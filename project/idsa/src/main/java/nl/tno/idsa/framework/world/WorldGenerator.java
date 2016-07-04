@@ -63,6 +63,7 @@ public class WorldGenerator {
                 model.geoMinY = Math.min(model.geoMinY, p1.getY());
                 model.geoMaxX = Math.max(model.geoMaxX, p1.getX());
                 model.geoMaxY = Math.max(model.geoMaxY, p1.getY());
+                //Why two times the same calculation? <---------------------------------------- added by alex later
                 model.geoMinX = Math.min(model.geoMinX, p1.getX());
                 model.geoMinY = Math.min(model.geoMinY, p1.getY());
                 model.geoMaxX = Math.max(model.geoMaxX, p1.getX());

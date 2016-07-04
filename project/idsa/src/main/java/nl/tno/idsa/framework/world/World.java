@@ -89,6 +89,10 @@ public class World {
     private Heuristic<Vertex> euclideanDistance;
     private Grid grid;
 
+    //Height and width of the world. We need it
+    private Double geoHeight;
+    private Double geoWidth;
+
     public World() {
         this.graph = new VertexGraph();
         this.vertices = new HashMap<Point, Vertex>();
@@ -97,6 +101,8 @@ public class World {
         this.euclideanDistance = new EuclideanDistance();
         this.utmRoot = null;
         this.grid = null;
+        this.geoHeight = null;
+        this.geoWidth = null;
     }
 
     public VertexGraph getGraph() {
@@ -147,6 +153,9 @@ public class World {
     public void applyGeoRoot(double utmMinX, double utmMinY, double widthWorld, double heightWorld) {
         this.utmRoot = new Point(utmMinX, utmMinY);
         this.grid = new Grid(widthWorld, heightWorld);
+        //save width and height
+        this.geoWidth = widthWorld;
+        this.geoHeight = heightWorld;
     }
 
     public Area getArea(Point p) {

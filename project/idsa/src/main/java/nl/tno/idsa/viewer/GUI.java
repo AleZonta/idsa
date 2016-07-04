@@ -90,6 +90,10 @@ public class GUI {
         }
         ProgressNotifier.notifyProgress(100);
 
+        //Loading the potential field
+        //PotentialField pot = new PotentialField();
+        //pot.initDifferentAreaType(world); //loading the lists with all the places
+
         // Hide progress notifier.
         ProgressNotifier.notifyShowProgress(false);
         ProgressNotifier.removeObserver(progressDialog);
