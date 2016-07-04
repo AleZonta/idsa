@@ -1,6 +1,7 @@
 package nl.tno.idsa.framework.simulator;
 
 import nl.tno.idsa.framework.messaging.Messenger;
+import nl.tno.idsa.framework.potential_field.PotentialField;
 import nl.tno.idsa.framework.world.Environment;
 import nl.tno.idsa.framework.world.Time;
 
@@ -27,6 +28,10 @@ public class Sim {
     private boolean requestPause;
     private boolean isPaused;
     private boolean isRunning;
+    private PotentialField pot; //Istance of the potential field class
+
+    public PotentialField getPot() { return this.pot; } //getter
+    public void setPot(PotentialField pot) { this.pot = pot; } //setter
 
     public static Sim getInstance() {
         if (instance == null) {
@@ -40,6 +45,7 @@ public class Sim {
         this.done = false;
         this.isRunning = false;
         this.requestPause = false;
+        this.pot = null;
 
         // Sim time is incremental time since environment starting time
         this.simTime = 0;

@@ -5,6 +5,7 @@ import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
 import nl.tno.idsa.framework.population.PopulationGenerator;
+import nl.tno.idsa.framework.potential_field.PotentialField;
 import nl.tno.idsa.framework.simulator.Sim;
 import nl.tno.idsa.framework.utils.DataSourceFinder;
 import nl.tno.idsa.framework.utils.RandomNumber;
@@ -88,11 +89,15 @@ public class GUI {
                 changedVertices++;
             }
         }
-        ProgressNotifier.notifyProgress(100);
+
 
         //Loading the potential field
-        //PotentialField pot = new PotentialField();
-        //pot.initDifferentAreaType(world); //loading the lists with all the places
+        ProgressNotifier.notifyProgressMessage("Loading potential field...");
+        ProgressNotifier.notifyUnknownProgress();
+        PotentialField pot = new PotentialField();
+        pot.initDifferentAreaType(world); //loading the lists with all the places
+
+        ProgressNotifier.notifyProgress(100);
 
         // Hide progress notifier.
         ProgressNotifier.notifyShowProgress(false);
@@ -101,6 +106,7 @@ public class GUI {
         // Create sim.
         Sim sim = Sim.getInstance();
         sim.init(env);
+        sim.setPot(pot); // set instance of Potential Field into the simulation
 
         // Open the viewer.
         System.out.println("Creating viewer...");

@@ -9,6 +9,8 @@ import nl.tno.idsa.framework.behavior.plans.ActionPlan;
 import nl.tno.idsa.framework.behavior.triggers.StaticAreaTrigger;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
+import nl.tno.idsa.framework.potential_field.ActivityNotImplementedException;
+import nl.tno.idsa.framework.potential_field.EmptyActivityException;
 import nl.tno.idsa.framework.semantics_impl.actions.Action;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationAndTime;
@@ -90,7 +92,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private static final String NODE_TYPE_AGENT = "agent";
     private static final String NODE_TYPE_STATIC_TRIGGER = "static_trigger";
 
-    private enum Mode {INSPECT_AGENT, TEST_ROUTE, INSPECT_AREA, PLACE_EVENT}
+    private enum Mode {INSPECT_AGENT, TEST_ROUTE, INSPECT_AREA, PLACE_EVENT, TRACK_AGENT}
     private Mode mode;
 
     public MainFrame(Sim sim) {
@@ -143,6 +145,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.selectionObserver.addObserver(this);
     }
 
+    //top panel with all the buttons and the information about simulation time
     private void initControlPanel() {
 
         javax.swing.JPanel controlPanel = new javax.swing.JPanel(new GridLayout(1, 0, 3, 3));
@@ -243,6 +246,22 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         createIncidentButton.setFocusPainted(false);
         controlPanel.add(createIncidentButton);
         bg.add(createIncidentButton);
+
+        //add button to track a person
+        final JToggleButton createTrackingButton = new JToggleButton(new AbstractAction("Track person") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (((JToggleButton) e.getSource()).isSelected()) {
+                    mode = Mode.TRACK_AGENT;
+                } else {
+                    mode = null;
+                }
+            }
+        });
+        createTrackingButton.setFocusPainted(false);
+        controlPanel.add(createTrackingButton);
+        bg.add(createTrackingButton);
+
 
         javax.swing.JPanel controlPanelP = new javax.swing.JPanel(new BorderLayout(3, 3));
         controlPanelP.add(controlPanel, BorderLayout.WEST);
@@ -905,6 +924,22 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                     addIncident(converted);
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if (mode == Mode.TRACK_AGENT || event.isControlDown()) { //After clicked on track agent button we need to find the agent
+                Point2D p = event.getPosition(); //position in the map where the click occurred
+                Point converted = new Point(p.getX(), -p.getY()); //translate point in our point class
+                Agent a = sim.getEnvironment().getAgentClosestTo(converted); //find closest agent to the point clicked
+                // Notify info panel that an agent has been selected
+                Messenger.broadcast(String.format("Display info on agent %s", a));
+                selectionObserver.setAgent(a);
+                try {
+                    sim.getPot().setTrackedAgent(a); //set tracked agent into the potential field so it can build the POI from agent's agenda
+                }catch (EmptyActivityException e){ //is possible the agent doesn't have activity
+                    JOptionPane.showMessageDialog(null, e, "InfoBox", JOptionPane.ERROR_MESSAGE);
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
+                }catch (ActivityNotImplementedException e){ //there are new activities in the simulator and now one implemented them in this class
+                    JOptionPane.showMessageDialog(null, e, "InfoBox", JOptionPane.ERROR_MESSAGE);
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
                 }
             }
         }

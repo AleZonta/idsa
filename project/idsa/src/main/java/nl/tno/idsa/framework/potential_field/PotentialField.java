@@ -20,8 +20,8 @@ public class PotentialField {
 
     private List<POI> pointsOfInterest; //list with all the POIs regarding the current tracked person
     private final HashMap<String, List<Area>> differentAreaType; //list with all the different areas preload at the start of the program
-    private Integer initialPositiveCharge; //positive charge that would assign to the POIs
-    private Integer initialNegativeCharge; //negative charge that would assign to the POIs (for future implementations)
+    //private Integer initialPositiveCharge; //positive charge that would assign to the POIs
+    //private Integer initialNegativeCharge; //negative charge that would assign to the POIs (for future implementations)
     private Agent trackedAgent; //agent that we are going to track
 
     private Point worldRoot; //root point of the world
@@ -33,8 +33,8 @@ public class PotentialField {
     public PotentialField(){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
-        this.initialNegativeCharge = null;
-        this.initialPositiveCharge = null;
+        //this.initialNegativeCharge = null;
+        //this.initialPositiveCharge = null;
         this.trackedAgent = null;
         this.worldRoot = null;
         this.worldHeight = null;
@@ -87,44 +87,48 @@ public class PotentialField {
         List<Activity> trackedActivities = this.trackedAgent.getAgenda(); //retrieve all the activities of the tracked person
         if (trackedActivities.isEmpty()) { throw new EmptyActivityException("No planned activity. WTF"); } //no activity? let's throw an Exception
 
+        List<PossibleActivity> activityAlreadyChecked = new ArrayList<>(); // some agent has more than one time the same activity. I am storing the activity so I am not adding more than once the same POI
         for(int i = 0; i < trackedActivities.size(); i++){ //iter among all the activities
             PossibleActivity poxActivity = trackedActivities.get(i).getPossibleActivity(); //return possible activity
 
-            //check which activity is planning to do
-            //TODO find a better way to check this. Maybe better ask who wrote the code. This is how I understood the code and my first idea. Not yet tested, dunno if it will work
-            //TODO all this decision is hardcoded. This is not good for future upgrading
-            if(poxActivity instanceof PossibleBeAtWork){ //if the possible activity is to be at work in the future we add all the workplaces (including police spawn point) to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Workplace"));
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("PoliceSpawnPoint"));
+            if(!activityAlreadyChecked.contains(poxActivity)){ // if already checked I don't do anything
+                //check which activity is planning to do
+                //TODO all this decision is hardcoded. This is not good for future upgrading
+                if(poxActivity instanceof PossibleBeAtWork){ //if the possible activity is to be at work in the future we add all the workplaces (including police spawn point) to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Workplace"));
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("PoliceSpawnPoint"));
 
-            } else if (poxActivity instanceof PossibleHangAroundOnSquare){ //if the possible activity is to hang around on square in the future we add all the squares to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Square"));
+                } else if (poxActivity instanceof PossibleHangAroundOnSquare){ //if the possible activity is to hang around on square in the future we add all the squares to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Square"));
 
-            } else if (poxActivity instanceof PossibleBeAtSchool){ //if the possible activity is to be at school in the future we add all the schools to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("School"));
+                } else if (poxActivity instanceof PossibleBeAtSchool){ //if the possible activity is to be at school in the future we add all the schools to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("School"));
 
-            } else if (poxActivity instanceof PossibleHaveDinnerAtHome){ //if the possible activity is to have dinner at home in the future we add all the homes to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("House"));
+                } else if (poxActivity instanceof PossibleHaveDinnerAtHome){ //if the possible activity is to have dinner at home in the future we add all the homes to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("House"));
 
-            } else if (poxActivity instanceof PossibleBeShopping){ //if the possible activity is to go to shopping in the future we add all the shops to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Shop"));
+                } else if (poxActivity instanceof PossibleBeShopping){ //if the possible activity is to go to shopping in the future we add all the shops to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Shop"));
 
-            } else if (poxActivity instanceof PossibleBeAtSportsField){ //if the possible activity is to be at the sport field in the future we add all the sport fields to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("SportField"));
+                } else if (poxActivity instanceof PossibleBeAtSportsField){ //if the possible activity is to be at the sport field in the future we add all the sport fields to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("SportField"));
 
-            } else if (poxActivity instanceof PossibleBeAtPlayground){ //if the possible activity is to be at the playground in the future we add all the playgrounds to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Playground"));
+                } else if (poxActivity instanceof PossibleBeAtPlayground){ //if the possible activity is to be at the playground in the future we add all the playgrounds to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Playground"));
 
-            } else if (poxActivity instanceof PossibleBeAtPark){ //if the possible activity is to be at the park in the future we add all the parks(including the water) to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Park"));
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Water"));
+                } else if (poxActivity instanceof PossibleBeAtPark){ //if the possible activity is to be at the park in the future we add all the parks(including the water) to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Park"));
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Water"));
 
-            } else if (poxActivity instanceof PossibleBeAtMarket){ //if the possible activity is to be at the market in the future we add all the shops to the POIs list
-                this.fromPoxPOIsToActualPOIs(differentAreaType.get("Shops"));
+                } else if (poxActivity instanceof PossibleBeAtMarket){ //if the possible activity is to be at the market in the future we add all the shops to the POIs list
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Shops"));
 
-            } else {
-                throw new ActivityNotImplementedException("Just found a new activity. Don't know how to react to it"); //just found new activity. Let's throw an Exception
+                } else {
+                    throw new ActivityNotImplementedException("Just found a new activity. Don't know how to react to it"); //just found new activity. Let's throw an Exception
+                }
+                activityAlreadyChecked.add(poxActivity); // adding current activity to the list of activity checked
             }
+
         }
 
         //now we have all the POIs inside the list. We have to give them the correct initial charge
