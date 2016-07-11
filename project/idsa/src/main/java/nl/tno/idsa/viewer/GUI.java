@@ -94,8 +94,7 @@ public class GUI {
         //Loading the potential field
         ProgressNotifier.notifyProgressMessage("Loading potential field...");
         ProgressNotifier.notifyUnknownProgress();
-        PotentialField pot = new PotentialField();
-        pot.initDifferentAreaType(world); //loading the lists with all the places
+        PotentialField pot = new PotentialField(world);
 
         ProgressNotifier.notifyProgress(100);
 

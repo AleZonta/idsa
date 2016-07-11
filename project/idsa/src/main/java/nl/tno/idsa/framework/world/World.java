@@ -101,8 +101,8 @@ public class World {
         this.euclideanDistance = new EuclideanDistance();
         this.utmRoot = null;
         this.grid = null;
-        this.geoHeight = null;
-        this.geoWidth = null;
+        this.geoHeight = null; //Height of the world
+        this.geoWidth = null; //Width of the world
     }
 
     public VertexGraph getGraph() {
@@ -156,6 +156,11 @@ public class World {
         //save width and height
         this.geoWidth = widthWorld;
         this.geoHeight = heightWorld;
+    }
+
+    //Im returning the width and the height of the world using a Point object so I have both in one place
+    public Point getGeoMisure(){
+        return new Point(this.geoWidth,this.geoHeight);
     }
 
     public Area getArea(Point p) {

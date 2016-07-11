@@ -6,6 +6,7 @@ import nl.tno.idsa.framework.behavior.incidents.PlannedIncident;
 import nl.tno.idsa.framework.utils.TextUtils;
 import nl.tno.idsa.viewer.components.SimpleGridBagPanel;
 import nl.tno.idsa.viewer.observers.SelectionObserver;
+import org.piccolo2d.PLayer;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -40,12 +41,18 @@ public class AgentInspectorPanel extends InspectorPanel implements Observer {
     private JList<Agent> householdMemberList;
     private JList<Agent> contactMemberList;
 
-    public AgentInspectorPanel(SelectionObserver selectionObserver) {
+    //button for heatmap
+    private JButton buttonHeatMap;
+    PLayer heatMapLAyer = null;
+
+    public AgentInspectorPanel(SelectionObserver selectionObserver, PLayer heatMapLAyer) {
         super(Side.RIGHT);
         setBorder(null);
 
         this.selectionObserver = selectionObserver;
         selectionObserver.addObserver(this);
+
+        this.heatMapLAyer = heatMapLAyer;
 
         createSubComponents();
         setAgent(null);
@@ -116,6 +123,20 @@ public class AgentInspectorPanel extends InspectorPanel implements Observer {
         JPanel main = new SimpleGridBagPanel(SimpleGridBagPanel.GRID_ROWS);
         getMainPanel().add(main, BorderLayout.NORTH);
 
+        //button used to show or hide the heat map
+        buttonHeatMap = new JButton(new AbstractAction("S/H HeatMap") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(heatMapLAyer.getVisible()){
+                    heatMapLAyer.setVisible(Boolean.FALSE);
+                }else{
+                    heatMapLAyer.setVisible(Boolean.TRUE);
+                }
+            }
+        });
+        JComponent[] buttonheat = createRow("Heat Map", buttonHeatMap);
+        main.add(createRow(buttonheat));
+
         JComponent[] nameRow = createRow("Name", "");
         nameLabel = (JLabel) nameRow[1];
         main.add(createRow(nameRow));
@@ -170,6 +191,7 @@ public class AgentInspectorPanel extends InspectorPanel implements Observer {
         contactMemberList = createClickableAgentList(2);
         JComponent[] contactListRow = createRow("Contacts", contactMemberList);
         main.add(createRow(contactListRow));
+
     }
 
     private void updateSubComponents() {

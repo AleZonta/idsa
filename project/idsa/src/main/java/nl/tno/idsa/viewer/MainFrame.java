@@ -11,6 +11,8 @@ import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
 import nl.tno.idsa.framework.potential_field.ActivityNotImplementedException;
 import nl.tno.idsa.framework.potential_field.EmptyActivityException;
+import nl.tno.idsa.framework.potential_field.ParameterNotDefinedException;
+import nl.tno.idsa.framework.potential_field.PotentialField;
 import nl.tno.idsa.framework.semantics_impl.actions.Action;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationAndTime;
@@ -86,6 +88,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private final PLayer edgeLayer;
     private final PLayer areaLayer;
     private final PLayer agentLayer;
+
+    private final PLayer heatMapLAyer; //<----------------------------------------------------
+
     private javax.swing.JLabel timeLabel;
     private javax.swing.JLabel positionLabel;
 
@@ -116,19 +121,25 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.edgeLayer = new PLayer();
         this.uiLayer = new PLayer();
         this.agentLayer = new PLayer();
+        this.heatMapLAyer = new PLayer(); // Layer for the heat map (potential field representation)
+
         canvas.getRoot().addChild(areaLayer);
         canvas.getRoot().addChild(edgeLayer);
         canvas.getRoot().addChild(uiLayer);
         canvas.getRoot().addChild(agentLayer);
+        canvas.getRoot().addChild(heatMapLAyer); // Adding the heat map layer to the root
+
         canvas.getCamera().addLayer(0, edgeLayer);
         canvas.getCamera().addLayer(1, areaLayer);
         canvas.getCamera().addLayer(2, uiLayer);
         canvas.getCamera().addLayer(3, agentLayer);
+        canvas.getCamera().addLayer(4, heatMapLAyer); // Assign the layer to the camera (with a number)
 
         initControlPanel();
         initMap(sim.getEnvironment().getWorld());
         initAgents(sim.getEnvironment().getAgents());
         initInspectors();
+        initHeatMap(); // Initialise the layer of the heat map
 
         ProgressDialog progressDialog = new ProgressDialog(mapFrame);
         ProgressNotifier.addObserver(progressDialog);
@@ -143,6 +154,49 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         // Register observers
         sim.getEnvironment().addObserver(this);
         this.selectionObserver.addObserver(this);
+    }
+
+    // setting up Heat Map and hiding it
+    private void initHeatMap(){
+        Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure();
+        Double size = sim.getPot().getCellSize();
+        Double column =  Math.ceil(heightAndWidth.getX() / size);
+        Double row = Math.ceil(heightAndWidth.getY() / size);
+        double coordinaterow = 0.0;
+        for (int i = 0; i < row ; i++){
+            double coordinatecolumn = 0.0;
+            for (int j = 0; j < column ; j++){
+                PPath node = PPath.createRectangle(coordinatecolumn, coordinaterow - heightAndWidth.getY(), size, size);
+                node.setPaint(null); // transparent
+                //node.setPaint(new Color((int)(Math.random()*256), 255, 255)); //set color to the cell
+                node.setStrokePaint(Color.BLACK);
+                node.setStroke(new BasicStroke(1f));
+                heatMapLAyer.addChild(node);
+                coordinatecolumn += size;
+            }
+            coordinaterow += size;
+        }
+
+        heatMapLAyer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
+//        for (int i = 0; i < 50; i++) {
+//            double x = random.nextInt((int)heightAndWidth.getX());
+//            double y = random.nextInt((int)heightAndWidth.getY());
+//            PPath node = PPath.createEllipse(x, y - heightAndWidth.getY(), 200, 200);
+//            node.setPaint(null);
+//            node.setStrokePaint(Color.BLACK);
+//            node.setStroke(new BasicStroke(3f));
+//            node.addAttribute("edges", new ArrayList());
+//            heatMapLAyer.addChild(node);
+//        }
+    }
+
+    //update heat map value
+    private void updateHeatMap(List<Double> heatMapValue){
+        List<PPath> listNodes = (List<PPath>)heatMapLAyer.getAllNodes();
+        for(int i = 1; i < listNodes.size(); i++){
+            listNodes.get(i).setPaint(new Color(heatMapValue.get(i).intValue(), 255, 255));
+        }
+        heatMapLAyer.setVisible(Boolean.TRUE);
     }
 
     //top panel with all the buttons and the information about simulation time
@@ -283,7 +337,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         inspectorPanel.setDividerLocation((int) (0.75 * Toolkit.getDefaultToolkit().getScreenSize().getHeight() - 100));
         contentPane.add(inspectorPanel, BorderLayout.EAST);
 
-        AgentInspectorPanel agentInspector = new AgentInspectorPanel(this.selectionObserver);
+        //Declaration of the right panel. They are passing the observer.
+        AgentInspectorPanel agentInspector = new AgentInspectorPanel(this.selectionObserver, this.heatMapLAyer);
         inspectorPanel.add(agentInspector);
 
         AreaInspectorPanel areaInspector = new AreaInspectorPanel(selectionObserver, sim.getEnvironment());
@@ -925,7 +980,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 } catch (Exception ex) {
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } else if (mode == Mode.TRACK_AGENT || event.isControlDown()) { //After clicked on track agent button we need to find the agent
+            } else if (mode == Mode.TRACK_AGENT) { //After clicked on track agent button we need to find the agent
                 Point2D p = event.getPosition(); //position in the map where the click occurred
                 Point converted = new Point(p.getX(), -p.getY()); //translate point in our point class
                 Agent a = sim.getEnvironment().getAgentClosestTo(converted); //find closest agent to the point clicked
@@ -933,12 +988,13 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 Messenger.broadcast(String.format("Display info on agent %s", a));
                 selectionObserver.setAgent(a);
                 try {
-                    sim.getPot().setTrackedAgent(a); //set tracked agent into the potential field so it can build the POI from agent's agenda
-                }catch (EmptyActivityException e){ //is possible the agent doesn't have activity
-                    JOptionPane.showMessageDialog(null, e, "InfoBox", JOptionPane.ERROR_MESSAGE);
-                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
-                }catch (ActivityNotImplementedException e){ //there are new activities in the simulator and now one implemented them in this class
-                    JOptionPane.showMessageDialog(null, e, "InfoBox", JOptionPane.ERROR_MESSAGE);
+                    PotentialField pot = sim.getPot();
+                    pot.setTrackedAgent(a); //set tracked agent into the potential field so it can build the POI from agent's agenda
+                    //show heat map with the poi
+                    pot.calculatePotentialFieldInAllTheWorld(2); // 2 is force field way
+                    updateHeatMap(pot.getHeatMapValue()); //update the GUI of the HeatMap
+
+                }catch (EmptyActivityException | ActivityNotImplementedException | ParameterNotDefinedException e){ //is possible the agent doesn't have activity / there are new activities in the simulator and now one implemented them in this class / I'm trying to calculate the potential field with a parameter not defined
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
                 }
             }

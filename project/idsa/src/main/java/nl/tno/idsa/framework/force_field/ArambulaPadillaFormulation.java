@@ -1,6 +1,10 @@
 package nl.tno.idsa.framework.force_field;
 
+import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by alessandrozonta on 30/06/16.
@@ -8,6 +12,7 @@ import nl.tno.idsa.framework.world.Point;
 //from Arambula Cosío, F., & Padilla Castañeda, M. a. A. (2004). Local Autonomous Robot Navigation using Potential Fields. Mathematical and Computer Modelling, 40(9–10), 1141–1156. http://doi.org/10.1016/j.mcm.2004.05.001
 public class ArambulaPadillaFormulation extends ForceField {
 
+    @Override
     //implementation of the abstract class with the arambulaPadillaFormulation of the potential field
     //currentPosition -> current position of the tracked person where we want to know how strong is the attraction
     //potentialPower -> is the power of the attractive point
@@ -26,6 +31,7 @@ public class ArambulaPadillaFormulation extends ForceField {
         return new Point(x * res1,y * res1);
     }
 
+    @Override
     //implementation of the abstract class with the arambulaPadillaFormulation of the potential field
     //currentPosition -> current position of the tracked person where we want to know how strong is the repulsion
     //potentialRepulsivePower -> is the power of the repulsive point
@@ -47,5 +53,26 @@ public class ArambulaPadillaFormulation extends ForceField {
         }else{
             return new Point(0,0);
         }
+    }
+
+    @Override
+    //implementation of the abstract method that implement how retrieve the force in every points of the world
+    //centerPoint -> list with all the center points of the heatMap cells
+    //pointsOfInterest -> list of all the point of interest present in the map
+    //return a list of double that are the value to show in the heatMap
+    public List<Double> calculateForceInAllTheWord(List<Point> centerPoint, List<POI> pointsOfInterest) {
+        //list with all the magnitude. From the potential field we should have vector so I calculate the magnitude. I m not sure
+        List<Double> magnitude = new ArrayList<>();
+        //now I have to calculate the value of the PF in every point
+        for (Point aCenterPoint : centerPoint) {
+            //for every point I have to compute the potential for all the attraction/repulsive points and sum the result
+            Point totalForceInThisPoint = new Point(0.0, 0.0);
+            for (POI aPointsOfInterest : pointsOfInterest) {
+                //automatically sum every potential from every poi
+                totalForceInThisPoint = totalForceInThisPoint.plus(this.force(aCenterPoint, aPointsOfInterest));
+            }
+            magnitude.add(Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0)));
+        }
+        return magnitude;
     }
 }
