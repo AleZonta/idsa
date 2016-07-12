@@ -20,7 +20,7 @@ public class ElectricPotential extends ForceField {
     //With this formulation we don't need to return a point but only a scalar value -> the result would be in the x position of the result
     protected Point attractiveForce(Point currentPosition, Double potentialAttractionPower, Point attractivePoint){
         //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition))
-        Double constant = 100000.0;
+        Double constant = 100.0;
         Double distance = currentPosition.euclideanDistanceTo(attractivePoint);
         return new Point(constant * (potentialAttractionPower/distance) ,0.0);
     }
@@ -47,17 +47,17 @@ public class ElectricPotential extends ForceField {
     //pointsOfInterest -> list of all the point of interest present in the map
     //return a list of double that are the value to show in the heatMap
     public List<Double> calculateForceInAllTheWord(List<Point> centerPoint, List<POI> pointsOfInterest) {
-        //list with all the magnitude. From the potential field we should have vector so I calculate the magnitude. I m not sure
+        //list with all the magnitude.
         List<Double> magnitude = new ArrayList<>();
         //now I have to calculate the value of the PF in every point
         for (Point aCenterPoint : centerPoint) {
             //for every point I have to compute the potential for all the attraction/repulsive points and sum the result
-            Point totalForceInThisPoint = new Point(0.0, 0.0);
+            Double totalForceInThisPoint = 0.0;
             for (POI aPointsOfInterest : pointsOfInterest) {
                 //automatically sum every potential from every poi
-                totalForceInThisPoint = totalForceInThisPoint.plus(this.force(aCenterPoint, aPointsOfInterest));
+                totalForceInThisPoint += this.force(aCenterPoint, aPointsOfInterest).getX();
             }
-            magnitude.add(totalForceInThisPoint.getX());
+            magnitude.add(totalForceInThisPoint);
         }
         return magnitude;
     }

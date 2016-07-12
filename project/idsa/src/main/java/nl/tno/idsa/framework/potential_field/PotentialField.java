@@ -29,7 +29,7 @@ public class PotentialField {
     private Point worldRoot; //root point of the world
     private Double worldHeight; //height of the world
     private Double worldWidth; //width of the world
-    private Double cellSide = 100.0; //side of the cell. We are gonna divide the word into cells
+    private Double cellSide = 20.0; //side of the cell. We are gonna divide the word into cells
 
     private List<Double> heatMapValue; //List of the values of the cell for the heat map
     private List<Point> centerPoint; //list with all the center
@@ -99,7 +99,6 @@ public class PotentialField {
                 }
             }
         }
-        String test = "";
     }
 
     //from Agent agenda we populate future possible POIs. This method throws two exceptions. If the agent has no activity we can not use it for our prediction. If the agent has unrecognized activity we raise another exception
@@ -166,9 +165,14 @@ public class PotentialField {
     }
 
     //From a list of possible Area we build our list of POIs
+    //TODO this method sometimes generate a nullpointexception and i don't know why
     private void fromPoxPOIsToActualPOIs(List<Area> possiblePOIs){
         for (Area possiblePOI : possiblePOIs) { //iter among all the elemt of the list. All the saved area saved in the init of the program
-            this.pointsOfInterest.add(new POI(possiblePOI)); //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later
+            try {
+                this.pointsOfInterest.add(new POI(possiblePOI)); //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later}
+            }catch (NullPointerException e){
+                continue; //do nothing
+            }
         }
     }
 
@@ -178,16 +182,16 @@ public class PotentialField {
         Double column =  Math.ceil(this.worldWidth / this.cellSide);
         Double row = Math.ceil(this.worldHeight / this.cellSide);
         //now i have to find the center of the cell
-        Double height = this.worldRoot.getY();
-        Double width = this.worldRoot.getX();
+        Double height = this.cellSide/2;
         //I need to find the center of every cell. From the center we will compute the potential field
         for (int i = 0; i < row; i++){
-            height += this.cellSide/2;
+            Double width = this.cellSide/2;
             for(int j = 0; j < column;  j++){
-                width += this.cellSide/2;
                 this.centerPoint.add(new Point(width, height)); //add central point to the list
                 this.heatMapValue.add(0.0); //initialise heatMapValue with a zero. Every center point has its own value
+                width += this.cellSide;
             }
+            height += this.cellSide;
         }
     }
 

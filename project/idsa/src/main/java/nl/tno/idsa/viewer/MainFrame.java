@@ -9,10 +9,7 @@ import nl.tno.idsa.framework.behavior.plans.ActionPlan;
 import nl.tno.idsa.framework.behavior.triggers.StaticAreaTrigger;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
-import nl.tno.idsa.framework.potential_field.ActivityNotImplementedException;
-import nl.tno.idsa.framework.potential_field.EmptyActivityException;
-import nl.tno.idsa.framework.potential_field.ParameterNotDefinedException;
-import nl.tno.idsa.framework.potential_field.PotentialField;
+import nl.tno.idsa.framework.potential_field.*;
 import nl.tno.idsa.framework.semantics_impl.actions.Action;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationAndTime;
@@ -89,7 +86,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private final PLayer areaLayer;
     private final PLayer agentLayer;
 
-    private final PLayer heatMapLAyer; //<----------------------------------------------------
+    private final PLayer heatMapPOIsLayer; //Layer for heat map POI
+    private final PLayer heatMapLayer; //Layer for heat map
 
     private javax.swing.JLabel timeLabel;
     private javax.swing.JLabel positionLabel;
@@ -121,19 +119,22 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.edgeLayer = new PLayer();
         this.uiLayer = new PLayer();
         this.agentLayer = new PLayer();
-        this.heatMapLAyer = new PLayer(); // Layer for the heat map (potential field representation)
+        this.heatMapPOIsLayer = new PLayer(); // Layer for the POI heat map (potential field representation)
+        this.heatMapLayer = new PLayer(); // Layer for the heat map (potential field representation)
 
         canvas.getRoot().addChild(areaLayer);
         canvas.getRoot().addChild(edgeLayer);
         canvas.getRoot().addChild(uiLayer);
         canvas.getRoot().addChild(agentLayer);
-        canvas.getRoot().addChild(heatMapLAyer); // Adding the heat map layer to the root
+        canvas.getRoot().addChild(heatMapPOIsLayer); // Adding the POI heat map layer to the root
+        canvas.getRoot().addChild(heatMapLayer); // Adding the heat map layer to the root
 
         canvas.getCamera().addLayer(0, edgeLayer);
         canvas.getCamera().addLayer(1, areaLayer);
         canvas.getCamera().addLayer(2, uiLayer);
         canvas.getCamera().addLayer(3, agentLayer);
-        canvas.getCamera().addLayer(4, heatMapLAyer); // Assign the layer to the camera (with a number)
+        canvas.getCamera().addLayer(4, heatMapPOIsLayer); // Assign the POI layer to the camera (with a number)
+        canvas.getCamera().addLayer(5, heatMapLayer); // Assign the layer to the camera (with a number)
 
         initControlPanel();
         initMap(sim.getEnvironment().getWorld());
@@ -158,45 +159,81 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
     // setting up Heat Map and hiding it
     private void initHeatMap(){
-        Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure();
-        Double size = sim.getPot().getCellSize();
-        Double column =  Math.ceil(heightAndWidth.getX() / size);
-        Double row = Math.ceil(heightAndWidth.getY() / size);
+        Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure(); //retrieve the starting point of the world
+        Double size = sim.getPot().getCellSize(); // retrieve the size of the cell
+        Double column =  Math.ceil(heightAndWidth.getX() / size); //compute how many columns we have
+        Double row = Math.ceil(heightAndWidth.getY() / size); //compute how many rows we have
         double coordinaterow = 0.0;
         for (int i = 0; i < row ; i++){
             double coordinatecolumn = 0.0;
             for (int j = 0; j < column ; j++){
-                PPath node = PPath.createRectangle(coordinatecolumn, coordinaterow - heightAndWidth.getY(), size, size);
+                // coordinatecolumn + heightAndWidth.getX() -> to move one step to the right of the map
+                // - coordinaterow -> I need the minus for display correctly the map
+                PPath node = PPath.createRectangle(coordinatecolumn + heightAndWidth.getX(), -coordinaterow, size, size);
                 node.setPaint(null); // transparent
                 //node.setPaint(new Color((int)(Math.random()*256), 255, 255)); //set color to the cell
-                node.setStrokePaint(Color.BLACK);
-                node.setStroke(new BasicStroke(1f));
-                heatMapLAyer.addChild(node);
-                coordinatecolumn += size;
+                //node.setStrokePaint(Color.BLACK);
+                //node.setStroke(new BasicStroke(1f));
+                node.setStrokePaint(null);
+                heatMapPOIsLayer.addChild(node);
+
+                // coordinatecolumn + heightAndWidth.getX()+ heightAndWidth.getX() -> to move two steps to the right of the map and one step right to the previous heat map
+                // - coordinaterow -> I need the minus for display correctly the map
+                PPath nodeS = PPath.createRectangle(coordinatecolumn + heightAndWidth.getX() + heightAndWidth.getX(), -coordinaterow, size, size);
+                nodeS.setPaint(null); // transparent
+                //node.setPaint(new Color((int)(Math.random()*256), 255, 255)); //set color to the cell
+                //nodeS.setStrokePaint(Color.BLACK);
+                //nodeS.setStroke(new BasicStroke(1f));
+                nodeS.setStrokePaint(null);
+                heatMapLayer.addChild(nodeS);
+
+                coordinatecolumn += size; //increase the coordinate of the column by cell size
             }
-            coordinaterow += size;
+            coordinaterow += size; // increase the coordinate of the row by cell size
         }
 
-        heatMapLAyer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
-//        for (int i = 0; i < 50; i++) {
-//            double x = random.nextInt((int)heightAndWidth.getX());
-//            double y = random.nextInt((int)heightAndWidth.getY());
-//            PPath node = PPath.createEllipse(x, y - heightAndWidth.getY(), 200, 200);
-//            node.setPaint(null);
-//            node.setStrokePaint(Color.BLACK);
-//            node.setStroke(new BasicStroke(3f));
-//            node.addAttribute("edges", new ArrayList());
-//            heatMapLAyer.addChild(node);
-//        }
+        heatMapPOIsLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
+        heatMapLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
     }
 
     //update heat map value
     private void updateHeatMap(List<Double> heatMapValue){
-        List<PPath> listNodes = (List<PPath>)heatMapLAyer.getAllNodes();
+        List<PPath> listNodes = (List<PPath>)heatMapLayer.getAllNodes();
         for(int i = 1; i < listNodes.size(); i++){
-            listNodes.get(i).setPaint(new Color(heatMapValue.get(i).intValue(), 255, 255));
+            listNodes.get(i).setPaint(new Color(heatMapValue.get(i - 1).intValue(), 255, 255));
         }
-        heatMapLAyer.setVisible(Boolean.TRUE);
+        this.heatMapLayer.setVisible(Boolean.TRUE);
+    }
+
+    //reset the heat map in case of multiple press of track button
+    private void resetHeatMaps(){
+        List<PPath> listNodes = (List<PPath>)heatMapLayer.getAllNodes(); //list of all the nodes inside the layer
+        for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
+            listNodes.get(i).setPaint(null); //reset color heat map
+        }
+        listNodes = (List<PPath>)heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
+        for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
+            listNodes.get(i).setPaint(null); //reset color heat map
+        }
+    }
+
+    //show on heat map the point of interest
+    private void showPOI(List<POI> pointsOfInterest){
+        Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure(); //retrieve the starting point of the world
+        List<PPath> listNodes = (List<PPath>)heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
+        Double size = sim.getPot().getCellSize()/2; //half of the size of the cell
+        for(int i = 0; i < pointsOfInterest.size(); i++){
+            //TODO mybe is possible to optimise the loop
+            for(int j = 1; j < listNodes.size(); j++){ // the loop starts from 1 because first node is the layer and we don't need it
+                //if the point of interest area contains the center coordinate of the node I'll change its color
+                //listNodes.get(j).getX() + size - heightAndWidth.getX() -> I'am subtracting the width of the map because I'm showing it not on the top but on the right and I'm adding the size because I want the middle point
+                //-listNodes.get(j).getY() + size -> I'm using the minus to respect the coordinate system of the view and adding the size because I want the central point of the cell
+                if(pointsOfInterest.get(i).getArea().getPolygon().contains(new Point(listNodes.get(j).getX() + size - heightAndWidth.getX(),-listNodes.get(j).getY() + size))){
+                    listNodes.get(j).setPaint(new Color(0, 255, 0));
+                }
+            }
+        }
+        this.heatMapPOIsLayer.setVisible(Boolean.TRUE);
     }
 
     //top panel with all the buttons and the information about simulation time
@@ -338,7 +375,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         contentPane.add(inspectorPanel, BorderLayout.EAST);
 
         //Declaration of the right panel. They are passing the observer.
-        AgentInspectorPanel agentInspector = new AgentInspectorPanel(this.selectionObserver, this.heatMapLAyer);
+        AgentInspectorPanel agentInspector = new AgentInspectorPanel(this.selectionObserver, this.heatMapPOIsLayer);
         inspectorPanel.add(agentInspector);
 
         AreaInspectorPanel areaInspector = new AreaInspectorPanel(selectionObserver, sim.getEnvironment());
@@ -992,7 +1029,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                     pot.setTrackedAgent(a); //set tracked agent into the potential field so it can build the POI from agent's agenda
                     //show heat map with the poi
                     pot.calculatePotentialFieldInAllTheWorld(2); // 2 is force field way
+                    resetHeatMaps(); //reset the color of the heatMaps
                     updateHeatMap(pot.getHeatMapValue()); //update the GUI of the HeatMap
+                    showPOI(pot.getPointsOfInterest()); //show POI on map
 
                 }catch (EmptyActivityException | ActivityNotImplementedException | ParameterNotDefinedException e){ //is possible the agent doesn't have activity / there are new activities in the simulator and now one implemented them in this class / I'm trying to calculate the potential field with a parameter not defined
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
