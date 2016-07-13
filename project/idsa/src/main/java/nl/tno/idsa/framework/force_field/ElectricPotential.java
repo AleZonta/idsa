@@ -17,12 +17,12 @@ public class ElectricPotential extends ForceField {
     //currentPosition -> current position of the tracked person where we want to know how strong is the attraction
     //potentialPower -> is the charge of the attractive point
     //attractivePoint -> charge position
-    //With this formulation we don't need to return a point but only a scalar value -> the result would be in the x position of the result
+    //Return a new Point -> X position is the magnitude of the force, Y position is the direction
     protected Point attractiveForce(Point currentPosition, Double potentialAttractionPower, Point attractivePoint){
         //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition))
-        Double constant = 100.0;
+        Double constant = 1.0;
         Double distance = currentPosition.euclideanDistanceTo(attractivePoint);
-        return new Point(constant * (potentialAttractionPower/distance) ,0.0);
+        return new Point(constant * (potentialAttractionPower/Math.pow(distance,2.0)) , Math.atan2(currentPosition.getY(),currentPosition.getX()));
     }
 
     @Override
@@ -47,17 +47,28 @@ public class ElectricPotential extends ForceField {
     //pointsOfInterest -> list of all the point of interest present in the map
     //return a list of double that are the value to show in the heatMap
     public List<Double> calculateForceInAllTheWord(List<Point> centerPoint, List<POI> pointsOfInterest) {
+        POI poi = pointsOfInterest.get(0);
+        POI poi1 = pointsOfInterest.get(1);
+        pointsOfInterest = new ArrayList<POI>();
+        pointsOfInterest.add(poi);
+        pointsOfInterest.add(poi1);
+
         //list with all the magnitude.
         List<Double> magnitude = new ArrayList<>();
         //now I have to calculate the value of the PF in every point
         for (Point aCenterPoint : centerPoint) {
             //for every point I have to compute the potential for all the attraction/repulsive points and sum the result
-            Double totalForceInThisPoint = 0.0;
+            Point totalForceInThisPoint = new Point(0.0,0.0);
             for (POI aPointsOfInterest : pointsOfInterest) {
                 //automatically sum every potential from every poi
-                totalForceInThisPoint += this.force(aCenterPoint, aPointsOfInterest).getX();
+                //this.force return the magnitude and the direction of the field in that position
+                Point E = this.force(aCenterPoint, aPointsOfInterest);
+                //I need to compute the vector component of the result -> Vx = v*sin(alpha) ; Vy = v*sin(alpha)
+                Point vectorComponent = new Point(E.getX() * Math.cos(E.getY()),E.getX() * Math.sin(E.getY()));
+                totalForceInThisPoint = totalForceInThisPoint.plus(vectorComponent);
             }
-            magnitude.add(totalForceInThisPoint);
+            //From the resultant vector get the magnitude
+            magnitude.add(Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0)));
         }
         return magnitude;
     }

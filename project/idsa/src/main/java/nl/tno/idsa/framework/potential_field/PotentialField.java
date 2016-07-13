@@ -13,6 +13,8 @@ import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
 import nl.tno.idsa.library.activities.possible.*;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.*;
 
 /**
@@ -29,7 +31,7 @@ public class PotentialField {
     private Point worldRoot; //root point of the world
     private Double worldHeight; //height of the world
     private Double worldWidth; //width of the world
-    private Double cellSide = 20.0; //side of the cell. We are gonna divide the word into cells
+    private Double cellSide = 40.0; //side of the cell. We are gonna divide the word into cells
 
     private List<Double> heatMapValue; //List of the values of the cell for the heat map
     private List<Point> centerPoint; //list with all the center
@@ -220,17 +222,29 @@ public class PotentialField {
 
     //normalise and scale heatMapValue for use the result like a rgb value
     private void normaliseHeatMapValue(){
+        //BufferedWriter outputWriter = null;
+        //try {
+        //    outputWriter = new BufferedWriter(new FileWriter("debug1.txt"));
+        //}catch (Exception e){}
         List<Double> newheatMapValue = new ArrayList<>();
         Double maxList = Collections.max(this.heatMapValue);
         Double minList = Collections.min(this.heatMapValue);
-        Double max = 255.0;
-        Double min = 0.0;
-        for (int i = 0; i < this.heatMapValue.size(); i++){
-            Double standard = (this.heatMapValue.get(i) - minList)/(maxList - minList);
+        Double max = 0.0;
+        Double min = 255.0;
+        for (Double aHeatMapValue : this.heatMapValue) {
+            Double standard = (aHeatMapValue - minList) / (maxList - minList);
             Double scaled = standard * (max - min) + min;
             newheatMapValue.add(scaled);
+            //try {
+            //    outputWriter.write(Double.toString(standard));
+            //    outputWriter.newLine();
+            //}catch (Exception e){}
         }
         this.heatMapValue = newheatMapValue;
+        //try {
+        //    outputWriter.flush();
+        //    outputWriter.close();
+        //}catch (Exception e){}
     }
 
     //function called after having select the person to track.
