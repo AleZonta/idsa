@@ -200,7 +200,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private void updateHeatMap(List<Double> heatMapValue){
         List<PPath> listNodes = (List<PPath>)heatMapLayer.getAllNodes();
         for(int i = 1; i < listNodes.size(); i++){
-            listNodes.get(i).setPaint(new Color(heatMapValue.get(i - 1).intValue(), 255, 255));
+            listNodes.get(i).setPaint(new Color(255, heatMapValue.get(i - 1).intValue(), heatMapValue.get(i - 1).intValue()));
         }
         this.heatMapLayer.setVisible(Boolean.TRUE);
     }

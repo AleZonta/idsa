@@ -19,8 +19,8 @@ public class ElectricPotential extends ForceField {
     //attractivePoint -> charge position
     //Return a new Point -> X position is the magnitude of the force, Y position is the direction
     protected Point attractiveForce(Point currentPosition, Double potentialAttractionPower, Point attractivePoint){
-        //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition))
-        Double constant = 1.0;
+        //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition) ^ 2)
+        Double constant = 100000.0;
         Double distance = currentPosition.euclideanDistanceTo(attractivePoint);
         return new Point(constant * (potentialAttractionPower/Math.pow(distance,2.0)) , Math.atan2(currentPosition.getY(),currentPosition.getX()));
     }
@@ -31,14 +31,14 @@ public class ElectricPotential extends ForceField {
     //potentialRepulsivePower -> is the power of the repulsive point
     //obstacle -> charge position
     //influenceDistance -> not used for this formulation
-    //With this formulation we don't need to return a point but only a scalar value -> the result would be in the x position of the result
+    //Return a new Point -> X position is the magnitude of the force, Y position is the direction
     protected Point repulsiveForce(Point currentPosition, Double potentialRepulsivePower, Point obstacle, Double influenceDistance){
-        //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition))
-        Double constant = 1.0;
+        //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition) ^ 2)
+        Double constant = 100000.0;
         Double distance = currentPosition.euclideanDistanceTo(obstacle);
         //also for the repulsive point the charge is not store with the negative sign, we need to change this
         Double negativePotential = -potentialRepulsivePower;
-        return new Point(constant * (negativePotential/distance),0.0);
+        return new Point(constant * (negativePotential/Math.pow(distance,2.0)) , Math.atan2(currentPosition.getY(),currentPosition.getX()));
     }
 
     @Override
@@ -47,12 +47,6 @@ public class ElectricPotential extends ForceField {
     //pointsOfInterest -> list of all the point of interest present in the map
     //return a list of double that are the value to show in the heatMap
     public List<Double> calculateForceInAllTheWord(List<Point> centerPoint, List<POI> pointsOfInterest) {
-        POI poi = pointsOfInterest.get(0);
-        POI poi1 = pointsOfInterest.get(1);
-        pointsOfInterest = new ArrayList<POI>();
-        pointsOfInterest.add(poi);
-        pointsOfInterest.add(poi1);
-
         //list with all the magnitude.
         List<Double> magnitude = new ArrayList<>();
         //now I have to calculate the value of the PF in every point
@@ -68,7 +62,11 @@ public class ElectricPotential extends ForceField {
                 totalForceInThisPoint = totalForceInThisPoint.plus(vectorComponent);
             }
             //From the resultant vector get the magnitude
-            magnitude.add(Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0)));
+            Double resultantVectorMagnitude = Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0));
+            //If I am very close to the center of attraction the potential goes to a very very very high number.
+            //Maybe I need a upper bound -> arbitrarily decided
+            if (resultantVectorMagnitude > 400.0) resultantVectorMagnitude = 400.0;
+            magnitude.add(resultantVectorMagnitude);
         }
         return magnitude;
     }

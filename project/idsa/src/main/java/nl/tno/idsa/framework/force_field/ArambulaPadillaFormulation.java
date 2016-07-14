@@ -10,6 +10,7 @@ import java.util.List;
  * Created by alessandrozonta on 30/06/16.
  */
 //from Arambula Cosío, F., & Padilla Castañeda, M. a. A. (2004). Local Autonomous Robot Navigation using Potential Fields. Mathematical and Computer Modelling, 40(9–10), 1141–1156. http://doi.org/10.1016/j.mcm.2004.05.001
+//TODO not sure the implementation is correct -> to check --> not used for now
 public class ArambulaPadillaFormulation extends ForceField {
 
     @Override

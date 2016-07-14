@@ -31,7 +31,7 @@ public class PotentialField {
     private Point worldRoot; //root point of the world
     private Double worldHeight; //height of the world
     private Double worldWidth; //width of the world
-    private Double cellSide = 40.0; //side of the cell. We are gonna divide the word into cells
+    private Double cellSide = 10.0; //side of the cell. We are gonna divide the word into cells TODO bind cell size with the const inside force field (higher the cell size lower the constant)
 
     private List<Double> heatMapValue; //List of the values of the cell for the heat map
     private List<Point> centerPoint; //list with all the center
@@ -169,12 +169,14 @@ public class PotentialField {
     //From a list of possible Area we build our list of POIs
     //TODO this method sometimes generate a nullpointexception and i don't know why
     private void fromPoxPOIsToActualPOIs(List<Area> possiblePOIs){
-        for (Area possiblePOI : possiblePOIs) { //iter among all the elemt of the list. All the saved area saved in the init of the program
-            try {
+        try {
+            for (Area possiblePOI : possiblePOIs) { //iter among all the elemt of the list. All the saved area saved in the init of the program
+
                 this.pointsOfInterest.add(new POI(possiblePOI)); //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later}
-            }catch (NullPointerException e){
-                continue; //do nothing
             }
+        }catch (NullPointerException e){
+            String why = "why????";
+             //do nothing
         }
     }
 
@@ -221,11 +223,9 @@ public class PotentialField {
     }
 
     //normalise and scale heatMapValue for use the result like a rgb value
+    //Print the heat map value on a file
+    //Instead from 0 to 255 I am scaling the value from 255 to 0 (inverted) so I can print only the attractive points
     private void normaliseHeatMapValue(){
-        //BufferedWriter outputWriter = null;
-        //try {
-        //    outputWriter = new BufferedWriter(new FileWriter("debug1.txt"));
-        //}catch (Exception e){}
         List<Double> newheatMapValue = new ArrayList<>();
         Double maxList = Collections.max(this.heatMapValue);
         Double minList = Collections.min(this.heatMapValue);
@@ -235,22 +235,35 @@ public class PotentialField {
             Double standard = (aHeatMapValue - minList) / (maxList - minList);
             Double scaled = standard * (max - min) + min;
             newheatMapValue.add(scaled);
-            //try {
-            //    outputWriter.write(Double.toString(standard));
-            //    outputWriter.newLine();
-            //}catch (Exception e){}
         }
         this.heatMapValue = newheatMapValue;
-        //try {
-        //    outputWriter.flush();
-        //    outputWriter.close();
-        //}catch (Exception e){}
     }
 
     //function called after having select the person to track.
     //position is the real-time position
     public void trackAndUpdate(Point position){
         //from the position tracked
+    }
+
+    //Save to csv file the heat map
+    private void saveHeatMap(){
+        Double count = 0.0;
+        Double column =  Math.ceil(this.worldWidth / this.cellSide);
+        BufferedWriter outputWriter = null;
+        try {
+            outputWriter = new BufferedWriter(new FileWriter("heatMapValue.csv"));
+            for (Double aHeatMapValue : this.heatMapValue) {
+                outputWriter.write(Double.toString(aHeatMapValue) + ", ");
+                count++;
+                if(count.equals(column)){
+                    count = 0.0;
+                    outputWriter.newLine();
+                }
+            }
+            outputWriter.flush();
+            outputWriter.close();
+        }catch (Exception e){}
+
     }
 
 }
