@@ -20,7 +20,7 @@ public class ElectricPotential extends ForceField {
     //Return a new Point -> X position is the magnitude of the force, Y position is the direction
     protected Point attractiveForce(Point currentPosition, Double potentialAttractionPower, Point attractivePoint){
         //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition) ^ 2)
-        Double constant = 100000.0;
+        Double constant = 1000.0;
         Double distance = currentPosition.euclideanDistanceTo(attractivePoint);
         return new Point(constant * (potentialAttractionPower/Math.pow(distance,2.0)) , Math.atan2(currentPosition.getY(),currentPosition.getX()));
     }

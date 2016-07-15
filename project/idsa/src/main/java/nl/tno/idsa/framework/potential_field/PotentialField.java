@@ -66,6 +66,8 @@ public class PotentialField {
     //setter for the track agent. This method throws two exceptions. If the agent has no activity we can not use it for our prediction. If the agent has unrecognized activity we raise another exception
     public void setTrackedAgent(Agent trackedAgent) throws EmptyActivityException, ActivityNotImplementedException {
         this.trackedAgent = trackedAgent;
+        //check if point of interest is empty (). This is needed if after one person I will select another one
+        this.pointsOfInterest.clear();
         this.popolatePOIsfromAgent();
     }
 
@@ -151,7 +153,7 @@ public class PotentialField {
             }
 
         }
-
+/*
         //now we have all the POIs inside the list. We have to give them the correct initial charge
         //We decide to give them an initial charge equals to the number of attractive POIs
         //Counting how many attractive POIs we have
@@ -163,11 +165,15 @@ public class PotentialField {
         for(int i = 0; i < this.pointsOfInterest.size(); i++){
             this.pointsOfInterest.get(i).setCharge(attractivePoint);
         }
-
+*/
+        //for now is better assign to every point the same charge
+        for(int i = 0; i < this.pointsOfInterest.size(); i++){
+            this.pointsOfInterest.get(i).setCharge(1.0);
+        }
     }
 
     //From a list of possible Area we build our list of POIs
-    //TODO this method sometimes generate a nullpointexception and i don't know why
+    //TODO this method sometimes generate a nullpointexception because possiblePOIs is empty. How is this possible?
     private void fromPoxPOIsToActualPOIs(List<Area> possiblePOIs){
         try {
             for (Area possiblePOI : possiblePOIs) { //iter among all the elemt of the list. All the saved area saved in the init of the program

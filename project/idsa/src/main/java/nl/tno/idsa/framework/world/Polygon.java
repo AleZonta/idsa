@@ -1,5 +1,9 @@
 package nl.tno.idsa.framework.world;
 
+import sun.jvm.hotspot.debugger.cdbg.PointerType;
+
+import java.awt.geom.Line2D;
+
 public class Polygon implements IGeometry {
 
     private final Point[] points;
@@ -94,7 +98,7 @@ public class Polygon implements IGeometry {
         double area = 0.0;
         for (int i = 0; i < points.length; ++i) {
             int j = (i + 1) % points.length;
-            // (x2-x1) (y2+y1)
+            
             area += points[i].getX() * points[j].getY();
             area -= points[j].getX() * points[i].getY();
         }
@@ -121,5 +125,49 @@ public class Polygon implements IGeometry {
             ret += p.toString() + ", ";
         }
         return ret + points[0] + ")";
+    }
+
+    //return the closest point to a selected point in the map
+    public Point getClosestPoint(Point currentPosition){
+        //How can i solve this?
+        //One segment is the one from current position to the center of the area (this.centroid) -> external_segment
+        //The other segments are the ones from the polygon.
+        //first point to second point against external_segment
+        //second point to third point agains external_segment
+        //and so on
+        //First returning true is the one that I need
+        Boolean result = Boolean.FALSE;
+        int i = 1;
+        while(i < points.length - 1 && !result){
+            //second vector is point[i-1] with points[i]
+            result = this.linesIntersect(currentPosition,this.centroid,points[i-1],points[i]);
+            i++;
+        }
+        //now two results are possible.
+        //loops ends because result became true -> found two segment that intersect
+        //loops ends because I check all the segments and no one intersect my segment. This means the segment is inside the polygon and I return the centroid
+        if(!result){
+            return this.centroid;
+        }else{
+            //now I need to find the point where the two segment intersect
+            return this.lineIntersect(currentPosition,this.centroid,points[i-1],points[i]);
+        }
+    }
+
+    //return if the two segments startPointAendPointA and startPointBendPointB intersect
+    private Boolean linesIntersect(Point startPointA, Point endPointA, Point startPointB, Point endPointB){
+        //I am using Java's 2D API to tests if the line segment from (x1,y1) to (x2,y2) intersects the line segment from (x3,y3) to (x4,y4).
+        //see http://docs.oracle.com/javase/6/docs/api/java/awt/geom/Line2D.html#linesIntersect%28double,%20double,%20double,%20double,%20double,%20double,%20double,%20double%29
+        Line2D line1 = new Line2D.Double(startPointA.getX(), startPointA.getY(), endPointA.getX(), endPointA.getY());
+        Line2D line2 = new Line2D.Double(startPointB.getX(), startPointB.getY(), endPointB.getX(), endPointB.getY());
+        return line2.intersectsLine(line1);
+    }
+
+    //return point where two line intersect
+    private Point lineIntersect(Point startPointA, Point endPointA, Point startPointB, Point endPointB){
+        Double denominator = (endPointB.getY() -startPointB.getX()) * (endPointA.getX() -startPointB.getY()) - (endPointB.getX() - startPointB.getX()) * (endPointA.getY() - startPointA.getY());
+        Double Ua = ((endPointB.getX() - startPointB.getX()) * (startPointA.getY() - startPointB.getY()) - (endPointB.getY() - startPointB.getY()) * (startPointA.getX() - startPointB.getX())) / denominator;
+        //Double Ub = ((endPointA.getX() - startPointA.getX()) * (startPointA.getY() - startPointB.getY()) - (endPointA.getY() - startPointA.getY()) * (startPointA.getX() - startPointB.getX())) / denominator;
+        return new Point(startPointA.getX() + Ua * (endPointA.getX() - startPointA.getX()), startPointA.getY() + Ua * (endPointA.getY() - startPointA.getY()));
     }
 }

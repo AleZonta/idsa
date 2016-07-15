@@ -215,6 +215,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
             listNodes.get(i).setPaint(null); //reset color heat map
         }
+        this.heatMapLayer.setVisible(Boolean.FALSE);
+        this.heatMapPOIsLayer.setVisible(Boolean.FALSE);
     }
 
     //show on heat map the point of interest
