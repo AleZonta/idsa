@@ -137,11 +137,11 @@ public class Polygon implements IGeometry {
         //and so on
         //First returning true is the one that I need
         Boolean result = Boolean.FALSE;
-        int i = 1;
+        int i = 0;
         while(i < points.length - 1 && !result){
             //second vector is point[i-1] with points[i]
-            result = this.linesIntersect(currentPosition,this.centroid,points[i-1],points[i]);
             i++;
+            result = this.linesIntersect(currentPosition,this.centroid,points[i-1],points[i]);
         }
         //now two results are possible.
         //loops ends because result became true -> found two segment that intersect
@@ -165,7 +165,7 @@ public class Polygon implements IGeometry {
 
     //return point where two line intersect
     private Point lineIntersect(Point startPointA, Point endPointA, Point startPointB, Point endPointB){
-        Double denominator = (endPointB.getY() -startPointB.getX()) * (endPointA.getX() -startPointB.getY()) - (endPointB.getX() - startPointB.getX()) * (endPointA.getY() - startPointA.getY());
+        Double denominator = (endPointB.getY() - startPointB.getY()) * (endPointA.getX() - startPointA.getX()) - (endPointB.getX() - startPointB.getX()) * (endPointA.getY() - startPointA.getY());
         Double Ua = ((endPointB.getX() - startPointB.getX()) * (startPointA.getY() - startPointB.getY()) - (endPointB.getY() - startPointB.getY()) * (startPointA.getX() - startPointB.getX())) / denominator;
         //Double Ub = ((endPointA.getX() - startPointA.getX()) * (startPointA.getY() - startPointB.getY()) - (endPointA.getY() - startPointA.getY()) * (startPointA.getX() - startPointB.getX())) / denominator;
         return new Point(startPointA.getX() + Ua * (endPointA.getX() - startPointA.getX()), startPointA.getY() + Ua * (endPointA.getY() - startPointA.getY()));
