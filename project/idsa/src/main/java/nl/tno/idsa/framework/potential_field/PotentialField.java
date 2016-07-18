@@ -223,7 +223,7 @@ public class PotentialField {
                 throw new ParameterNotDefinedException("Typology of Potential Field not declared"); //Parameter is not correct
         }
         //calculate the value of the potential field
-        this.heatMapValue = this.artificialPotentialField.calculateForceInAllTheWord(this.centerPoint,this.pointsOfInterest);
+        this.heatMapValue = this.artificialPotentialField.calculateForceInAllTheWorld(this.centerPoint,this.pointsOfInterest);
         this.normaliseHeatMapValue(); // normalise and scale the list
 
     }

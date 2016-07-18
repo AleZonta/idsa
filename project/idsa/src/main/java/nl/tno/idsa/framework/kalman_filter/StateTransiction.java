@@ -10,7 +10,7 @@ public class StateTransiction extends MatrixDefinition {
     //constructor with dt
     public StateTransiction(Double dt){
         //4 rows and columns -> number of row and columns present in the state transition function
-        super(4,4, dt); //calling father constructor with two parameters (dimension of the matrix)
+        super(4,4, dt); //calling father constructor with three parameters (dimension of the matrix and dt)
 
         //populate the matrix with values. The diagonal is all equal to 1
         for(int i = 0; i < 4; i++){

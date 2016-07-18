@@ -46,7 +46,7 @@ public class ElectricPotential extends ForceField {
     //centerPoint -> list with all the center points of the heatMap cells
     //pointsOfInterest -> list of all the point of interest present in the map
     //return a list of double that are the value to show in the heatMap
-    public List<Double> calculateForceInAllTheWord(List<Point> centerPoint, List<POI> pointsOfInterest) {
+    public List<Double> calculateForceInAllTheWorld(List<Point> centerPoint, List<POI> pointsOfInterest) {
         //list with all the magnitude.
         List<Double> magnitude = new ArrayList<>();
         //now I have to calculate the value of the PF in every point

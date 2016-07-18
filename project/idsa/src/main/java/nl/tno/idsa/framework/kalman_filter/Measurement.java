@@ -16,6 +16,12 @@ public class Measurement {
         this.y = null;
     }
 
+    //constructor with two element
+    public Measurement(Double a, Double b){
+        this.x = a;
+        this.y = b;
+    }
+
     //constructor with one point.
     public Measurement(Point point){
         this.x = point.getX();

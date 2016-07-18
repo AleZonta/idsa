@@ -14,12 +14,12 @@ public class ProcessNoise extends MatrixDefinition {
         //TODO set noise
         //For simplicity I will assume the noise is a discrete time Wiener process - that it is constant for each time period. This assumption allows me to use a variance to specify how much I think the model changes between steps.
         //Here I assume the noise in x and y are independent, so the covariances between any x and y variable should be zero.
-        this.Q_discrete_white_noise();
+        this.q_discrete_white_noise();
     }
 
     //Returns the Q matrix for the Discrete Constant White Noise Model. It is using the implementation found at https://github.com/rlabbe/filterpy/blob/master/filterpy/common/discretization.py semplified for our used
     //TODO make not hardcoded in this way
-    private void Q_discrete_white_noise(){
+    private void q_discrete_white_noise(){
         this.getMatrix()[0][0] = 0.25 * Math.pow(this.getTimeStep(),4.0);
         this.getMatrix()[0][1] = 0.5 * Math.pow(this.getTimeStep(),3.0);
         this.getMatrix()[1][0] = 0.5 * Math.pow(this.getTimeStep(),3.0);

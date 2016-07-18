@@ -10,7 +10,7 @@ public class MeasurementNoise extends MatrixDefinition {
     //normal constructor
     public MeasurementNoise(){
         //2 is the number of row present in measurement TODO make not hardcoded here
-        //It is a 2×22×2 matrix because we have 2 sensor inputs, and covariance matrices are always of size n×nn×n for nn variables.
+        //It is a 2×2 matrix because we have 2 sensor inputs, and covariance matrices are always of size n×nn×n for nn variables.
         super(2,2);
         //TODO set noise
         //We assume that the xx and yy variables are independent white Gaussian processes.
