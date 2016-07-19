@@ -15,6 +15,91 @@ import static org.junit.Assert.*;
  */
 public class MatrixDefinitionTest {
     @Test
+    //testing the method for subtracting two matrices
+    public void differenceWith() throws Exception {
+        //first exception if first matrix is not square
+        MatrixDefinition matrix = new MatrixDefinition(2,4,1.0,1.0);
+        MatrixDefinition secondMatrix = new MatrixDefinition(2,2,1.0,1.0);
+        try {
+            MatrixDefinition result = matrix.differenceWith(secondMatrix);
+        }catch (DifferentMatrixException e){
+            assertEquals("Error with the matrix", e.getMessage());
+        }
+        //second exception if first is square and second not
+        matrix = new MatrixDefinition(2,2,1.0,1.0);
+        secondMatrix = new MatrixDefinition(2,4,1.0,1.0);
+        try {
+            MatrixDefinition result = matrix.differenceWith(secondMatrix);
+        }catch (DifferentMatrixException e){
+            assertEquals("Error with the matrix", e.getMessage());
+        }
+        //third exception if the two matrix are square but with different size
+        matrix = new MatrixDefinition(2,2,1.0,1.0);
+        secondMatrix = new MatrixDefinition(4,4,1.0,1.0);
+        try {
+            MatrixDefinition result = matrix.differenceWith(secondMatrix);
+        }catch (DifferentMatrixException e){
+            assertEquals("Error with the matrix", e.getMessage());
+        }
+        //actual subtraction
+        matrix = new MatrixDefinition(2,2,1.0,5.0);
+        secondMatrix = new MatrixDefinition(2,2,1.0,1.0);
+        MatrixDefinition supposeMatrix = new MatrixDefinition(2,2,1.0,4.0);
+
+        MatrixDefinition result = matrix.differenceWith(secondMatrix);
+        for (int i = 0; i < result.getRow(); i++){
+            for (int j = 0; j < result.getColumn(); j++){
+                assertEquals(result.getMatrix()[i][j], supposeMatrix.getMatrix()[i][j]);
+            }
+        }
+
+    }
+
+    @Test
+    //testing the method for inverting a matrix
+    public void inverseMatrix() throws Exception {
+        MatrixDefinition matrix = new MatrixDefinition(2,4,1.0,1.0);
+        try {
+            MatrixDefinition res = matrix.inverseMatrix();
+        }catch (DifferentMatrixException e){
+            assertEquals("Error with the matrix", e.getMessage());
+        }
+        matrix = new MatrixDefinition(4,4,1.0);
+        Double value = 0.0;
+        for (int i = 0; i < 4; i++){
+            for (int j = 0; j < 4; j++){
+                matrix.getMatrix()[i][j] = value;
+                value++;
+            }
+        }
+        try {
+            MatrixDefinition res = matrix.inverseMatrix();
+        }catch (DifferentMatrixException e){
+            assertEquals("Error with the matrix", e.getMessage());
+        }
+        matrix = new MatrixDefinition(2,2,1.0);
+        matrix.getMatrix()[0][0] = 4.0;
+        matrix.getMatrix()[0][1] = 3.0;
+        matrix.getMatrix()[1][0] = 3.0;
+        matrix.getMatrix()[1][1] = 2.0;
+
+        MatrixDefinition checkMatrix = new MatrixDefinition(2,2,1.0);
+        checkMatrix.getMatrix()[0][0] = -2.0;
+        checkMatrix.getMatrix()[0][1] = 3.0;
+        checkMatrix.getMatrix()[1][0] = 3.0;
+        checkMatrix.getMatrix()[1][1] = -4.0;
+
+        MatrixDefinition resultMatrix = matrix.inverseMatrix();
+
+        for (int i = 0; i < resultMatrix.getRow(); i++){
+            for (int j = 0; j < resultMatrix.getColumn(); j++){
+                assertEquals(resultMatrix.getMatrix()[i][j], checkMatrix.getMatrix()[i][j]);
+            }
+        }
+
+    }
+
+    @Test
     //Testing the method for transposing a Matrix
     public void transposeMatrix() throws Exception {
         MatrixDefinition matrix = new MatrixDefinition(4,4,1.0);
@@ -60,14 +145,11 @@ public class MatrixDefinitionTest {
             }
         }
         res = matrix.transposeMatrix();
-        assertEquals(matrixEnd.getMatrix()[0][0], res.getMatrix()[0][0]);
-        assertEquals(matrixEnd.getMatrix()[0][1], res.getMatrix()[1][0]);
-        assertEquals(matrixEnd.getMatrix()[0][2], res.getMatrix()[2][0]);
-        assertEquals(matrixEnd.getMatrix()[0][3], res.getMatrix()[3][0]);
-        assertEquals(matrixEnd.getMatrix()[1][0], res.getMatrix()[0][1]);
-        assertEquals(matrixEnd.getMatrix()[1][1], res.getMatrix()[1][1]);
-        assertEquals(matrixEnd.getMatrix()[1][2], res.getMatrix()[2][1]);
-        assertEquals(matrixEnd.getMatrix()[1][3], res.getMatrix()[3][1]);
+        for (int i = 0; i < res.getRow(); i++){
+            for (int j = 0; j < res.getColumn(); j++){
+                assertEquals(matrixEnd.getMatrix()[i][j], res.getMatrix()[i][j]);
+            }
+        }
     }
 
     @Test
@@ -85,29 +167,11 @@ public class MatrixDefinitionTest {
         }
     }
 
-    @org.junit.Test
-    //Testing the method for multiply a matrix by a StateVector
-    public void multiplyFor() throws Exception {
-        List<Double> load = new ArrayList<>();
-        for (int i = 0; i < 4; i++) load.add(2.0);
-        StateVector vector = new StateVector(load);
-        MatrixDefinition matrix = new MatrixDefinition(4,4,1.0,1.0);
-
-        List<Double> end = new ArrayList<>();
-        for (int i = 0; i < 4; i++) end.add(8.0);
-        StateVector resultExpected = new StateVector(end);
-
-        StateVector resultComputed = matrix.multiplyFor(vector);
-
-        assertEquals(resultExpected.getX(),resultComputed.getX());
-        assertEquals(resultExpected.getY(),resultComputed.getY());
-        assertEquals(resultExpected.getVx(),resultComputed.getVx());
-        assertEquals(resultExpected.getVy(),resultComputed.getVy());
-    }
 
     @Test
     //Testing the method for multiply a matrix by a matrix
     public void multiplyFor2() throws Exception {
+        //Matrix with same dimension
         MatrixDefinition matrix = new MatrixDefinition(4,4);
         MatrixDefinition matrixTwo = new MatrixDefinition(8,8);
         try {
