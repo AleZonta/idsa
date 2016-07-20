@@ -57,6 +57,16 @@ public class MatrixDefinition {
         return this.matrix;
     }
 
+    //getter for element of the matrix
+    public Double getElement(int x,int y) {
+        return this.matrix[x][y];
+    }
+
+    //setter for element of the matrix
+    public void setElement(int x,int y, Double value) {
+        this.matrix[x][y] = value;
+    }
+
     //getter for timestep
     //quite simple -> no test
     public Double getTimeStep(){
@@ -85,7 +95,7 @@ public class MatrixDefinition {
         }
     }
 
-    //multiply MatrixDefinition for MatrixDefinitio (same number of row and column)
+    //multiply MatrixDefinition for MatrixDefinitio (same number of row and column) and return MatrixDefinition
     //tested
     public MatrixDefinition multiplyFor(MatrixDefinition matrix) throws DifferentMatrixException {
         if (!this.column.equals(matrix.getRow())) throw new DifferentMatrixException("Error with the matrix");
@@ -121,7 +131,7 @@ public class MatrixDefinition {
         MatrixDefinition newMatrix = new MatrixDefinition(this.row, this.column);
         for(int i = 0; i < this.row; i++){
             for(int j = 0; j < this.column; j++){
-                newMatrix.getMatrix()[i][j] += this.matrix[i][j] * matrix.getMatrix()[i][j];
+                newMatrix.getMatrix()[i][j] += this.matrix[i][j] + matrix.getMatrix()[i][j];
             }
         }
         return newMatrix;
@@ -265,9 +275,13 @@ public class MatrixDefinition {
     //calculate difference between matrix (same number of row and column)
     //tested
     public MatrixDefinition differenceWith(MatrixDefinition matrix) throws DifferentMatrixException{
-        if (!this.row.equals(this.column)) throw new DifferentMatrixException("Error with the matrix");
-        if (!matrix.getRow().equals(matrix.getColumn())) throw new DifferentMatrixException("Error with the matrix");
-        if (!this.row.equals(matrix.getRow())) throw new DifferentMatrixException("Error with the matrix");
+        //if both matrix are vectors I can compute this
+        if  (!(this.column == matrix.column && matrix.column == 1)) {
+            if (!this.row.equals(this.column)) throw new DifferentMatrixException("Error with the matrix");
+            if (!matrix.getRow().equals(matrix.getColumn()))
+                throw new DifferentMatrixException("Error with the matrix");
+            if (!this.row.equals(matrix.getRow())) throw new DifferentMatrixException("Error with the matrix");
+        }
         MatrixDefinition result = new MatrixDefinition(this.row,this.column);
         for(int i = 0; i < this.row; i++){
             for(int j = 0; j < this.column; j++){

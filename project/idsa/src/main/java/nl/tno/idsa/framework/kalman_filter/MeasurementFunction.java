@@ -18,7 +18,16 @@ public class MeasurementFunction extends MatrixDefinition {
         //So, HH is 2x4.
         super(2,4); //calling father constructor with two parameters (dimension of the matrix)
         //I don't have transformation so i can use the value like they are. put one in [0][0] and [1][2]
-        this.getMatrix()[0][0] = this.getMatrix()[1][2] = 1.0;
+        this.setElement(0,0,1.0);
+        this.setElement(1,2,1.0);
+    }
+
+
+    // Multiplication between MeasurementFunction and StateVector that return a Measurement
+    // Tested
+    public Measurement multiplyFor(StateVector vector) throws DifferentMatrixException{
+        MatrixDefinition result = super.multiplyFor(vector);
+        return new Measurement(result.getElement(0,0),result.getElement(1,0));
     }
 
 }

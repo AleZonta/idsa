@@ -16,7 +16,8 @@ public class MeasurementNoise extends MatrixDefinition {
         //We assume that the xx and yy variables are independent white Gaussian processes.
         //That is, the noise in x is not in any way dependent on the noise in y, and the noise is normally distributed about the mean 0
         //For now let's set the variance for xx and yy to be 5 meters22. They are independent, so there is no covariance, and our off diagonals will be 0.
-        this.getMatrix()[0][0] = this.getMatrix()[1][1] = 5.0;
+        this.setElement(0,0,5.0);
+        this.setElement(1,1,5.0);
     }
 
 }

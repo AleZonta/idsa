@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.test.kalman_filter;
 
+import nl.tno.idsa.framework.kalman_filter.Measurement;
 import nl.tno.idsa.framework.kalman_filter.StateVector;
 import nl.tno.idsa.framework.world.Point;
 import org.junit.Test;
@@ -7,12 +8,30 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 /**
  * Created by alessandrozonta on 19/07/16.
  */
 public class StateVectorTest {
+    @Test
+    //test if summing between two statevector generates a statevectors
+    public void sumWith() throws Exception {
+        StateVector firstVector = new StateVector();
+        for (int i = 0; i < firstVector.getRow(); i++) for (int j = 0; j < firstVector.getColumn(); j++) firstVector.setElement(i, j, 3.0);
+        StateVector secondVector = new StateVector();
+        for (int i = 0; i < secondVector.getRow(); i++) for (int j = 0; j < secondVector.getColumn(); j++) secondVector.setElement(i, j, 7.0);
+
+        StateVector expectedResult = new StateVector();
+        for (int i = 0; i < expectedResult.getRow(); i++) for (int j = 0; j < expectedResult.getColumn(); j++) expectedResult.setElement(i, j, 10.0);
+
+        StateVector computedResult = firstVector.sumWith(secondVector);
+        assertThat(computedResult, instanceOf(StateVector.class)); //Assert that result is really of that class
+
+        for(int i = 0; i < computedResult.getRow(); i++) for(int j = 0; j < computedResult.getColumn(); j++) assertEquals(expectedResult.getElement(i,j), computedResult.getElement(i,j));
+    }
+
     @Test
     //test if it returns correctly the size of the state vector
     public void size() throws Exception {
