@@ -97,7 +97,8 @@ public class KalmanFilter {
             this.K = (this.P.multiplyFor(this.H.transposeMatrix())).multiplyFor(this.S.inverseMatrix()); // K = PH^(S^-1) -> throws DifferentMatrixException
             this.y = this.z.differenceWith(this.H.multiplyFor(this.x)); // y = z - Hx -> throws DifferentMatrixException
             this.x = this.x.sumWith(this.K.multiplyFor(this.y)); // x = x + Ky -> throws DifferentMatrixException
-//            this.P = (Covariance) this.P.differenceWith(this.K.multiplyFor(this.H).multiplyFor(this.P)); // P = P - KHP -> throws DifferentMatrixException
+            Covariance I = new Covariance(1.0); //  Identity matrix
+            this.P =  (I.differenceWith(this.K.multiplyFor(this.H))).multiplyFor(this.P); // P = (I - KH)P -> throws DifferentMatrixException
         }catch ( NullPointerException | DifferentMatrixException e){
             //We did not designed well our Kalman Filter.
             //TODO decide what to do with this exception

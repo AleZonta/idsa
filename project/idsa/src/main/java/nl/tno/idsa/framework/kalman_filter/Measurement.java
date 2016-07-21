@@ -41,4 +41,5 @@ public class Measurement extends MatrixDefinition {
         MatrixDefinition result = super.differenceWith(matrix);
         return new Measurement(result.getElement(0,0),result.getElement(1,0));
     }
+
 }

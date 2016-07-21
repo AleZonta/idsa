@@ -38,11 +38,18 @@ public class Covariance extends MatrixDefinition {
         return new Covariance(result);
     }
 
-
     //Sum between a Covariance matrix and a process noise matrix that it returns a Covariance matrix
     // tested
     public Covariance sumWith(ProcessNoise matrix) throws DifferentMatrixException{
         MatrixDefinition result = super.sumWith(matrix);
+        return new Covariance(result);
+    }
+
+    // Difference between Covariance and MatrixDefinition that return a Covariance
+    // Tested
+    public Covariance differenceWith(MatrixDefinition matrix) throws DifferentMatrixException{
+        MatrixDefinition result = super.differenceWith(matrix);
+        if(result.getRow() != 4 && result.getColumn() != 4) throw new DifferentMatrixException("Error with the matrix");
         return new Covariance(result);
     }
 }

@@ -117,6 +117,25 @@ public class KalmanFilterTest {
         assertEquals(Double.valueOf(newFormat.format(x.getElement(2,0))), new Double(8.955224));
         assertEquals(Double.valueOf(newFormat.format(x.getElement(3,0))), new Double(4.477615));
 
+        //checking if it computes P correctly
+        Covariance P = filter.getP();
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(0,0))), new Double(4.975124));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(0,1))), new Double(2.487564));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(0,2))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(0,3))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(1,0))), new Double(2.487564));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(1,1))), new Double(251.244345));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(1,2))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(1,3))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(2,0))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(2,1))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(2,2))), new Double(4.975124));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(2,3))), new Double(2.487564));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(3,0))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(3,1))), new Double(0));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(3,2))), new Double(2.487564));
+        assertEquals(Double.valueOf(newFormat.format(P.getElement(3,3))), new Double(251.244345));
+
     }
 
 }

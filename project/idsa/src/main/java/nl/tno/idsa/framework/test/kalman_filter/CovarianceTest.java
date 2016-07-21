@@ -1,8 +1,6 @@
 package nl.tno.idsa.framework.test.kalman_filter;
 
-import nl.tno.idsa.framework.kalman_filter.Covariance;
-import nl.tno.idsa.framework.kalman_filter.ProcessNoise;
-import nl.tno.idsa.framework.kalman_filter.StateTransition;
+import nl.tno.idsa.framework.kalman_filter.*;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -49,5 +47,32 @@ public class CovarianceTest {
         assertThat(computedResult, instanceOf(Covariance.class)); //Assert that result is really of that class
 
         for(int i = 0; i < matrix.getRow(); i++) for(int j = 0; j < matrix.getColumn(); j++) assertEquals(expectedResult.getElement(i,j), computedResult.getElement(i,j));
+    }
+
+
+    @Test
+    //testing if difference between a covariance matrix and a matrixDefinition is a covariance matrix
+    public void differenceWith() throws Exception{
+        Covariance matrix = new Covariance(1.0);
+        for(int i = 0; i < matrix.getRow(); i++) for(int j = 0; j < matrix.getColumn(); j++) matrix.setElement(i,j,12.0);
+
+        MatrixDefinition secondMatrix = new MatrixDefinition(6,4);
+        try {
+            matrix.differenceWith(secondMatrix);
+        }catch (DifferentMatrixException e){
+            assertEquals("Error with the matrix", e.getMessage());
+        }
+        secondMatrix = new MatrixDefinition(4,4);
+        for(int i = 0; i < matrix.getRow(); i++) for(int j = 0; j < matrix.getColumn(); j++) secondMatrix.setElement(i,j,5.0);
+
+        Covariance expectedResult = new Covariance(1.0);
+        for(int i = 0; i < expectedResult.getRow(); i++) for(int j = 0; j < expectedResult.getColumn(); j++) expectedResult.setElement(i,j,7.0);
+
+        Covariance computedResult = matrix.differenceWith(secondMatrix);
+
+        assertThat(computedResult, instanceOf(Covariance.class)); //Assert that result is really of that class
+
+        for(int i = 0; i < computedResult.getRow(); i++) for(int j = 0; j < computedResult.getColumn(); j++) assertEquals(expectedResult.getElement(i,j), computedResult.getElement(i,j));
+
     }
 }

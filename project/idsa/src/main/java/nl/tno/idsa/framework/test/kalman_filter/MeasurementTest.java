@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.test.kalman_filter;
 
+import nl.tno.idsa.framework.kalman_filter.Covariance;
 import nl.tno.idsa.framework.kalman_filter.Measurement;
 import org.junit.Test;
 
