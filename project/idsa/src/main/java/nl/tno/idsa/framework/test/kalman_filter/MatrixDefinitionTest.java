@@ -258,13 +258,13 @@ public class MatrixDefinitionTest {
         MatrixDefinition matrix = new MatrixDefinition(4,4);
         MatrixDefinition matrixTwo = new MatrixDefinition(4,8);
         try {
-            matrix.multiplyFor(matrixTwo);
+            matrix.sumWith(matrixTwo);
         }catch (DifferentMatrixException e){
             assertEquals("Error with the matrix", e.getMessage());
         }
         matrixTwo = new MatrixDefinition(8,4);
         try {
-            matrix.multiplyFor(matrixTwo);
+            matrix.sumWith(matrixTwo);
         }catch (DifferentMatrixException e){
             assertEquals("Error with the matrix", e.getMessage());
         }

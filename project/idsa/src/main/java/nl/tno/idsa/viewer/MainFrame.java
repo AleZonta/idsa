@@ -1034,7 +1034,6 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                     resetHeatMaps(); //reset the color of the heatMaps
                     updateHeatMap(pot.getHeatMapValue()); //update the GUI of the HeatMap
                     showPOI(pot.getPointsOfInterest()); //show POI on map
-
                 }catch (EmptyActivityException | ActivityNotImplementedException | ParameterNotDefinedException e){ //is possible the agent doesn't have activity / there are new activities in the simulator and now one implemented them in this class / I'm trying to calculate the potential field with a parameter not defined
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
                 }

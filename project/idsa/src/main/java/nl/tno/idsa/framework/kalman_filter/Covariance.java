@@ -25,7 +25,7 @@ public class Covariance extends MatrixDefinition {
         //populate the matrix with values. The diagonal is all equal to value
         for(int i = 0; i < matrix.getRow(); i++){
             for(int j = 0; j < matrix.getColumn(); j++){
-                this.getMatrix()[i][j] = matrix.getElement(i,j);
+                this.setElement(i,j,matrix.getElement(i,j));
             }
         }
     }

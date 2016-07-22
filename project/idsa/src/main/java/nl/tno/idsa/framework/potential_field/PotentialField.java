@@ -74,6 +74,9 @@ public class PotentialField {
     //getter for heatMapValue
     public List<Double> getHeatMapValue() { return this.heatMapValue; }
 
+    //getter for centerpoint
+    public List<Point> getCenterPoints() { return  this.centerPoint; }
+
     //getter for cellSide
     public Double getCellSize() { return this.cellSide; }
 
@@ -167,19 +170,16 @@ public class PotentialField {
         }
 */
         //for now is better assign to every point the same charge
-        for(int i = 0; i < this.pointsOfInterest.size(); i++){
-            this.pointsOfInterest.get(i).setCharge(1.0);
-        }
+        this.pointsOfInterest.stream().forEach(p -> p.setCharge(1.0));
     }
 
     //From a list of possible Area we build our list of POIs
-    //TODO this method sometimes generate a nullpointexception because possiblePOIs is empty. How is this possible?
+    //TODO this method sometimes generate a nullpointexception because possiblePOIs is empty. How is this possible? test method that creates that list
     private void fromPoxPOIsToActualPOIs(List<Area> possiblePOIs){
         try {
-            for (Area possiblePOI : possiblePOIs) { //iter among all the elemt of the list. All the saved area saved in the init of the program
-
-                this.pointsOfInterest.add(new POI(possiblePOI)); //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later}
-            }
+            //iter among all the elemt of the list. All the saved area saved in the init of the program
+            //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later}
+            possiblePOIs.stream().forEach( aPossiblePOI -> this.pointsOfInterest.add(new POI(aPossiblePOI)));
         }catch (NullPointerException e){
             String why = "why????";
              //do nothing
@@ -225,7 +225,6 @@ public class PotentialField {
         //calculate the value of the potential field
         this.heatMapValue = this.artificialPotentialField.calculateForceInAllTheWorld(this.centerPoint,this.pointsOfInterest);
         this.normaliseHeatMapValue(); // normalise and scale the list
-
     }
 
     //normalise and scale heatMapValue for use the result like a rgb value
@@ -233,15 +232,19 @@ public class PotentialField {
     //Instead from 0 to 255 I am scaling the value from 255 to 0 (inverted) so I can print only the attractive points
     private void normaliseHeatMapValue(){
         List<Double> newheatMapValue = new ArrayList<>();
-        Double maxList = Collections.max(this.heatMapValue);
-        Double minList = Collections.min(this.heatMapValue);
+        Optional<Double> maxList = this.heatMapValue.stream().max(Comparator.naturalOrder());
+        Optional<Double> minList = this.heatMapValue.stream().min(Comparator.naturalOrder());
+        //Double maxList = Collections.max(this.heatMapValue);
+        //Double minList = Collections.min(this.heatMapValue);
         Double max = 0.0;
         Double min = 255.0;
-        for (Double aHeatMapValue : this.heatMapValue) {
-            Double standard = (aHeatMapValue - minList) / (maxList - minList);
+
+        this.heatMapValue.stream().forEach( aHeatMapValue -> {
+            Double standard = (aHeatMapValue - minList.get()) / (maxList.get() - minList.get());
             Double scaled = standard * (max - min) + min;
             newheatMapValue.add(scaled);
-        }
+        });
+
         this.heatMapValue = newheatMapValue;
     }
 

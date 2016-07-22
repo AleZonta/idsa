@@ -5,6 +5,7 @@ import nl.tno.idsa.framework.world.Point;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by alessandrozonta on 04/07/16.
@@ -48,9 +49,13 @@ public class ElectricPotential extends ForceField {
     //return a list of double that are the value to show in the heatMap
     public List<Double> calculateForceInAllTheWorld(List<Point> centerPoint, List<POI> pointsOfInterest) {
         //list with all the magnitude.
-        List<Double> magnitude = new ArrayList<>();
+        //List<Double> magnitude = new ArrayList<>();
+        //Since I am using a parallel for the order of the result is not assured and I need to memorise also the point of that value
+        ConcurrentHashMap<Point,Double> magnitude = new ConcurrentHashMap<>();
         //now I have to calculate the value of the PF in every point
-        for (Point aCenterPoint : centerPoint) {
+
+        //Sequential version
+        /*for (Point aCenterPoint : centerPoint) {
             //for every point I have to compute the potential for all the attraction/repulsive points and sum the result
             Point totalForceInThisPoint = new Point(0.0,0.0);
             for (POI aPointsOfInterest : pointsOfInterest) {
@@ -67,7 +72,35 @@ public class ElectricPotential extends ForceField {
             //Maybe I need a upper bound -> arbitrarily decided
             if (resultantVectorMagnitude > 400.0) resultantVectorMagnitude = 400.0;
             magnitude.add(resultantVectorMagnitude);
-        }
-        return magnitude;
+        }*/
+
+        //parallel version
+        centerPoint.parallelStream().forEach((aCenterPoint) -> {
+            //for every point I have to compute the potential for all the attraction/repulsive points and sum the result
+            Point totalForceInThisPoint = new Point(0.0,0.0);
+            for (POI aPointsOfInterest : pointsOfInterest) {
+                //automatically sum every potential from every poi
+                //this.force return the magnitude and the direction of the field in that position
+                Point E = this.force(aCenterPoint, aPointsOfInterest);
+                //I need to compute the vector component of the result -> Vx = v*sin(alpha) ; Vy = v*sin(alpha)
+                Point vectorComponent = new Point(E.getX() * Math.cos(E.getY()),E.getX() * Math.sin(E.getY()));
+                totalForceInThisPoint = totalForceInThisPoint.plus(vectorComponent);
+            }
+            //From the resultant vector get the magnitude
+            Double resultantVectorMagnitude = Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0));
+            //If I am very close to the center of attraction the potential goes to a very very very high number.
+            //Maybe I need a upper bound -> arbitrarily decided
+            if (resultantVectorMagnitude > 400.0) resultantVectorMagnitude = 400.0;
+            if (resultantVectorMagnitude.isNaN()) resultantVectorMagnitude = 0.0;
+            //adding the point and the magnitude of the pf
+            magnitude.put(aCenterPoint,resultantVectorMagnitude);
+        });
+
+        //magnitude is not ordered. To print we need an ordered list so now is better order everything
+        List<Double> orderedMagnitude = new ArrayList<>();
+        centerPoint.stream().forEach(aPoint -> orderedMagnitude.add(magnitude.get(aPoint)));
+
+        //return the ordered list
+        return orderedMagnitude;
     }
 }

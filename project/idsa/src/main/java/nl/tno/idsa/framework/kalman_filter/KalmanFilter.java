@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.kalman_filter;
 
+import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.library.locations.Public;
 
 /**
@@ -40,6 +41,16 @@ public class KalmanFilter {
     //set the new measurement
     public void setMeasurement(Double x, Double y){
         this.z = new Measurement(x,y);
+    }
+
+    //set the initial position
+    public void setInitialPosition(Point position, Point velocity){
+        this.x = new StateVector(position,velocity);
+    }
+
+    //set initial covariance
+    public void setInitialCovariance(Double value){
+        this.P = new Covariance(value);
     }
 
     // Constructor
@@ -90,7 +101,8 @@ public class KalmanFilter {
         }
     }
 
-    //  Update phase of kalman filter
+    // Update phase of kalman filter
+    // Tested
     public void updatePhase(){
         try {
             this.S = (this.H.multiplyFor(this.P).multiplyFor(this.H.transposeMatrix())).sumWith(this.R); //  S = HPH^ + R -> throws DifferentMatrixException
