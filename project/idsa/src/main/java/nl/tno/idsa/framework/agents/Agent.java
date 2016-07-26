@@ -8,6 +8,7 @@ import nl.tno.idsa.framework.behavior.triggers.AreaTrigger;
 import nl.tno.idsa.framework.behavior.triggers.MovingAreaTrigger;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.population.*;
+import nl.tno.idsa.framework.potential_field.Tracking_System;
 import nl.tno.idsa.framework.semantics_base.SemanticLibrary;
 import nl.tno.idsa.framework.semantics_base.relations.SemanticRelation;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;
@@ -24,7 +25,7 @@ import java.util.*;
 /**
  * All functionality for a member of the population.
  */
-public class Agent implements ISimulatedObject {
+public class Agent extends Observable implements ISimulatedObject  {
 
     private static long ID_COUNTER = 0;
     private final long id; // Unique.
@@ -193,6 +194,9 @@ public class Agent implements ISimulatedObject {
 
     public void setLocation(Point location) {
         this.position = new Point(location.getX(), location.getY());
+        //I need to indicate the state of the model has changed and then I need to update all of the registered observer
+        setChanged();
+        notifyObservers(this.position);
 
         updateCurrentLocation();
         // TODO update grid cell
@@ -519,5 +523,10 @@ public class Agent implements ISimulatedObject {
     @Override
     public String toString() {
         return getFirstName() + " (" + (int) getAge() + ")";
+    }
+
+    //set the observer for this agent
+    public void setTracked(Tracking_System track){
+        this.addObserver(track);
     }
 }

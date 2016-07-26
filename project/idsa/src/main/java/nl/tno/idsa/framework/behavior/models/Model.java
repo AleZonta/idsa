@@ -200,7 +200,7 @@ public abstract class Model {
             this.lastUpdateTime = currentTime;
 
             // Do a step.
-            stepped = doStep(durationInSeconds);
+            stepped =  doStep(durationInSeconds);
         }
 
         currentDuration += durationInSeconds;

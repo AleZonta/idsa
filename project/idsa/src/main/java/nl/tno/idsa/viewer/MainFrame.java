@@ -88,6 +88,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
     private final PLayer heatMapPOIsLayer; //Layer for heat map POI
     private final PLayer heatMapLayer; //Layer for heat map
+    private final PotentialField pot;
+    private final Tracking_System track; //tracking system object, we need it to connect pf with tracking of the agent
 
     private javax.swing.JLabel timeLabel;
     private javax.swing.JLabel positionLabel;
@@ -101,6 +103,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     public MainFrame(Sim sim) {
 
         this.sim = sim;
+
+        this.pot = sim.getPot();
+        this.track = new Tracking_System(this.pot);
 
         // Shared agent/incident selection
         this.selectionObserver = new SelectionObserver();
@@ -155,6 +160,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         // Register observers
         sim.getEnvironment().addObserver(this);
         this.selectionObserver.addObserver(this);
+        this.pot.addObserver(this);
+
     }
 
     // setting up Heat Map and hiding it
@@ -206,17 +213,20 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     }
 
     //reset the heat map in case of multiple press of track button
-    private void resetHeatMaps(){
+    private void resetHeatMaps(Boolean both){
         List<PPath> listNodes = (List<PPath>)heatMapLayer.getAllNodes(); //list of all the nodes inside the layer
         for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
             listNodes.get(i).setPaint(null); //reset color heat map
         }
-        listNodes = (List<PPath>)heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
-        for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
-            listNodes.get(i).setPaint(null); //reset color heat map
+        if(both) {
+            listNodes = (List<PPath>) heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
+            for (int i = 1; i < listNodes.size(); i++) { // the loop starts from 1 because first node is the layer and we don't need it
+                listNodes.get(i).setPaint(null); //reset color heat map
+            }
+            this.heatMapPOIsLayer.setVisible(Boolean.FALSE);
+            this.heatMapLayer.setVisible(Boolean.FALSE);
         }
-        this.heatMapLayer.setVisible(Boolean.FALSE);
-        this.heatMapPOIsLayer.setVisible(Boolean.FALSE);
+
     }
 
     //show on heat map the point of interest
@@ -957,6 +967,11 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                         if (list.size() > 0) {
                             //zoomInOnSelection();
                         }
+                    }else {
+                        //the list is not an instance of Agent so the only thing it could be is Potentialfiled
+                        resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
+                        updateHeatMap((List<Double>) arg); //update the GUI of the HeatMap
+                        showPOI(pot.getPointsOfInterest()); //show POI on map
                     }
                 } else {
                     if (selectionObserver.getIncident() != null && selectionObserver.getIncident().getActionPlan() != null) {
@@ -1027,13 +1042,12 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 Messenger.broadcast(String.format("Display info on agent %s", a));
                 selectionObserver.setAgent(a);
                 try {
-                    PotentialField pot = sim.getPot();
+                    resetHeatMaps(true); //I am resetting also the POI heat map
                     pot.setTrackedAgent(a); //set tracked agent into the potential field so it can build the POI from agent's agenda
+                    sim.getEnvironment().getAgents().stream().forEach(Observable::deleteObservers); //delete all the observers from the agents
+                    a.setTracked(track); //set the observer to the observable
                     //show heat map with the poi
-                    pot.calculatePotentialFieldInAllTheWorld(2); // 2 is force field way
-                    resetHeatMaps(); //reset the color of the heatMaps
-                    updateHeatMap(pot.getHeatMapValue()); //update the GUI of the HeatMap
-                    showPOI(pot.getPointsOfInterest()); //show POI on map
+                    pot.calculatePotentialFieldInAllTheWorld();
                 }catch (EmptyActivityException | ActivityNotImplementedException | ParameterNotDefinedException e){ //is possible the agent doesn't have activity / there are new activities in the simulator and now one implemented them in this class / I'm trying to calculate the potential field with a parameter not defined
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
                 }

@@ -70,13 +70,17 @@ public class POI {
     }
 
     //increase the charge of this POI. Increase by one
-    public void increaseCharge(){
-        this.charge++;
+    public void increaseCharge(Double value){
+        this.charge+=value;
     }
 
     //decrease the charge of this POI. Minimum value is 0 for now. Under the 0 the charge cannot decrease
-    public void decreaseCharge(){
-        if(this.charge > 0) this.charge--;
+    public void decreaseCharge(Double value){
+        if(this.charge > 0 && this.charge > value) {
+            this.charge-=value;
+        }else{
+            this.charge = 0.0;
+        }
     }
 
     //reset the charge value to the initial one

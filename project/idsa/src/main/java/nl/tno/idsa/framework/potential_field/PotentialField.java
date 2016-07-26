@@ -9,6 +9,7 @@ import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.force_field.KathibFormulation;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationFunction;
 import nl.tno.idsa.framework.world.Area;
+import nl.tno.idsa.framework.world.Path;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
 import nl.tno.idsa.library.activities.possible.*;
@@ -20,7 +21,7 @@ import java.util.*;
 /**
  * Created by alessandrozonta on 29/06/16.
  */
-public class PotentialField {
+public class PotentialField extends Observable {
 
     private List<POI> pointsOfInterest; //list with all the POIs regarding the current tracked person
     private final HashMap<String, List<Area>> differentAreaType; //list with all the different areas preload at the start of the program
@@ -28,15 +29,17 @@ public class PotentialField {
     //private Integer initialNegativeCharge; //negative charge that would assign to the POIs (for future implementations)
     private Agent trackedAgent; //agent that we are going to track
 
-    private Point worldRoot; //root point of the world
-    private Double worldHeight; //height of the world
-    private Double worldWidth; //width of the world
-    private Double cellSide = 10.0; //side of the cell. We are gonna divide the word into cells TODO bind cell size with the const inside force field (higher the cell size lower the constant)
+    private final Double worldHeight; //height of the world
+    private final Double worldWidth; //width of the world
+    private final Double cellSide = 10.0; //side of the cell. We are gonna divide the word into cells TODO bind cell size with the const inside force field (higher the cell size lower the constant)
 
     private List<Double> heatMapValue; //List of the values of the cell for the heat map
     private List<Point> centerPoint; //list with all the center
 
     private ForceField artificialPotentialField; //Declaration of the artificialPotentialField
+
+    private Point previousPoint; //Store the previus point used for the tracking
+    private final World world; //Save the world -> We need it for update the potential filter
 
     //basic class constructor
     public PotentialField(World world){
@@ -45,7 +48,6 @@ public class PotentialField {
         //this.initialNegativeCharge = null;
         //this.initialPositiveCharge = null;
         this.trackedAgent = null;
-        this.worldRoot = world.getUtmRoot();
         this.worldHeight = world.getGeoMisure().getY(); //Height is in the y position of the point
         this.worldWidth = world.getGeoMisure().getX(); //Width is in the x position of the point
         this.heatMapValue = new ArrayList<>();
@@ -54,7 +56,9 @@ public class PotentialField {
         this.initialiseHeatMap(); //initialise heat map
         this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
 
-        this.initDifferentAreaType(world); //loading the lists with all the places
+        this.previousPoint = null;
+        this.world = world;
+        this.initDifferentAreaType(this.world); //loading the lists with all the places
     }
 
     //getter for pointsOfInterest
@@ -69,6 +73,8 @@ public class PotentialField {
         //check if point of interest is empty (). This is needed if after one person I will select another one
         this.pointsOfInterest.clear();
         this.popolatePOIsfromAgent();
+        //set the starting point of the agent
+        this.previousPoint = trackedAgent.getLocation();
     }
 
     //getter for heatMapValue
@@ -206,6 +212,12 @@ public class PotentialField {
     }
 
     //Calculate potential in all the map for the GUI
+    //without parameter, force to use 2
+    public  void calculatePotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
+        this.calculatePotentialFieldInAllTheWorld(2);
+    }
+
+    //Calculate potential in all the map for the GUI
     //parameter integer type -> 0 = ArambullaPadillaFormulation, 1 = KathibFormulation, 2 = ElectricPotential
     public void calculatePotentialFieldInAllTheWorld(Integer typology) throws ParameterNotDefinedException {
         //declare the typology of potential field we are gonna use
@@ -246,12 +258,42 @@ public class PotentialField {
         });
 
         this.heatMapValue = newheatMapValue;
+        //I need to indicate the state of the model has changed and then I need to update all of the registered observer
+        setChanged();
+        notifyObservers(this.heatMapValue);
     }
 
     //function called after having select the person to track.
     //position is the real-time position
-    public void trackAndUpdate(Point position){
-        //from the position tracked
+    public void trackAndUpdate(Point currentPosition){
+        //this is the angle that the tracked person is using to move respect the x axis
+        Double angle = Math.toDegrees(Math.atan2(currentPosition.getY() - this.previousPoint.getY(), currentPosition.getX() - this.previousPoint.getX()));
+        //threshold angle
+        Double threshold = 45.0; // TODO find the best value for this threshold
+        //now I need to check and update every point of interest
+        for (POI aPointsOfInterest : this.pointsOfInterest) {
+            //calculate path from newPosition to POI
+            //Path fastestWayToGo = this.world.getPath(currentPosition, aPointsOfInterest.getArea().getPolygon().getCenterPoint());
+            //from the path just computed I need to check the first point anc compute the angle
+            //Point firstPoint = fastestWayToGo.get(5); //1 is the first element but better check some element further to have a good estimation
+            //Compute the angle between the first point of the path and the currentPosition
+            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+            //check if the current angle is inside or outside the angle plus or minus the threshold
+            if(currentAngle > angle - threshold && currentAngle < angle + threshold ){
+                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+            }else{
+                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+            }
+        }
+        //after having modified all the poi we need to calculate again the POI
+        try {
+            this.calculatePotentialFieldInAllTheWorld();
+        }catch (ParameterNotDefinedException e){
+            //I'm fixing the parameter to 2 so I am not dealing with this exception
+        }
+
     }
 
     //Save to csv file the heat map
