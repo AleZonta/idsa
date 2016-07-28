@@ -41,6 +41,8 @@ public class PotentialField extends Observable {
     private Point previousPoint; //Store the previus point used for the tracking
     private final World world; //Save the world -> We need it for update the potential filter
 
+    static Integer fileCount = 0; //static variable for differentiate the saved file
+
     //basic class constructor
     public PotentialField(World world){
         this.pointsOfInterest = new ArrayList<>();
@@ -236,7 +238,12 @@ public class PotentialField extends Observable {
         }
         //calculate the value of the potential field
         this.heatMapValue = this.artificialPotentialField.calculateForceInAllTheWorld(this.centerPoint,this.pointsOfInterest);
+
+        //savefile
+        this.saveHeatMap();
+
         this.normaliseHeatMapValue(); // normalise and scale the list
+
     }
 
     //normalise and scale heatMapValue for use the result like a rgb value
@@ -271,7 +278,7 @@ public class PotentialField extends Observable {
         //threshold angle
         Double threshold = 45.0; // TODO find the best value for this threshold
         //now I need to check and update every point of interest
-        for (POI aPointsOfInterest : this.pointsOfInterest) {
+        /*for (POI aPointsOfInterest : this.pointsOfInterest) {
             //calculate path from newPosition to POI
             //Path fastestWayToGo = this.world.getPath(currentPosition, aPointsOfInterest.getArea().getPolygon().getCenterPoint());
             //from the path just computed I need to check the first point anc compute the angle
@@ -286,7 +293,21 @@ public class PotentialField extends Observable {
                 //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
                 aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
             }
-        }
+        }*/
+
+        //parallel version of the loop to check and update every point of interest
+        this.pointsOfInterest.parallelStream().forEach(aPointsOfInterest -> {
+            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+            //check if the current angle is inside or outside the angle plus or minus the threshold
+            if(currentAngle > angle - threshold && currentAngle < angle + threshold ){
+                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+            }else{
+                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+            }
+        });
+
         //after having modified all the poi we need to calculate again the POI
         try {
             this.calculatePotentialFieldInAllTheWorld();
@@ -298,16 +319,17 @@ public class PotentialField extends Observable {
 
     //Save to csv file the heat map
     private void saveHeatMap(){
-        Double count = 0.0;
+        fileCount++;
+        Double localCount = 0.0;
         Double column =  Math.ceil(this.worldWidth / this.cellSide);
         BufferedWriter outputWriter = null;
         try {
-            outputWriter = new BufferedWriter(new FileWriter("heatMapValue.csv"));
+            outputWriter = new BufferedWriter(new FileWriter("heatMapValue" + fileCount + ".csv"));
             for (Double aHeatMapValue : this.heatMapValue) {
                 outputWriter.write(Double.toString(aHeatMapValue) + ", ");
-                count++;
-                if(count.equals(column)){
-                    count = 0.0;
+                localCount++;
+                if(localCount.equals(column)){
+                    localCount = 0.0;
                     outputWriter.newLine();
                 }
             }

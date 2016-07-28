@@ -969,7 +969,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                         }
                     }else {
                         //the list is not an instance of Agent so the only thing it could be is Potentialfiled
-                        resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
+                        //resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
                         updateHeatMap((List<Double>) arg); //update the GUI of the HeatMap
                         showPOI(pot.getPointsOfInterest()); //show POI on map
                     }
