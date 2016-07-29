@@ -90,6 +90,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private final PLayer heatMapLayer; //Layer for heat map
     private final PotentialField pot;
     private final Tracking_System track; //tracking system object, we need it to connect pf with tracking of the agent
+    private final MainFrame mainFrame; //this object. I need it to pass to the agent for the observer observable system
+    private final List<Point> orderCellsDisplayed; //I need to keep track of the position of the cells when I am going to update the position tracked
 
     private javax.swing.JLabel timeLabel;
     private javax.swing.JLabel positionLabel;
@@ -140,6 +142,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         canvas.getCamera().addLayer(3, agentLayer);
         canvas.getCamera().addLayer(4, heatMapPOIsLayer); // Assign the POI layer to the camera (with a number)
         canvas.getCamera().addLayer(5, heatMapLayer); // Assign the layer to the camera (with a number)
+        this.orderCellsDisplayed = new ArrayList<>();
 
         initControlPanel();
         initMap(sim.getEnvironment().getWorld());
@@ -162,17 +165,20 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.selectionObserver.addObserver(this);
         this.pot.addObserver(this);
 
+        this.mainFrame = this;
+
+
     }
 
-    // setting up Heat Map and hiding it
+    // setting up Heat Maps and hiding it
     private void initHeatMap(){
         Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure(); //retrieve the starting point of the world
         Double size = sim.getPot().getCellSize(); // retrieve the size of the cell
         Double column =  Math.ceil(heightAndWidth.getX() / size); //compute how many columns we have
         Double row = Math.ceil(heightAndWidth.getY() / size); //compute how many rows we have
-        double coordinaterow = 0.0;
+        Double coordinaterow = 0.0;
         for (int i = 0; i < row ; i++){
-            double coordinatecolumn = 0.0;
+            Double coordinatecolumn = 0.0;
             for (int j = 0; j < column ; j++){
                 // coordinatecolumn + heightAndWidth.getX() -> to move one step to the right of the map
                 // - coordinaterow -> I need the minus for display correctly the map
@@ -183,6 +189,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 //node.setStroke(new BasicStroke(1f));
                 node.setStrokePaint(null);
                 heatMapPOIsLayer.addChild(node);
+                //remember position of the cell and ordering it with an index
+                this.orderCellsDisplayed.add(new Point(coordinatecolumn,coordinaterow));
 
                 // coordinatecolumn + heightAndWidth.getX()+ heightAndWidth.getX() -> to move two steps to the right of the map and one step right to the previous heat map
                 // - coordinaterow -> I need the minus for display correctly the map
@@ -205,7 +213,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
     //update heat map value
     private void updateHeatMap(List<Double> heatMapValue){
-        List<PPath> listNodes = (List<PPath>)heatMapLayer.getAllNodes();
+        List<PPath> listNodes = (List<PPath>)this.heatMapLayer.getAllNodes();
         for(int i = 1; i < listNodes.size(); i++){
             listNodes.get(i).setPaint(new Color(255, heatMapValue.get(i - 1).intValue(), heatMapValue.get(i - 1).intValue()));
         }
@@ -214,12 +222,12 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
     //reset the heat map in case of multiple press of track button
     private void resetHeatMaps(Boolean both){
-        List<PPath> listNodes = (List<PPath>)heatMapLayer.getAllNodes(); //list of all the nodes inside the layer
+        List<PPath> listNodes = (List<PPath>)this.heatMapLayer.getAllNodes(); //list of all the nodes inside the layer
         for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
             listNodes.get(i).setPaint(null); //reset color heat map
         }
         if(both) {
-            listNodes = (List<PPath>) heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
+            listNodes = (List<PPath>) this.heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
             for (int i = 1; i < listNodes.size(); i++) { // the loop starts from 1 because first node is the layer and we don't need it
                 listNodes.get(i).setPaint(null); //reset color heat map
             }
@@ -231,9 +239,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
     //show on heat map the point of interest
     private void showPOI(List<POI> pointsOfInterest){
-        Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure(); //retrieve the starting point of the world
-        List<PPath> listNodes = (List<PPath>)heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
-        Double size = sim.getPot().getCellSize()/2; //half of the size of the cell
+        Point heightAndWidth = this.sim.getEnvironment().getWorld().getGeoMisure(); //retrieve the starting point of the world
+        List<PPath> listNodes = (List<PPath>)this.heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
+        Double size = this.sim.getPot().getCellSize()/2; //half of the size of the cell
         for(int i = 0; i < pointsOfInterest.size(); i++){
             //TODO mybe is possible to optimise the loop
             for(int j = 1; j < listNodes.size(); j++){ // the loop starts from 1 because first node is the layer and we don't need it
@@ -246,6 +254,22 @@ public class MainFrame implements IEnvironmentObserver, Observer {
             }
         }
         this.heatMapPOIsLayer.setVisible(Boolean.TRUE);
+    }
+
+    //show on the map showing the points of interest the position of the tracked person
+    private void updateMyPoint(Point currentPosition){
+        Double size = this.sim.getPot().getCellSize(); // retrieve the size of the cell
+        //Now i should compute in which cell my point is
+        Integer i = -1;
+        Boolean ret = Boolean.FALSE;
+        while(i < this.orderCellsDisplayed.size() && !ret){
+            i++;
+            if(this.orderCellsDisplayed.get(i).veryClose(currentPosition,size)){
+                ret = Boolean.TRUE;
+            }
+        }
+        //now i is the position to update
+        ((List<PPath>)this.heatMapPOIsLayer.getAllNodes()).get(i).setPaint(new Color(0, 0, 0));
     }
 
     //top panel with all the buttons and the information about simulation time
@@ -971,7 +995,6 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                         //the list is not an instance of Agent so the only thing it could be is Potentialfiled
                         //resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
                         updateHeatMap((List<Double>) arg); //update the GUI of the HeatMap
-                        showPOI(pot.getPointsOfInterest()); //show POI on map
                     }
                 } else {
                     if (selectionObserver.getIncident() != null && selectionObserver.getIncident().getActionPlan() != null) {
@@ -987,6 +1010,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 PArea drawableFilledArea = getDrawableFilledArea((Area) arg);
                 drawableFilledArea.setPaint(Color.BLUE);
                 uiLayer.addChild(drawableFilledArea);
+            } else if (arg instanceof Point) {
+                //I am updating the tracking position
+                updateMyPoint((Point) arg);
             }
         } else {
             // Clear
@@ -1039,14 +1065,15 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 Point converted = new Point(p.getX(), -p.getY()); //translate point in our point class
                 Agent a = sim.getEnvironment().getAgentClosestTo(converted); //find closest agent to the point clicked
                 // Notify info panel that an agent has been selected
-                Messenger.broadcast(String.format("Display info on agent %s", a));
-                selectionObserver.setAgent(a);
+                //Messenger.broadcast(String.format("Display info on agent %s", a));
+                //selectionObserver.setAgent(a);
                 try {
                     resetHeatMaps(true); //I am resetting also the POI heat map
                     pot.setTrackedAgent(a); //set tracked agent into the potential field so it can build the POI from agent's agenda
                     sim.getEnvironment().getAgents().stream().forEach(Observable::deleteObservers); //delete all the observers from the agents
-                    a.setTracked(track); //set the observer to the observable
+                    a.setTracked(track,mainFrame); //set the observer to the observable
                     //show heat map with the poi
+                    showPOI(pot.getPointsOfInterest()); //show POI on map
                     pot.calculatePotentialFieldInAllTheWorld();
                 }catch (EmptyActivityException | ActivityNotImplementedException | ParameterNotDefinedException e){ //is possible the agent doesn't have activity / there are new activities in the simulator and now one implemented them in this class / I'm trying to calculate the potential field with a parameter not defined
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);

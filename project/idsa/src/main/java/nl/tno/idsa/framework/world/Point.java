@@ -131,4 +131,12 @@ public class Point implements IGeometry {
         }
         return new Point(x, y);
     }
+
+    //method that return if point is close to another point
+    public boolean veryClose(Point point, double precision){
+        if (this.x < point.getX() && this.x + precision > point.getX() && this.y < point.getY() && this.y + precision > point.getY()) {
+            return true;
+        }
+        return false;
+    }
 }

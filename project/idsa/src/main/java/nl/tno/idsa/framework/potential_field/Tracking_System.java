@@ -8,7 +8,7 @@ import java.util.Observer;
 /**
  * Created by alessandrozonta on 26/07/16.
  */
-public class Tracking_System implements Observer {
+public class Tracking_System implements Observer  {
     private final PotentialField pot; //istance of potential field
 
     //constructor

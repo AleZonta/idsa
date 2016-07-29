@@ -19,6 +19,7 @@ import nl.tno.idsa.framework.utils.RandomNumber;
 import nl.tno.idsa.framework.world.*;
 import nl.tno.idsa.library.locations.House;
 import nl.tno.idsa.library.locations.Inside;
+import nl.tno.idsa.viewer.MainFrame;
 
 import java.util.*;
 
@@ -526,7 +527,8 @@ public class Agent extends Observable implements ISimulatedObject  {
     }
 
     //set the observer for this agent
-    public void setTracked(Tracking_System track){
+    public void setTracked(Tracking_System track, MainFrame mainFrame){
         this.addObserver(track);
+        this.addObserver(mainFrame);
     }
 }
