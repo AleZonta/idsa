@@ -124,7 +124,7 @@ public class AgentInspectorPanel extends InspectorPanel implements Observer {
         getMainPanel().add(main, BorderLayout.NORTH);
 
         //button used to show or hide the heat map
-        buttonHeatMap = new JButton(new AbstractAction("S/H HeatMap") {
+        buttonHeatMap = new JButton(new AbstractAction("S/H heatMap") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if(heatMapLAyer.getVisible()){

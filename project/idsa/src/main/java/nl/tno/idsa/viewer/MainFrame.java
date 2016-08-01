@@ -89,7 +89,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private final PLayer heatMapPOIsLayer; //Layer for heat map POI
     private final PLayer heatMapLayer; //Layer for heat map
     private final PotentialField pot;
-    private final Tracking_System track; //tracking system object, we need it to connect pf with tracking of the agent
+    private final TrackingSystem track; //tracking system object, we need it to connect pf with tracking of the agent
     private final MainFrame mainFrame; //this object. I need it to pass to the agent for the observer observable system
     private final List<Point> orderCellsDisplayed; //I need to keep track of the position of the cells when I am going to update the position tracked
 
@@ -107,7 +107,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.sim = sim;
 
         this.pot = sim.getPot();
-        this.track = new Tracking_System(this.pot);
+        this.track = new TrackingSystem(this.pot);
 
         // Shared agent/incident selection
         this.selectionObserver = new SelectionObserver();
@@ -994,7 +994,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                     }else {
                         //the list is not an instance of Agent so the only thing it could be is Potentialfiled
                         //resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
-                        updateHeatMap((List<Double>) arg); //update the GUI of the HeatMap
+                        updateHeatMap((List<Double>) arg); //update the GUI of the heatMap
                     }
                 } else {
                     if (selectionObserver.getIncident() != null && selectionObserver.getIncident().getActionPlan() != null) {

@@ -8,7 +8,7 @@ import nl.tno.idsa.framework.behavior.triggers.AreaTrigger;
 import nl.tno.idsa.framework.behavior.triggers.MovingAreaTrigger;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.population.*;
-import nl.tno.idsa.framework.potential_field.Tracking_System;
+import nl.tno.idsa.framework.potential_field.TrackingSystem;
 import nl.tno.idsa.framework.semantics_base.SemanticLibrary;
 import nl.tno.idsa.framework.semantics_base.relations.SemanticRelation;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;
@@ -527,7 +527,7 @@ public class Agent extends Observable implements ISimulatedObject  {
     }
 
     //set the observer for this agent
-    public void setTracked(Tracking_System track, MainFrame mainFrame){
+    public void setTracked(TrackingSystem track, MainFrame mainFrame){
         this.addObserver(track);
         this.addObserver(mainFrame);
     }
