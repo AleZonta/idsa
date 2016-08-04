@@ -2,6 +2,7 @@ package nl.tno.idsa.framework.potential_field;
 
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
+import nl.tno.idsa.framework.world.Polygon;
 
 /**
  * Created by alessandrozonta on 29/06/16.
@@ -13,6 +14,7 @@ public class POI {
     private Double initial_charge; //initial charge of the POI. Used to reset after the use
     private Boolean meaning; //Boolean value. 1 if attractive, 0 if repulsive
     private Double influenceDistance; //Influence distance of obstacles. Now we are not using it so it is set to zero
+    private Boolean isReal; //Boolean value that means if the POI is real or it is created only for the calculation TRUE is real / FALSE id created
 
     //Class constructor without parameters
     public POI(){
@@ -21,6 +23,7 @@ public class POI {
         this.initial_charge = null;
         this.meaning = true;
         this.influenceDistance = null;
+        this.isReal = Boolean.TRUE;
     }
 
     //Class constructor with only one parameter. Assuming it is an attractor and we set the charge later
@@ -30,6 +33,7 @@ public class POI {
         this.initial_charge = null;
         this.meaning = true;
         this.influenceDistance = null;
+        this.isReal = Boolean.TRUE;
     }
 
     //Class constructor for all the four variable
@@ -39,6 +43,17 @@ public class POI {
         this.initial_charge = charge;
         this.meaning = meaning;
         this.influenceDistance = null;
+        this.isReal = Boolean.TRUE;
+    }
+
+    //special constructor for POI not real
+    public POI(Point centralPoint, Double charge){
+        this.area = new Area(9999, new Polygon(centralPoint),"");
+        this.charge = charge;
+        this.initial_charge = charge;
+        this.meaning = Boolean.TRUE;
+        this.influenceDistance = null;
+        this.isReal = Boolean.FALSE;
     }
 
     //getter for coordinate variable

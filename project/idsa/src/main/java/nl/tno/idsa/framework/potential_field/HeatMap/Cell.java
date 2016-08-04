@@ -16,10 +16,10 @@ public class Cell {
     private final List<Cell> subCells; //list of sub cells of this cell
     private final List<POI> POIs; //list of POIs in this sub cell (list could be also with only one)
     private Double averageCharge; //average charge poi of the cell located in the center of it
-    private final Double potential; //potential in this cell
+    private Double potential; //potential in this cell
+    private Double normalisedPotential; //normalised Potential of the cell
     private final Integer id; //id of the cell
     private final List<Integer> listNeighbors; //list of all the neighbors of the cell
-    private Integer fatherId; //id of the father cell
 
     //constructor without parameters
     public Cell(){
@@ -28,11 +28,25 @@ public class Cell {
         this.subCells = new ArrayList<>();
         this.POIs = new ArrayList<>();
         this.averageCharge = null;
-        this.potential = 0.0;
+        this.potential = -900.0;
+        this.normalisedPotential = -900.0;
         this.id = null;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for(int i = 0; i < 8; i++) this.listNeighbors.add(null);
-        this.fatherId = null;
+    }
+
+    //constructor with only id
+    public Cell(Integer id){
+        this.size = null;
+        this.center = null;
+        this.subCells = new ArrayList<>();
+        this.POIs = new ArrayList<>();
+        this.averageCharge = null;
+        this.potential = -900.0;
+        this.normalisedPotential = 0.0;
+        this.id = id;
+        this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
+        for(int i = 0; i < 8; i++) this.listNeighbors.add(null);
     }
 
     //constructor with size and center point and id
@@ -42,25 +56,24 @@ public class Cell {
         this.subCells = new ArrayList<>();
         this.POIs = new ArrayList<>();
         this.averageCharge = null;
-        this.potential = 0.0;
+        this.potential = -900.0;
+        this.normalisedPotential = 0.0;
         this.id = id;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for (int i = 0; i < 8; i++) this.listNeighbors.add(null);
-        this.fatherId = null;
     }
 
-    //constructor with size and center point id averagecharge and fatherID
-    public Cell(Double size, Point center, Integer id, Double charge, Integer fatherId){
+    //constructor with all the parameters
+    public Cell(Double size, Point center, List<Cell> subCells, List<POI> poiList, Integer id, Double charge, List<Integer> listNeighbors ){
         this.size = size;
         this.center = center;
-        this.subCells = new ArrayList<>();
-        this.POIs = new ArrayList<>();
+        this.subCells = subCells;
+        this.POIs = poiList;
         this.averageCharge = charge;
-        this.potential = 0.0;
+        this.potential = -900.0;
+        this.normalisedPotential = 0.0;
         this.id = id;
-        this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
-        for(int i = 0; i < 8; i++) this.listNeighbors.add(null);
-        this.fatherId = fatherId;
+        this.listNeighbors = listNeighbors;
     }
 
     //getters
@@ -88,10 +101,15 @@ public class Cell {
         return this.potential;
     }
 
-    public Integer getId(){ return  this.id; }
+    public void setPotential(Double potential) { this.potential = potential; }
 
-    public void setFatherId(Integer id) { this.fatherId = id; }
-    public Integer getFatherId() { return this.fatherId; }
+    public Double getNormalisedPotential() {
+        return this.normalisedPotential;
+    }
+
+    public void setNormalisedPotential(Double potential) { this.normalisedPotential = potential; }
+
+    public Integer getId(){ return  this.id; }
 
     //add one sub cell to the list
     //implicitly tested
@@ -104,6 +122,9 @@ public class Cell {
     public Boolean isSplittable(){
         return this.subCells.size() != 0;
     }
+
+    //delete all the subcells
+    public void eraseSubCells() { this.subCells.clear(); }
 
     //add one POI to the POIs list
     //implicitly tested
@@ -151,10 +172,7 @@ public class Cell {
     //tested
     public Boolean contains(Point point){
         //if cell is inside the border of big cell
-        if (point.getX() > this.getLeftBorder() && point.getX() < this.getRightBorder() && point.getY() > this.getBottomBorder() && point.getY() < this.getTopBorder()) {
-            return true;
-        }
-        return false;
+        return point.getX() >= this.getLeftBorder() && point.getX() <= this.getRightBorder() && point.getY() >= this.getBottomBorder() && point.getY() <= this.getTopBorder();
     }
 
     //from all the subCells find out the POIs and add them to my list
@@ -183,10 +201,15 @@ public class Cell {
         return this.listNeighbors.get(position);
     }
 
-    //return a new cell without sub cell if it is not splittable
+    //hard copy cell.
+    //Boolean keepChild. If true I keep them otherwise no
     //tested
-    public Cell retNewCellWithoutChildren(){
-        return new Cell(this.size, this.center, this.id, this.averageCharge, this.fatherId);
+    public Cell deepCopy(Boolean keepChild){
+        if(keepChild){
+            return new Cell(this.size,this.center,this.subCells,this.POIs,this.id,this.averageCharge,this.listNeighbors);
+        }else {
+            return new Cell(this.size,this.center, new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors);
+        }
     }
 
 }

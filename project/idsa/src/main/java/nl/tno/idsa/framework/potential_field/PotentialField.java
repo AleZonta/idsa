@@ -7,21 +7,21 @@ import nl.tno.idsa.framework.force_field.ArambulaPadillaFormulation;
 import nl.tno.idsa.framework.force_field.ElectricPotential;
 import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.force_field.KathibFormulation;
+import nl.tno.idsa.framework.potential_field.heatMap.Cell;
+import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationFunction;
 import nl.tno.idsa.framework.world.Area;
-import nl.tno.idsa.framework.world.Path;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
 import nl.tno.idsa.library.activities.possible.*;
+import nl.tno.idsa.viewer.MainFrame;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.*;
 
 /**
  * Created by alessandrozonta on 29/06/16.
  */
-public class PotentialField extends Observable {
+public class PotentialField extends Observable{
 
     private List<POI> pointsOfInterest; //list with all the POIs regarding the current tracked person
     private final HashMap<String, List<Area>> differentAreaType; //list with all the different areas preload at the start of the program
@@ -33,35 +33,40 @@ public class PotentialField extends Observable {
     private final Double worldWidth; //width of the world
     private final Double cellSide = 10.0; //side of the cell. We are gonna divide the word into cells TODO bind cell size with the const inside force field (higher the cell size lower the constant)
 
-    private List<Double> heatMapValue; //List of the values of the cell for the heat map
-    private List<Point> centerPoint; //list with all the center
+    private final Matrix heatMapTilesOptimisation; //new version of the heat map. It use dynamic tile. Hope this is a faster way to compute everything
 
     private ForceField artificialPotentialField; //Declaration of the artificialPotentialField
 
-    private Point previousPoint; //Store the previus point used for the tracking
-    private final World world; //Save the world -> We need it for update the potential filter
+    private Point previousPoint; //Store the previous point used for the tracking
 
-    static Integer fileCount = 0; //static variable for differentiate the saved file
+    private List<Double> heatMapValues; //store all the charge
 
     //basic class constructor
     public PotentialField(World world){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
-        //this.initialNegativeCharge = null;
-        //this.initialPositiveCharge = null;
         this.trackedAgent = null;
         this.worldHeight = world.getGeoMisure().getY(); //Height is in the y position of the point
         this.worldWidth = world.getGeoMisure().getX(); //Width is in the x position of the point
-        this.heatMapValue = new ArrayList<>();
-        this.centerPoint = new ArrayList<>();
+
+        this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth);
+        this.heatMapValues = new ArrayList<>();
 
         this.initialiseHeatMap(); //initialise heat map
         this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
 
         this.previousPoint = null;
-        this.world = world;
-        this.initDifferentAreaType(this.world); //loading the lists with all the places
+        this.initDifferentAreaType(world); //loading the lists with all the places
     }
+
+    //getter for the matrix dynamic map level
+    //public HashMap<Double, List<Cell>> getDynamicMapLevel(){ return this.heatMapTilesOptimisation.getDynamicMapLevel(); }
+
+    //getter for the matrix map level
+    //public HashMap<Double, List<Cell>> getMapLevel(){ return this.heatMapTilesOptimisation.getMapLevel(); }
+
+    //getter for the different cell size
+    public TreeMap<Double, Double> getDifferentCellSize(){ return this.heatMapTilesOptimisation.getDifferentCellSize(); }
 
     //getter for pointsOfInterest
     public List<POI> getPointsOfInterest() { return this.pointsOfInterest; }
@@ -70,6 +75,7 @@ public class PotentialField extends Observable {
     public HashMap<String, List<Area>> getDifferentAreaType(){ return this.differentAreaType; }
 
     //setter for the track agent. This method throws two exceptions. If the agent has no activity we can not use it for our prediction. If the agent has unrecognized activity we raise another exception
+    //trackedAgent is the agent that we have just selected how person to track
     public void setTrackedAgent(Agent trackedAgent) throws EmptyActivityException, ActivityNotImplementedException {
         this.trackedAgent = trackedAgent;
         //check if point of interest is empty (). This is needed if after one person I will select another one
@@ -77,13 +83,10 @@ public class PotentialField extends Observable {
         this.popolatePOIsfromAgent();
         //set the starting point of the agent
         this.previousPoint = trackedAgent.getLocation();
+
+        //populate the new version of the matrix with the POI
+        this.heatMapTilesOptimisation.initPOI(this.pointsOfInterest);
     }
-
-    //getter for heatMapValue
-    public List<Double> getHeatMapValue() { return this.heatMapValue; }
-
-    //getter for centerpoint
-    public List<Point> getCenterPoints() { return  this.centerPoint; }
 
     //getter for cellSide
     public Double getCellSize() { return this.cellSide; }
@@ -196,32 +199,25 @@ public class PotentialField extends Observable {
 
     //initialise the heatmapvalue with zero after having calculate how many position we need and the center of every cell
     private void initialiseHeatMap(){
-        //divide the word into small cells
-        Double column =  Math.ceil(this.worldWidth / this.cellSide);
-        Double row = Math.ceil(this.worldHeight / this.cellSide);
-        //now i have to find the center of the cell
-        Double height = this.cellSide/2;
-        //I need to find the center of every cell. From the center we will compute the potential field
-        for (int i = 0; i < row; i++){
-            Double width = this.cellSide/2;
-            for(int j = 0; j < column;  j++){
-                this.centerPoint.add(new Point(width, height)); //add central point to the list
-                this.heatMapValue.add(0.0); //initialise heatMapValue with a zero. Every center point has its own value
-                width += this.cellSide;
-            }
-            height += this.cellSide;
-        }
+        //initialise the new version of the heat map -> calling Matrix.init
+        this.heatMapTilesOptimisation.initMap();
+    }
+
+    //Calculate potential in all the map for the GUI, initial configuration
+    public  void calculateInitialPotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
+        this.calculatePotentialFieldInAllTheWorld(2, Boolean.TRUE);
     }
 
     //Calculate potential in all the map for the GUI
     //without parameter, force to use 2
     public  void calculatePotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
-        this.calculatePotentialFieldInAllTheWorld(2);
+        this.calculatePotentialFieldInAllTheWorld(2,Boolean.FALSE);
     }
 
     //Calculate potential in all the map for the GUI
     //parameter integer type -> 0 = ArambullaPadillaFormulation, 1 = KathibFormulation, 2 = ElectricPotential
-    public void calculatePotentialFieldInAllTheWorld(Integer typology) throws ParameterNotDefinedException {
+    //Boolean disclaimer = True if is the first calculation of the bottom level, FALSE if is all the other computation
+    public void calculatePotentialFieldInAllTheWorld(Integer typology, Boolean disclaimer) throws ParameterNotDefinedException {
         //declare the typology of potential field we are gonna use
         switch (typology){
             case 0:
@@ -237,76 +233,32 @@ public class PotentialField extends Observable {
                 throw new ParameterNotDefinedException("Typology of Potential Field not declared"); //Parameter is not correct
         }
         //calculate the value of the potential field
-        this.heatMapValue = this.artificialPotentialField.calculateForceInAllTheWorld(this.centerPoint,this.pointsOfInterest);
-
-        //savefile
-        this.saveHeatMap();
-
-        this.normaliseHeatMapValue(); // normalise and scale the list
-
-    }
-
-    //normalise and scale heatMapValue for use the result like a rgb value
-    //Print the heat map value on a file
-    //Instead from 0 to 255 I am scaling the value from 255 to 0 (inverted) so I can print only the attractive points
-    private void normaliseHeatMapValue(){
-        List<Double> newheatMapValue = new ArrayList<>();
-        Optional<Double> maxList = this.heatMapValue.stream().max(Comparator.naturalOrder());
-        Optional<Double> minList = this.heatMapValue.stream().min(Comparator.naturalOrder());
-        //Double maxList = Collections.max(this.heatMapValue);
-        //Double minList = Collections.min(this.heatMapValue);
-        Double max = 0.0;
-        Double min = 255.0;
-
-        this.heatMapValue.stream().forEach( aHeatMapValue -> {
-            Double standard = (aHeatMapValue - minList.get()) / (maxList.get() - minList.get());
-            Double scaled = standard * (max - min) + min;
-            newheatMapValue.add(scaled);
-        });
-
-        this.heatMapValue = newheatMapValue;
-        //I need to indicate the state of the model has changed and then I need to update all of the registered observer
+        //calling the method of the  heat map system
+        if(disclaimer){
+            this.heatMapTilesOptimisation.computeInitialForceInAllOfThePoints(this.artificialPotentialField);
+        }else {
+            this.heatMapTilesOptimisation.computeForceInAllOfThePoints(this.artificialPotentialField);
+        }
+        //calculate all the charges
+        this.heatMapValues = getAllTheCharges(disclaimer);
+        //notify that I have updated the charge
         setChanged();
-        notifyObservers(this.heatMapValue);
+        notifyObservers(this.heatMapValues);
     }
 
     //function called after having select the person to track.
     //position is the real-time position
     public void trackAndUpdate(Point currentPosition){
+        //compute the actual map that I will use
+        this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
+
         //this is the angle that the tracked person is using to move respect the x axis
         Double angle = Math.toDegrees(Math.atan2(currentPosition.getY() - this.previousPoint.getY(), currentPosition.getX() - this.previousPoint.getX()));
         //threshold angle
         Double threshold = 45.0; // TODO find the best value for this threshold
-        //now I need to check and update every point of interest
-        /*for (POI aPointsOfInterest : this.pointsOfInterest) {
-            //calculate path from newPosition to POI
-            //Path fastestWayToGo = this.world.getPath(currentPosition, aPointsOfInterest.getArea().getPolygon().getCenterPoint());
-            //from the path just computed I need to check the first point anc compute the angle
-            //Point firstPoint = fastestWayToGo.get(5); //1 is the first element but better check some element further to have a good estimation
-            //Compute the angle between the first point of the path and the currentPosition
-            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
-            //check if the current angle is inside or outside the angle plus or minus the threshold
-            if(currentAngle > angle - threshold && currentAngle < angle + threshold ){
-                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
-            }else{
-                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
-            }
-        }*/
 
-        //parallel version of the loop to check and update every point of interest
-        this.pointsOfInterest.parallelStream().forEach(aPointsOfInterest -> {
-            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
-            //check if the current angle is inside or outside the angle plus or minus the threshold
-            if(currentAngle > angle - threshold && currentAngle < angle + threshold ){
-                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
-            }else{
-                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
-            }
-        });
+        //calling the method of the  heat map system
+        this.heatMapTilesOptimisation.updatePOIcharge(currentPosition,angle,threshold);
 
         //after having modified all the poi we need to calculate again the POI
         try {
@@ -317,26 +269,16 @@ public class PotentialField extends Observable {
 
     }
 
-    //Save to csv file the heat map
-    private void saveHeatMap(){
-        fileCount++;
-        Double localCount = 0.0;
-        Double column =  Math.ceil(this.worldWidth / this.cellSide);
-        BufferedWriter outputWriter = null;
-        try {
-            outputWriter = new BufferedWriter(new FileWriter("heatMapValue" + fileCount + ".csv"));
-            for (Double aHeatMapValue : this.heatMapValue) {
-                outputWriter.write(Double.toString(aHeatMapValue) + ", ");
-                localCount++;
-                if(localCount.equals(column)){
-                    localCount = 0.0;
-                    outputWriter.newLine();
-                }
-            }
-            outputWriter.flush();
-            outputWriter.close();
-        }catch (Exception e){}
-
+    //get the charge of all the levels in one list
+    //Boolean disclaimer = True if is the first calculation of the bottom level, FALSE if is all the other computation
+    public List<Double> getAllTheCharges(Boolean disclaimer){
+        List<Double> chargeValue = new ArrayList<>();
+        if(disclaimer){
+            this.heatMapTilesOptimisation.getChargeInSelectedLevel(0.0).forEach(chargeValue::add);
+        }else {
+            this.getDifferentCellSize().forEach((key,value) -> this.heatMapTilesOptimisation.getChargeInSelectedLevel(key).forEach(chargeValue::add));
+        }
+        return chargeValue;
     }
 
 }

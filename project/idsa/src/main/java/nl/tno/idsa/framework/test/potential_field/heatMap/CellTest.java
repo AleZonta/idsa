@@ -106,13 +106,13 @@ public class CellTest {
     @Test
     //It tests if from the method is able from all the sub cell to copy all the POIs into the father and compute correctly their average
     public void populatePOIfromSubCells() throws Exception {
-        for(int qq = 0 ; qq < 10; qq++) { //test for 10 times
+        for(int qq = 0 ; qq < 100; qq++) { //test for 10 times
             Integer numberOfSubPoi = 0;
             Random randomGenerator = new Random();
             Cell bigCell = new Cell();
             int randomInt = randomGenerator.nextInt(30);
             for (int q = 0; q < randomInt; q++) {
-                Cell cell = new Cell();
+                Cell cell = new Cell(q);
                 List<Double> values = new ArrayList<>();
 
                 randomInt = randomGenerator.nextInt(30);
@@ -134,6 +134,7 @@ public class CellTest {
                 expectedValue += bigCell.getPOIs().get(z).getCharge();
             }
             expectedValue /= bigCell.getPOIs().size();
+            if(expectedValue.isNaN()) expectedValue = 0.0;
 
             assertEquals(expectedValue, bigCell.getAverageCharge());
             assertEquals(numberOfSubPoi.intValue(), bigCell.getPOIs().size());
@@ -178,7 +179,7 @@ public class CellTest {
             for (int i = 0; i < randomInt; i++) {
                 cell.addSubCells(new Cell());
             }
-            Cell newCell = cell.retNewCellWithoutChildren();
+            Cell newCell = cell.deepCopy(Boolean.FALSE);
             assertEquals(0, newCell.getSubCells().size());
         }
 

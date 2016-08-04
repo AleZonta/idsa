@@ -10,6 +10,7 @@ import nl.tno.idsa.framework.behavior.triggers.StaticAreaTrigger;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
 import nl.tno.idsa.framework.potential_field.*;
+import nl.tno.idsa.framework.potential_field.heatMap.Cell;
 import nl.tno.idsa.framework.semantics_impl.actions.Action;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationAndTime;
@@ -166,12 +167,11 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.pot.addObserver(this);
 
         this.mainFrame = this;
-
-
     }
 
     // setting up Heat Maps and hiding it
     private void initHeatMap(){
+        //POIs heat map is printed in the same old way
         Point heightAndWidth = sim.getEnvironment().getWorld().getGeoMisure(); //retrieve the starting point of the world
         Double size = sim.getPot().getCellSize(); // retrieve the size of the cell
         Double column =  Math.ceil(heightAndWidth.getX() / size); //compute how many columns we have
@@ -191,31 +191,42 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 heatMapPOIsLayer.addChild(node);
                 //remember position of the cell and ordering it with an index
                 this.orderCellsDisplayed.add(new Point(coordinatecolumn,coordinaterow));
-
-                // coordinatecolumn + heightAndWidth.getX()+ heightAndWidth.getX() -> to move two steps to the right of the map and one step right to the previous heat map
-                // - coordinaterow -> I need the minus for display correctly the map
-                PPath nodeS = PPath.createRectangle(coordinatecolumn + heightAndWidth.getX() + heightAndWidth.getX(), -coordinaterow, size, size);
-                nodeS.setPaint(null); // transparent
-                //node.setPaint(new Color((int)(Math.random()*256), 255, 255)); //set color to the cell
-                //nodeS.setStrokePaint(Color.BLACK);
-                //nodeS.setStroke(new BasicStroke(1f));
-                nodeS.setStrokePaint(null);
-                heatMapLayer.addChild(nodeS);
-
                 coordinatecolumn += size; //increase the coordinate of the column by cell size
             }
             coordinaterow += size; // increase the coordinate of the row by cell size
         }
-
         heatMapPOIsLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
+
+        //for the heatMapLayer I prepare all the rectangle in the position so later I have only to update the rectangle that I need
+        TreeMap<Double, Double> differentCellSize = this.pot.getDifferentCellSize();
+        differentCellSize.forEach((key,elem) -> {
+            Double coordinateRow = 0.0;
+            for (int i = 0; i < row ; i++){
+                Double coordinateColumn = 0.0;
+                for (int j = 0; j < column ; j++){
+                    // coordinatecolumn + heightAndWidth.getX() + heightAndWidth.getX()  -> to move two steps to the right of the map
+                    // - coordinaterow -> I need the minus for display correctly the map
+                    PPath node = PPath.createRectangle(coordinateColumn + heightAndWidth.getX() + heightAndWidth.getX(), -coordinateRow, elem, elem);
+                    node.setPaint(null); // transparent
+                    node.setStrokePaint(null);
+                    heatMapLayer.addChild(node);
+                    coordinateColumn += size; //increase the coordinate of the column by cell size
+                }
+                coordinateRow += size; // increase the coordinate of the row by cell size
+            }
+        });
+        //after this assignment heatMapLayer should have all the cells in the order from the smallest one to the biggest one
+
         heatMapLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
     }
 
     //update heat map value
     private void updateHeatMap(List<Double> heatMapValue){
         List<PPath> listNodes = (List<PPath>)this.heatMapLayer.getAllNodes();
-        for(int i = 1; i < listNodes.size(); i++){
-            listNodes.get(i).setPaint(new Color(255, heatMapValue.get(i - 1).intValue(), heatMapValue.get(i - 1).intValue()));
+        for(int i = 0; i < heatMapValue.size(); i++){
+            if(heatMapValue.get(i) != -900.0){
+                listNodes.get(i + 1).setPaint(new Color(255, heatMapValue.get(i).intValue(), heatMapValue.get(i).intValue()));
+            }
         }
         this.heatMapLayer.setVisible(Boolean.TRUE);
     }
@@ -993,7 +1004,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                         }
                     }else {
                         //the list is not an instance of Agent so the only thing it could be is Potentialfiled
-                        //resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
+                        resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
                         updateHeatMap((List<Double>) arg); //update the GUI of the heatMap
                     }
                 } else {
@@ -1013,7 +1024,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
             } else if (arg instanceof Point) {
                 //I am updating the tracking position
                 updateMyPoint((Point) arg);
-            }
+            } /*else if (arg instanceof HashMap){
+                updateHeatMap((HashMap<Double, List<Cell>>) arg); //update the GUI of the heatMap
+            }*/
         } else {
             // Clear
         }
@@ -1074,7 +1087,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                     a.setTracked(track,mainFrame); //set the observer to the observable
                     //show heat map with the poi
                     showPOI(pot.getPointsOfInterest()); //show POI on map
-                    pot.calculatePotentialFieldInAllTheWorld();
+                    pot.calculateInitialPotentialFieldInAllTheWorld();
                 }catch (EmptyActivityException | ActivityNotImplementedException | ParameterNotDefinedException e){ //is possible the agent doesn't have activity / there are new activities in the simulator and now one implemented them in this class / I'm trying to calculate the potential field with a parameter not defined
                     Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
                 }

@@ -1,20 +1,22 @@
 package nl.tno.idsa.framework.potential_field.heatMap;
 
+import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by alessandrozonta on 29/07/16.
  */
 //class that implement the behaviour of all the cells of the map
-public class Matrix {
+public class Matrix{
     private final HashMap<Double, List<Cell>> mapLevel; //contains all the levels and all the cell of that level (static version containing all the level that I am using at the start)
     private HashMap<Double, List<Cell>> dynamicMapLevel; //dynamic map level containing the real cell that I am using
     private final Double worldHeight; //height of the map
     private final Double worldWidth; //width of the map
-    private final HashMap<Double, Double> differentCellSize; //all the different cell size for the map
+    private final TreeMap<Double, Double> differentCellSize; //all the different cell size for the map -> is a tree map because it preserves the order
 
     //simple constructor
     public Matrix(Double height, Double width){
@@ -22,7 +24,7 @@ public class Matrix {
         this.worldWidth = width;
         this.mapLevel = new HashMap<>();
         this.dynamicMapLevel = new HashMap<>();
-        this.differentCellSize = new HashMap<>();
+        this.differentCellSize = new TreeMap<>();
         //adding hardcoded level
         this.differentCellSize.put(0.0,10.0);
         this.differentCellSize.put(1.0,50.0);
@@ -31,12 +33,13 @@ public class Matrix {
         this.differentCellSize.put(4.0,1000.0);
     }
 
-    //get dynamicMapLevel
-    public HashMap<Double, List<Cell>> getDynamicMapLevel(){ return this.dynamicMapLevel; }
+    //getDifferentCellSize
+    public TreeMap<Double, Double> getDifferentCellSize(){ return this.differentCellSize; }
 
     //building the different level
     //pointsOfInterest = list of all the points of interest
-    public void initMap(List<POI> pointsOfInterest){
+    //kind of tested
+    public void initMap(){
         //build all the level from the lowest to the higher
         this.differentCellSize.forEach((key,value) -> {
             List<Cell> level = new ArrayList<>();
@@ -67,9 +70,21 @@ public class Matrix {
             this.mapLevel.put(key,level);
         });
 
+        //add every sub cell to its father
+        for(Double i = 0.0; i < this.differentCellSize.size() - 1 ; i++){
+            for(Cell cell : this.mapLevel.get(i)){
+                this.putCellIntoFatherList(cell, this.mapLevel.get(i + 1.0));
+            }
+        }
+    }
+
+    //populate map with pointsOfInterest
+    //pointsOfInterest = list of all the points of interest
+    //kind of tested
+    public void initPOI(List<POI> pointsOfInterest){
         //I should add all the POIs to the respective cell. Only for the lowest level
         pointsOfInterest.stream().forEach(poi -> this.mapLevel.get(0.0).stream().filter(cell -> cell.contains(poi
-                .getArea().getPolygon().getCenterPoint())).findFirst().ifPresent(cell -> cell.addPOIs(poi)));
+                .getArea().getPolygon().getCenterPoint())).forEach(cell -> cell.addPOIs(poi)));
 
         //calculate average charge for every cell
         this.mapLevel.get(0.0).stream().forEach(Cell::computeAverageCharge);
@@ -79,12 +94,8 @@ public class Matrix {
             this.mapLevel.get(i).stream().forEach(Cell::populatePOIfromSubCells);
         }
 
-        //add every sub cell to its father
-        for(Double i = 0.0; i < this.differentCellSize.size() - 1 ; i++){
-            for(Cell cell : this.mapLevel.get(i)){
-                this.putCellIntoFatherList(cell, this.mapLevel.get(i + 1.0));
-            }
-        }
+        //initialise also dynamic map level
+        this.dynamicMapLevel = this.mapLevel;
     }
 
     //add this cell in the biggest cell
@@ -97,7 +108,6 @@ public class Matrix {
             //if cell is inside the border of big cell
             if (center.getX() > bigCell.getLeftBorder() && center.getX() < bigCell.getRightBorder() && center.getY() > bigCell.getBottomBorder() && center.getY() < bigCell.getTopBorder()) {
                 bigCell.addSubCells(cell); //add the cell to the father
-                cell.setFatherId(bigCell.getId()); //add this cell the Id of the father
                 found = Boolean.TRUE;
             }
             position++;
@@ -110,12 +120,20 @@ public class Matrix {
         return this.differentCellSize.size();
     }
 
-    //given a point I should return at which cell it belongs. From the biggest one to the smallest one
+    //given a point I should return at which cell it belongs.
     //point = actual point that I am computing
     //level = level of the maps where I am looking for where the cell is
     //Return a Cell -> the Cell that contains the point
     private Cell getCellWhereIBelong(Point point, Double level){
         return this.mapLevel.get(level).stream().filter(tile -> tile.contains(point)).findFirst().get();
+    }
+
+    //given a point I should return at which cell it belongs.
+    //point = actual point that I am computing
+    //List<Cell> subCell = list of cells where I have to look where is the one that I am looking
+    //Return a Cell -> the Cell that contains the point
+    private Cell getCellWhereIBelong(Point point, List<Cell> subCell){
+        return subCell.stream().filter(tile -> tile.contains(point)).findFirst().get();
     }
 
     //return in which sector is the point
@@ -132,27 +150,26 @@ public class Matrix {
         Double topBorder = cell.getTopBorder();
         Double x = point.getX();
         Double y = point.getY();
-        if(x > leftBorder && x < leftBorder + division && y < topBorder && y > topBorder - division){
+        if(x >= leftBorder && x <= leftBorder + division && y <= topBorder && y >= topBorder - division){
             return 1;
-        }else if(x > leftBorder + division && x < leftBorder + secondDivision && y < topBorder && y > topBorder - division){
+        }else if(x >= leftBorder + division && x <= leftBorder + secondDivision && y <= topBorder && y >= topBorder - division){
             return 2;
-        }else if(x > leftBorder + secondDivision && x < cell.getRightBorder() && y < topBorder && y > topBorder - division){
+        }else if(x >= leftBorder + secondDivision && x <= cell.getRightBorder() && y <= topBorder && y >= topBorder - division){
             return 3;
-        }else if(x > leftBorder && x < leftBorder + division && y < topBorder - division && y > topBorder - secondDivision){
+        }else if(x >= leftBorder && x <= leftBorder + division && y <= topBorder - division && y >= topBorder - secondDivision){
             return 4;
-        }else if(x > leftBorder + division && x < leftBorder + secondDivision && y < topBorder - division && y > topBorder - secondDivision){
+        }else if(x >= leftBorder + division && x <= leftBorder + secondDivision && y <= topBorder - division && y >= topBorder - secondDivision){
             return 5;
-        }else if(x > leftBorder + secondDivision && x < cell.getRightBorder() && y < topBorder - division && y > topBorder - secondDivision){
+        }else if(x >= leftBorder + secondDivision && x <= cell.getRightBorder() && y <= topBorder - division && y >= topBorder - secondDivision){
             return 6;
-        }else if(x > leftBorder && x < leftBorder + division && y < topBorder && y < topBorder - secondDivision && y > topBorder - division - secondDivision){
+        }else if(x >= leftBorder && x <= leftBorder + division && y <= topBorder - secondDivision && y >= topBorder - cell.getSize()){
             return 7;
-        }else if(x > leftBorder + division && x < leftBorder + secondDivision && y < secondDivision && y > topBorder - division - secondDivision){
+        }else if(x >= leftBorder + division && x <= leftBorder + secondDivision && y <= topBorder -  secondDivision && y >= topBorder - cell.getSize()){
             return 8;
         }else{
             return 9;
         }
     }
-
 
     //building the neighbourhood of one cell
     //I need to keep in mind special case, the border. They may not have some neighbour
@@ -169,61 +186,61 @@ public class Matrix {
             if (q == 0) {
                 //first position
                 if (z == 0) {
-                    level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // top cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 6); // bottom cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 7); // bottom right cell
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 1); // top cell
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 2); // top right cell
+                    level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // right cell
                 } else if (z == column - 1) { //last position
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 0);// top left cell
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 1); // top cell
                     level.get(pos).setNeighbour(level.get(((q) * column) + z - 1), 3); // left cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 5); // bottom left cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 6); // bottom cell
                 } else {//other position first row
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 0);// top left cell
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 1); // top cell
+                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 2); // top right cell
                     level.get(pos).setNeighbour(level.get(((q) * column) + z - 1), 3); // left cell
                     level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // top cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 5); // bottom left cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 6); // bottom cell
-                    level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 7); // bottom right cell
                 }
             } else if (q == row - 1) {//last row
                 //first position
                 if (z == 0) {
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 1); // top cell
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 2); // top right cell
-                    level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // right cell
+                    level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // top cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 6); // bottom cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 7); // bottom right cell
                 } else if (z == column - 1) { //last position
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 0);// top left cell
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 1); // top cell
                     level.get(pos).setNeighbour(level.get(((q) * column) + z - 1), 3); // left cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 5); // bottom left cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 6); // bottom cell
                 } else {//other position first row
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 0);// top left cell
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 1); // top cell
-                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 2); // top right cell
                     level.get(pos).setNeighbour(level.get(((q) * column) + z - 1), 3); // left cell
                     level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // right cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 5); // bottom left cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 6); // bottom cell
+                    level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 7);// bottom right cell
                 }
             } else if (z == 0) { //first column
                 //i need only to fix the center cell since the first and the last are fixed
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 1); // top cell
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 2); // top right cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 1); // top cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 2); // top right cell
                 level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // right cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 6); // bottom cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 7); // bottom right cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 6); // bottom cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 7); // bottom right cell
             } else if (z == column - 1) { //last column
                 //i need only to fix the center cell since the first and the last are fixed
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 0);// top left cell
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 1); // top cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 0);// top left cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 1); // top cell
                 level.get(pos).setNeighbour(level.get(((q) * column) + z - 1), 3); // left cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 5); // bottom left cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 6); // bottom cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 5); // bottom left cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 6); // bottom cell
             } else {
                 //these are the normal cases
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 0);// top left cell// top left cell// top left cell
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 1); // top cell
-                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 2); // top right cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 0);// top left cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 1); // top cell
+                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 2); // top right cell
                 level.get(pos).setNeighbour(level.get(((q) * column) + z - 1), 3); // left cell
                 level.get(pos).setNeighbour(level.get(((q) * column) + z + 1), 4); // right cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z - 1), 5); // bottom left cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z), 6); // bottom cell
-                level.get(pos).setNeighbour(level.get(((q + 1) * column) + z + 1), 7);// bottom right cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z - 1), 5); // bottom left cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z), 6); // bottom cell
+                level.get(pos).setNeighbour(level.get(((q - 1) * column) + z + 1), 7);// bottom right cell
             }
         }catch (Exception e){} //I should not have exception because I am setting a hardcoded position
     }
@@ -241,28 +258,58 @@ public class Matrix {
             //neighbour could have only three different sizes. 3, 1, or is null
             if (neighbour == null) {
                 if (cell.getId().equals(selectedCell.getId())) {
-                    level.add(cell);
+                    level.add(cell.deepCopy(Boolean.TRUE));
                 } else { //otherwise I am copying the cell without children to save space
-                    level.add(cell.retNewCellWithoutChildren());
+                    level.add(cell.deepCopy(Boolean.FALSE));
                 }
             } else if (neighbour.size() == 1) {
                 if (cell.getId().equals(selectedCell.getId()) || cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(0)))) {
-                    level.add(cell);
+                    level.add(cell.deepCopy(Boolean.TRUE));
                 } else { //otherwise I am copying the cell without children to save space
-                    level.add(cell.retNewCellWithoutChildren());
+                    level.add(cell.deepCopy(Boolean.FALSE));
                 }
             } else {
                 //if is one of the cells that i have to split I am copying the entire cell
                 if (cell.getId().equals(selectedCell.getId()) || cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(0))) ||
                         cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(1))) ||
-                        cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(3)))) {
-                    level.add(cell);
+                        cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(2)))) {
+                    level.add(cell.deepCopy(Boolean.TRUE));
                 } else { //otherwise I am copying the cell without children to save space
-                    level.add(cell.retNewCellWithoutChildren());
+                    level.add(cell.deepCopy(Boolean.FALSE));
                 }
             }
         }
         this.dynamicMapLevel.put(currentLevel, level);
+    }
+
+    //Is computing the real list of the sub cell
+    //if some of them are the ones that need to keep in mind I am saving them, otherwise I am deleting their children
+    //The inputs are
+    //neighbour = list of the positions of the neighbour that I am keeping entirely alive
+    //selectedCell = the cell containing the point
+    //List<Cell> subCells = sub cells to check
+    //it throws an exception, if the index is not in the correct range
+    private void computeRealList(List<Integer> neighbour, Cell selectedCell, List<Cell> subCells) throws Exception{
+        List<Cell> level = new ArrayList<>();
+        for (Cell cell : subCells) {
+            //neighbour could have only three different sizes. 3, 1, or is null
+            if (neighbour == null) {
+                if (!cell.getId().equals(selectedCell.getId())) {
+                    cell.eraseSubCells();
+                }
+            } else if (neighbour.size() == 1) {
+                if (!cell.getId().equals(selectedCell.getId()) && !cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(0)))) {
+                    cell.eraseSubCells();
+                }
+            } else {
+                //if is one of the cells that i have to split I am copying the entire cell
+                if (!cell.getId().equals(selectedCell.getId()) && !cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(0))) &&
+                        !cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(1))) &&
+                        !cell.getId().equals(selectedCell.getIdCorrectNeighbour(neighbour.get(2)))) {
+                    cell.eraseSubCells();
+                }
+            }
+        }
     }
 
     //try to build all the level with only the actual cell that I am using
@@ -271,8 +318,149 @@ public class Matrix {
     //For every level if the currentPosition point is not in that area or close is keeping only the cell without children
     //if is in that area is keeping the children because I need more details
     //no children means highest level, children means lowest level of abstraction
+    //kind of tested
     public void computeActualMatrix(Point currentPosition){
         //I have the current position, I need to build the final matrix
+        this.dynamicMapLevel = new HashMap<>();
+        //I don't need to check all the level. The biggest one is the only one that I am keeping totally
+        //all the others I don't need since I can use the children of the cell
+        //this is the first level cell where the point is
+        Cell levelCell = this.getCellWhereIBelong(currentPosition , 4.0);
+        //return the sector of this cell
+        Integer sector = this.getSector(levelCell, currentPosition);
+        //now sector could be from 1 to 9
+        switch (sector){
+            case 1:
+                //if it is in the first sector I need to split also three other cell.s The neighbours number 0,1,3
+                try {
+                    this.computeRealList(Arrays.asList(0, 1, 3), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 2:
+                //if it is in the second sector I need to split another other cell. The neighbour number 1
+                try {
+                    this.computeRealList(Collections.singletonList(1), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 3:
+                //if it is in the third sector I need to split also three other cells. The neighbours number 1,2,4
+                try {
+                    this.computeRealList(Arrays.asList(1,2,4), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 4:
+                //if it is in the fourth sector I need to split another other cell. The neighbour number 3
+                try {
+                    this.computeRealList(Collections.singletonList(3), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 5:
+                //if it is in the fifth sector I don't need to split other cells.
+                try {
+                    this.computeRealList(null, levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 6:
+                //if it is in the sixth sector I need to split another other cell. The neighbour number 4
+                try {
+                    this.computeRealList(Collections.singletonList(4), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 7:
+                //if it is in the seventh sector I need to split also three other cells. The neighbours number 3,5,6
+                try {
+                    this.computeRealList(Arrays.asList(3,5,6), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 8:
+                //if it is in the eighth sector I need to split another other cell. The neighbour number 6
+                try {
+                    this.computeRealList(Collections.singletonList(6), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 9:
+                //if it is in the ninth sector I need to split also three other cells. The neighbours number 4,6,7
+                try {
+                    this.computeRealList(Arrays.asList(4,6,7), levelCell, 4.0);
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+        }
+
+        //I build first level. From that level I should check in the sub cell of all the ceell that are splittable
+        List<Cell> splittableCells = new ArrayList<>();
+        this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+
+        while (!splittableCells.isEmpty()){
+            //having this list I should find all the sub cells of these cells
+            List<Cell> subSplittableCells = new ArrayList<>();
+            splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
+
+            //this is the first level cell where the point is
+            levelCell = this.getCellWhereIBelong(currentPosition , subSplittableCells);
+            //now I know at which sub cell I belong. I need to update the matrix
+            //return the sector of this cell
+            sector = this.getSector(levelCell, currentPosition);
+            //now sector could be from 1 to 9
+            switch (sector){
+                case 1:
+                    //if it is in the first sector I need to split also three other cell.s The neighbours number 0,1,3
+                    try {
+                        this.computeRealList(Arrays.asList(0, 1, 3), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 2:
+                    //if it is in the second sector I need to split another other cell. The neighbour number 1
+                    try {
+                        this.computeRealList(Collections.singletonList(1), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 3:
+                    //if it is in the third sector I need to split also three other cells. The neighbours number 1,2,4
+                    try {
+                        this.computeRealList(Arrays.asList(1,2,4), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 4:
+                    //if it is in the fourth sector I need to split another other cell. The neighbour number 3
+                    try {
+                        this.computeRealList(Collections.singletonList(3), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 5:
+                    //if it is in the fifth sector I don't need to split other cells.
+                    try {
+                        this.computeRealList(null, levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 6:
+                    //if it is in the sixth sector I need to split another other cell. The neighbour number 4
+                    try {
+                        this.computeRealList(Collections.singletonList(4), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 7:
+                    //if it is in the seventh sector I need to split also three other cells. The neighbours number 3,5,6
+                    try {
+                        this.computeRealList(Arrays.asList(3,5,6), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 8:
+                    //if it is in the eighth sector I need to split another other cell. The neighbour number 6
+                    try {
+                        this.computeRealList(Collections.singletonList(6), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+                case 9:
+                    //if it is in the ninth sector I need to split also three other cells. The neighbours number 4,6,7
+                    try {
+                        this.computeRealList(Arrays.asList(4,6,7), levelCell, subSplittableCells);
+                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                    break;
+            }
+            splittableCells.clear();
+            subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+        }
+        /*
         //The key of all the levels ordered from the highest level to the lowest
         List<Double> numberOfLevels = Arrays.asList(4.0,3.0,2.0,1.0,0.0);
         numberOfLevels.stream().forEach(lev -> {
@@ -337,7 +525,351 @@ public class Matrix {
                     }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
                     break;
             }
-        });
+        });*/
     }
 
+    //get all the point of interest from selected level. This means that I am using only the cell that are not going to be split
+    //It is using the dynamic map because in that one I have the actual POIs
+    //level = level that I am interest in finding all the POI
+    //kind of tested
+    private List<POI> getPOIsInSelectedLevel(Double level){
+        List<POI> newPOIsList = new ArrayList<>();
+        this.dynamicMapLevel.get(level).stream().filter(cell -> !cell.isSplittable()).forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
+        /*this.dynamicMapLevel.get(level).forEach(cell -> {
+            if(!cell.isSplittable()) newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge()));
+        });*/
+        return newPOIsList;
+    }
+
+    //same as before but instead have the level like a parameter has a list of cells
+    //kind of tested
+    private List<POI> getPOIsInSelectedLevel(List<Cell> cells){
+        List<POI> newPOIsList = new ArrayList<>();
+        cells.stream().forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
+        /*cells.forEach(cell -> {
+            if(!cell.isSplittable()) newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge()));
+        });*/
+        return newPOIsList;
+    }
+
+    //get all the center point of the cell. I am returning only the cells not splittable
+    //It is using the dynamic map because in that one I have the actual centers
+    //level = level that I am interest in finding all the POI
+    //kind of tested
+    private List<Point> getCenterPointsInSelectedLevel(Double level){
+        List<Point> newPointsList = new ArrayList<>();
+        this.dynamicMapLevel.get(level).stream().filter(cell -> !cell.isSplittable()).forEach(cell -> newPointsList.add(cell.getCenter()));
+        /*this.dynamicMapLevel.get(level).forEach(cell -> {
+            if(!cell.isSplittable()) newPointsList.add(cell.getCenter());
+        });*/
+        return newPointsList;
+    }
+
+    //same as before but instead have the level like a parameter has a list of cells
+    //kind of tested
+    private List<Point> getCenterPointsInSelectedLevel(List<Cell> cells){
+        List<Point> newPointsList = new ArrayList<>();
+        cells.stream().forEach(cell -> newPointsList.add(cell.getCenter()));
+        /*cells.forEach(cell -> {
+            if(!cell.isSplittable()) newPointsList.add(cell.getCenter());
+        });*/
+        return newPointsList;
+    }
+
+    //put the potential value calculated inside the actual level
+    //I need this so when I am going to visualise it I can call directly the matrix instead a simpler vector
+    //level = level that I am interest in finding all the POI
+    //List<Double> potentialValue = list with all the calculated potential
+    //List<Cell> cells = if not null These are the cells that have to be updated
+    //kind of tested
+    private void setPotentialValueIntoSelectedLevel(Double level, List<Double> potentialValue, List<Cell> cells){
+        List<Cell> listCells = this.dynamicMapLevel.get(level);
+
+        Integer i = 0;
+        for(Cell singleCell : cells){
+            Cell c = listCells.stream().filter(cell -> cell.getId().equals(singleCell.getId())).findFirst().get();
+            if( c != null ){
+                c.setPotential(potentialValue.get(i));
+                i++;
+            }
+        }
+
+
+        /*Integer j = 0;
+        for(int i = 0; i < listNotSplittableCells.size(); i ++){
+            if(cells == null){
+                listNotSplittableCells.get(i).setPotential(potentialValue.get(i));
+            }else {
+                Cell cell = listNotSplittableCells.get(i);
+                if(cells.stream().filter(c -> c.getId().equals(cell.getId())).findFirst().isPresent()){
+                    listNotSplittableCells.get(i).setPotential(potentialValue.get(j));
+                    j++;
+                }
+            }
+
+        }*/
+
+    }
+
+    //get all the potential value in a list on the selected level
+    //level = level that I am interest in finding all the POI
+    //kind of tested
+    private List<Double> getPotentialValueInSelectedLevel(Double level){
+        List<Double> list = new ArrayList<>();
+        this.dynamicMapLevel.get(level).stream().filter(cell -> cell.getPotential() != -900.0).forEach(cell -> list.add(cell.getPotential()));
+        return list;
+    }
+
+    //return list of cell that are gonna be split in the level under the one where I am
+    //this means that I am returning only the sub cell of the cell that in this level are splittable
+    //level = level that I am interest in finding all the POI
+    private List<Cell> getSubCellOfSplittableCells(Double level){
+        List<Cell> cells = new ArrayList<>();
+        this.dynamicMapLevel.get(level).forEach(cell -> {
+            if(cell.isSplittable()){
+                cell.getSubCells().forEach(cellID -> cells.add(this.dynamicMapLevel.get(level - 1).stream().filter(c -> c.getId().equals(cellID.getId())).findFirst().get()));
+            }
+        });
+        return cells;
+    }
+
+    //wrapper for the calculation of the potential field in all of the points in the word
+    //the input is
+    //artPotField -> the force field selected for our program
+    //kind of tested
+    public void computeForceInAllOfThePoints(ForceField artPotField){
+        //save the list of the potential value returned from the method
+        //List<Double> numberOfLevels = Arrays.asList(3.0,2.0,1.0,0.0);
+        /*HashMap<Double,Double> numbersOfLevels = new HashMap<>();
+        numbersOfLevels.put(4.0,3.0);
+        numbersOfLevels.put(3.0,2.0);
+        numbersOfLevels.put(2.0,1.0);
+        numbersOfLevels.put(1.0,0.0);
+        
+
+        //In first level I am calculating only that are not going to be split
+        this.setPotentialValueIntoSelectedLevel(4.0, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(4.0), this.getPOIsInSelectedLevel(4.0)), null);
+
+        //In second level I am computing only the one that are not gonna be split but only in the cell that are split in the first one
+        numbersOfLevels.entrySet().parallelStream().forEach(element -> {
+            List<Cell> splittableCells = this.getSubCellOfSplittableCells(element.getKey());
+            this.setPotentialValueIntoSelectedLevel(element.getValue(), artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(splittableCells),this.getPOIsInSelectedLevel(splittableCells)), splittableCells);
+        });
+
+
+        //now I have calculated the potential for all the cell, I should normalise it
+        List<Double> numberOfLevels = Arrays.asList(4.0,3.0,2.0,1.0,0.0);
+        List<Double> totalPotential = new ArrayList<>();
+        numberOfLevels.stream().forEach(level -> this.getPotentialValueInSelectedLevel(level).stream().forEach(totalPotential::add));
+
+        //now inside totalPotential I have a list of all the potential value. I can compute the values that I need to normalise them
+        Double maxList = totalPotential.stream().max(Comparator.naturalOrder()).get();
+        Double minList = totalPotential.stream().min(Comparator.naturalOrder()).get();
+        Double max = 0.0;
+        Double min = 255.0;
+
+        //set the normalise potential to every cells
+        //normalise and scale heatMapValue for use the result like a rgb value
+        //Print the heat map value on a file
+        //Instead from 0 to 255 I am scaling the value from 255 to 0 (inverted) so I can print only the attractive points
+        numberOfLevels.stream().forEach(level -> this.dynamicMapLevel.get(level).stream().forEach(cell -> {
+            Double standard = (cell.getPotential() - minList) / (maxList - minList);
+            Double scaled = standard * (max - min) + min;
+            cell.setNormalisedPotential(scaled);
+        }));*/
+
+        //In first level I am calculating only that are not going to be split
+        List<Cell> splittableCells = new ArrayList<>();
+        this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+
+        this.setPotentialValueIntoSelectedLevel(4.0, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(splittableCells), this.getPOIsInSelectedLevel(splittableCells)), splittableCells);
+
+        //In second level nad so on I am computing only the sub cell of the cell that can be split in the first level
+        List<Double> numberOfRealLevels = Arrays.asList(3.0,2.0,1.0,0.0);
+        List<Cell> subSplittableCells = new ArrayList<>();
+
+        numberOfRealLevels.forEach(level -> {
+            subSplittableCells.clear();
+            splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
+
+            //I need to populate second level of the matrix
+            this.dynamicMapLevel.put(level,this.mapLevel.get(level));
+            this.setPotentialValueIntoSelectedLevel(level, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(subSplittableCells), this.getPOIsInSelectedLevel(subSplittableCells)), subSplittableCells);
+
+            splittableCells.clear();
+            subSplittableCells.forEach(splittableCells::add);
+        });
+
+        //now I have calculated the potential for all the cell, I should normalise it
+        List<Double> numberOfLevels = Arrays.asList(4.0,3.0,2.0,1.0,0.0);
+        this.normalisePotentialValue(numberOfLevels);
+    }
+
+    //update all the POIs charge in the new map
+    //I need to update the POI only in the cells not splittable of the first level. Then following the splittable cell I go down and repeat the update
+    //the inputs are
+    //currentPosition -> point where the tracked person is right now
+    //angle -> this is the angle that the tracked person is using to move respect the x axis
+    //threshold angle
+    //kind of tested
+    public void updatePOIcharge(Point currentPosition, Double angle, Double threshold){
+
+        //All the POI in level 4.0
+        List<POI> listOfPOIsToUpdate = this.getPOIsInSelectedLevel(4.0);
+
+        listOfPOIsToUpdate.stream().forEach(aPointsOfInterest ->{
+            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+            //check if the current angle is inside or outside the angle plus or minus the threshold
+            if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
+                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+            }else{
+                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+            }
+        });
+
+        //get the splittable cell in last level
+        List<Cell> splittableCells = new ArrayList<>();
+        this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+        //get sub cell of the splittable
+        List<Cell> subSplittableCells = new ArrayList<>();
+
+        while(!splittableCells.isEmpty()){
+            subSplittableCells.clear();
+            splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
+
+            listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
+            listOfPOIsToUpdate.stream().forEach(aPointsOfInterest ->{
+                Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+                //check if the current angle is inside or outside the angle plus or minus the threshold
+                if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
+                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                    aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+                }else{
+                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                    aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+                }
+            });
+
+            splittableCells.clear();
+            subSplittableCells.forEach(splittableCells::add);
+        }
+
+
+
+        /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
+
+        numberOfLevels.stream().forEach(level ->{
+            List<POI> listOfPOIsToUpdate = new ArrayList<>();
+            if(level == 5.0){//for level 4.0 I need to find the POIs in this level (it is coded like 5.0 in the if clause because 4.0 I will use later)
+                listOfPOIsToUpdate = this.getPOIsInSelectedLevel(4.0);
+            }else{//for all the others levels I find the POI from the Splittable Cell of the previous
+                List<Cell> splittableCells = this.getSubCellOfSplittableCells(level);
+                listOfPOIsToUpdate = this.getPOIsInSelectedLevel(splittableCells);
+            }
+            listOfPOIsToUpdate.stream().forEach(aPointsOfInterest ->{
+                Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+                //check if the current angle is inside or outside the angle plus or minus the threshold
+                if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
+                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                    aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+                }else{
+                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                    aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+                }
+            });
+        });*/
+
+
+    }
+
+    //return the list of all the normalised charge in the current level.
+    //if the level is the higher all the tiles has charge, for the other levels only the sub tile of the father has a value, all the other have to be null
+    //I can not set null so I am setting -900.0 that is an impossible value for that value.
+    //kind of tested
+    public List<Double> getChargeInSelectedLevel(Double level){
+        List<Double> chargeList = new ArrayList<>();
+        this.dynamicMapLevel.get(level).forEach(cell -> chargeList.add(cell.getNormalisedPotential()));
+        return chargeList;
+
+       /* if(level == 4.0){//top level, all the tiles have charge
+            this.dynamicMapLevel.get(4.0).forEach(cell -> {
+                if(cell.isSplittable()){
+                    chargeList.add(-900.0);
+                }else{
+                    chargeList.add(cell.getNormalisedPotential());
+                }
+            });
+            return chargeList;
+        }else{
+
+            //I need to check in father level the cell that has to be colored
+            List<Cell> listSubCell = this.getSubCellOfSplittableCells(level + 1);
+            this.dynamicMapLevel.get(level).forEach(cell -> {
+                if(listSubCell.stream().filter(subCell -> subCell.getId().equals(cell.getId())).findFirst().isPresent()){
+                    if(cell.isSplittable()){
+                        chargeList.add(-900.0);
+                    }else{
+                        chargeList.add(cell.getNormalisedPotential());
+                    }
+                }else{
+                    chargeList.add(-900.0);
+                }
+            });
+            return chargeList;
+        }*/
+
+    }
+
+    //wrapper for the calculation of the potential field in all of the points in the word
+    //this is calculating at the beginning of the simulation, so it is using the normal map and calculating only in the small level
+    //the input is
+    //artPotField -> the force field selected for our program
+    public void computeInitialForceInAllOfThePoints(ForceField artPotField){
+        //calculating bottom level
+        List<POI> newPOIsList = new ArrayList<>();
+        this.mapLevel.get(0.0).stream().forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
+        List<Point> newPointsList = new ArrayList<>();
+        this.mapLevel.get(0.0).stream().forEach(cell -> newPointsList.add(cell.getCenter()));
+        List<Double> potentialValue = artPotField.calculateForceInAllTheWorld(newPointsList, newPOIsList);
+
+        //set also the other level
+        List<Double> numberOfRealLevels = Arrays.asList(3.0,2.0,1.0,0.0);
+        numberOfRealLevels.forEach(level -> this.dynamicMapLevel.put(level,this.mapLevel.get(level)));
+
+        //put the value in it
+        List<Cell> selectedLevel = this.dynamicMapLevel.get(0.0);
+        for(int i = 0; i < potentialValue.size(); i++){
+            selectedLevel.get(i).setPotential(potentialValue.get(i));
+        }
+
+        //now I have calculated the potential for all the cell, I should normalise it
+        List<Double> numberOfLevels = Collections.singletonList(0.0);
+        this.normalisePotentialValue(numberOfLevels);
+    }
+
+
+    //set the normalise potential to every cells
+    //List<Double> numberOfLevels -> level where I need to normalise the potential
+    private void normalisePotentialValue(List<Double> numberOfLevels){
+        List<Double> totalPotential = new ArrayList<>();
+        numberOfLevels.stream().forEach(level -> this.getPotentialValueInSelectedLevel(level).stream().forEach(totalPotential::add));
+
+        //now inside totalPotential I have a list of all the potential value. I can compute the values that I need to normalise them
+        Double maxList = totalPotential.stream().max(Comparator.naturalOrder()).get();
+        Double minList = totalPotential.stream().min(Comparator.naturalOrder()).get();
+        Double max = 0.0;
+        Double min = 255.0;
+
+        //set the normalise potential to every cells
+        //normalise and scale heatMapValue for use the result like a rgb value
+        //Print the heat map value on a file
+        //Instead from 0 to 255 I am scaling the value from 255 to 0 (inverted) so I can print only the attractive points
+        numberOfLevels.stream().forEach(level -> this.dynamicMapLevel.get(level).stream().filter(cell -> cell.getPotential() != -900.0).forEach(cell -> {
+            Double standard = (cell.getPotential() - minList) / (maxList - minList);
+            Double scaled = standard * (max - min) + min;
+            cell.setNormalisedPotential(scaled);
+        }));
+    }
 }

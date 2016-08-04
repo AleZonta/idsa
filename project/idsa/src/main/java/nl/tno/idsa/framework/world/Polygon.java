@@ -35,6 +35,15 @@ public class Polygon implements IGeometry {
         this.yMax = yMax;
     }
 
+    public Polygon(Point central){
+        this.centroid = central;
+        this.xMin = Double.POSITIVE_INFINITY;
+        this.yMin = Double.POSITIVE_INFINITY;
+        this.xMax = Double.NEGATIVE_INFINITY;
+        this.yMax = Double.NEGATIVE_INFINITY;
+        this.points = new Point[0];
+    }
+
     @Override
     public Point[] getPoints() {
         return points;
