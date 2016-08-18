@@ -39,7 +39,9 @@ public class PotentialField extends Observable{
 
     private Point previousPoint; //Store the previous point used for the tracking
 
-    private List<Double> heatMapValues; //store all the charge
+    private TreeMap<Double, List<Double>> heatMapValues; //store all the charge
+
+    static Double commonInitialCharge = 10.0; //common initial charge. Is easier store it here than inside the code
 
     //basic class constructor
     public PotentialField(World world){
@@ -50,7 +52,7 @@ public class PotentialField extends Observable{
         this.worldWidth = world.getGeoMisure().getX(); //Width is in the x position of the point
 
         this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth);
-        this.heatMapValues = new ArrayList<>();
+        this.heatMapValues = new TreeMap<>();
 
         this.initialiseHeatMap(); //initialise heat map
         this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
@@ -181,7 +183,7 @@ public class PotentialField extends Observable{
         }
 */
         //for now is better assign to every point the same charge
-        this.pointsOfInterest.stream().forEach(p -> p.setCharge(1.0));
+        this.pointsOfInterest.stream().forEach(p -> p.setCharge(commonInitialCharge));
     }
 
     //From a list of possible Area we build our list of POIs
@@ -271,14 +273,20 @@ public class PotentialField extends Observable{
 
     //get the charge of all the levels in one list
     //Boolean disclaimer = True if is the first calculation of the bottom level, FALSE if is all the other computation
-    public List<Double> getAllTheCharges(Boolean disclaimer){
-        List<Double> chargeValue = new ArrayList<>();
+    public TreeMap<Double, List<Double>> getAllTheCharges(Boolean disclaimer){
+        TreeMap<Double, List<Double>> heatMapChargeValues = new TreeMap<>();
         if(disclaimer){
+            List<Double> chargeValue = new ArrayList<>();
             this.heatMapTilesOptimisation.getChargeInSelectedLevel(0.0).forEach(chargeValue::add);
+            heatMapChargeValues.put(0.0,chargeValue);
         }else {
-            this.getDifferentCellSize().forEach((key,value) -> this.heatMapTilesOptimisation.getChargeInSelectedLevel(key).forEach(chargeValue::add));
+            this.getDifferentCellSize().forEach((key,value) -> {
+                List<Double> chargeValue = new ArrayList<>();
+                this.heatMapTilesOptimisation.getChargeInSelectedLevel(key).forEach(chargeValue::add);
+                heatMapChargeValues.put(key,chargeValue);
+            });
         }
-        return chargeValue;
+        return heatMapChargeValues;
     }
 
 }

@@ -21,7 +21,7 @@ public class ElectricPotential extends ForceField {
     //Return a new Point -> X position is the magnitude of the force, Y position is the direction
     protected Point attractiveForce(Point currentPosition, Double potentialAttractionPower, Point attractivePoint){
         //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition) ^ 2)
-        Double constant = 10000.0;
+        Double constant = constantNeededForThePotentialCalculation;
         Double distance = currentPosition.euclideanDistanceTo(attractivePoint);
         return new Point(constant * (potentialAttractionPower/Math.pow(distance,2.0)) , Math.atan2(currentPosition.getY(),currentPosition.getX()));
     }
@@ -35,7 +35,7 @@ public class ElectricPotential extends ForceField {
     //Return a new Point -> X position is the magnitude of the force, Y position is the direction
     protected Point repulsiveForce(Point currentPosition, Double potentialRepulsivePower, Point obstacle, Double influenceDistance){
         //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition) ^ 2)
-        Double constant = 100000.0;
+        Double constant = constantNeededForThePotentialCalculation;
         Double distance = currentPosition.euclideanDistanceTo(obstacle);
         //also for the repulsive point the charge is not store with the negative sign, we need to change this
         Double negativePotential = -potentialRepulsivePower;
@@ -93,7 +93,7 @@ public class ElectricPotential extends ForceField {
             Double resultantVectorMagnitude = Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0));
             //If I am very close to the center of attraction the potential goes to a very very very high number.
             //Maybe I need a upper bound -> arbitrarily decided
-            if (resultantVectorMagnitude > 400.0) resultantVectorMagnitude = 400.0;
+            if (resultantVectorMagnitude > maximumValuePermittedForThePotential) resultantVectorMagnitude = maximumValuePermittedForThePotential;
             if (resultantVectorMagnitude.isNaN()) resultantVectorMagnitude = 0.0;
             //adding the point and the magnitude of the pf
             magnitude.put(aCenterPoint,resultantVectorMagnitude);

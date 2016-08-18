@@ -95,7 +95,7 @@ public class Matrix{
         }
 
         //initialise also dynamic map level
-        this.dynamicMapLevel = this.mapLevel;
+        this.differentCellSize.forEach((key,size) -> this.dynamicMapLevel.put(key,this.copyEntireList(this.mapLevel.get(key))));
     }
 
     //add this cell in the biggest cell
@@ -107,7 +107,7 @@ public class Matrix{
             Cell bigCell = cellList.get(position);
             //if cell is inside the border of big cell
             if (center.getX() > bigCell.getLeftBorder() && center.getX() < bigCell.getRightBorder() && center.getY() > bigCell.getBottomBorder() && center.getY() < bigCell.getTopBorder()) {
-                bigCell.addSubCells(cell); //add the cell to the father
+                bigCell.addSubCells(cell.deepCopy(Boolean.TRUE)); //add the cell to the father
                 found = Boolean.TRUE;
             }
             position++;
@@ -253,7 +253,7 @@ public class Matrix{
     //it throws an exception, if the index is not in the correct range
     private void computeRealList(List<Integer> neighbour, Cell selectedCell, Double currentLevel) throws Exception{
         List<Cell> level = new ArrayList<>();
-        List<Cell> levelSelected = this.mapLevel.get(currentLevel);
+        List<Cell> levelSelected = this.copyEntireList(this.mapLevel.get(currentLevel));
         for (Cell cell : levelSelected) {
             //neighbour could have only three different sizes. 3, 1, or is null
             if (neighbour == null) {
@@ -287,10 +287,10 @@ public class Matrix{
     //The inputs are
     //neighbour = list of the positions of the neighbour that I am keeping entirely alive
     //selectedCell = the cell containing the point
+    //currentLevel = the level on the mapLevel that I am currently using
     //List<Cell> subCells = sub cells to check
     //it throws an exception, if the index is not in the correct range
-    private void computeRealList(List<Integer> neighbour, Cell selectedCell, List<Cell> subCells) throws Exception{
-        List<Cell> level = new ArrayList<>();
+    private void computeRealList(List<Integer> neighbour, Cell selectedCell, Double currentLevel, List<Cell> subCells) throws Exception{
         for (Cell cell : subCells) {
             //neighbour could have only three different sizes. 3, 1, or is null
             if (neighbour == null) {
@@ -309,6 +309,124 @@ public class Matrix{
                     cell.eraseSubCells();
                 }
             }
+        }
+        this.dynamicMapLevel.put(currentLevel, this.copyEntireList(this.mapLevel.get(currentLevel)));
+        List<Cell> levelSelected = this.dynamicMapLevel.get(currentLevel);
+        levelSelected.stream().forEach(cell -> {
+            //if this cell is present in the list of the sub cells
+            if(subCells.stream().filter(c -> c.getId().equals(cell.getId())).findFirst().isPresent()){
+                //I need to check if it still has the children or not
+                if(!subCells.stream().filter(c -> c.getId().equals(cell.getId())).findFirst().get().isSplittable()){
+                    //is splittable mean it has children. So if it has not children we need to erase
+                    cell.eraseSubCells();
+                } //otherwise the children reamin
+            }else{ // the cell is not present. I erase the subcell
+                cell.eraseSubCells();
+            }
+        });
+
+    }
+
+    //sector could be from 1 to 9
+    //different sector comport different cell
+    //this method has a switch between the different sectors
+    //the inputs are
+    //sector =  number of the sector where we are now
+    //levelCell = cell where we are now
+    //List<Cell> subSplittableCells = sub cells to check
+    //Double level = level where we are now
+    private void discriminateSector(Integer sector, Cell levelCell, List<Cell> subSplittableCells, Double level){
+        switch (sector){
+            case 1:
+                //if it is in the first sector I need to split also three other cell.s The neighbours number 0,1,3
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Arrays.asList(0, 1, 3), levelCell, level);
+                    }else{
+                        this.computeRealList(Arrays.asList(0, 1, 3), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 2:
+                //if it is in the second sector I need to split another other cell. The neighbour number 1
+                try {
+                    if(subSplittableCells == null) {
+                        this.computeRealList(Collections.singletonList(1), levelCell, level);
+                    }else{
+                        this.computeRealList(Collections.singletonList(1), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 3:
+                //if it is in the third sector I need to split also three other cells. The neighbours number 1,2,4
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Arrays.asList(1,2,4), levelCell, level);
+                    }else{
+                        this.computeRealList(Arrays.asList(1,2,4), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 4:
+                //if it is in the fourth sector I need to split another other cell. The neighbour number 3
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Collections.singletonList(3), levelCell, level);
+                    }else{
+                        this.computeRealList(Collections.singletonList(3), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 5:
+                //if it is in the fifth sector I don't need to split other cells.
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(null, levelCell, level);
+                    }else{
+                        this.computeRealList(null, levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 6:
+                //if it is in the sixth sector I need to split another other cell. The neighbour number 4
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Collections.singletonList(4), levelCell, level);
+                    }else{
+                        this.computeRealList(Collections.singletonList(4), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 7:
+                //if it is in the seventh sector I need to split also three other cells. The neighbours number 3,5,6
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Arrays.asList(3,5,6), levelCell, level);
+                    }else{
+                        this.computeRealList(Arrays.asList(3,5,6), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 8:
+                //if it is in the eighth sector I need to split another other cell. The neighbour number 6
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Collections.singletonList(6), levelCell, level);
+                    }else{
+                        this.computeRealList(Collections.singletonList(6), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
+            case 9:
+                //if it is in the ninth sector I need to split also three other cells. The neighbours number 4,6,7
+                try {
+                    if(subSplittableCells == null){
+                        this.computeRealList(Arrays.asList(4,6,7), levelCell, level);
+                    }else{
+                        this.computeRealList(Arrays.asList(4,6,7), levelCell, level, subSplittableCells);
+                    }
+                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
+                break;
         }
     }
 
@@ -329,67 +447,13 @@ public class Matrix{
         //return the sector of this cell
         Integer sector = this.getSector(levelCell, currentPosition);
         //now sector could be from 1 to 9
-        switch (sector){
-            case 1:
-                //if it is in the first sector I need to split also three other cell.s The neighbours number 0,1,3
-                try {
-                    this.computeRealList(Arrays.asList(0, 1, 3), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 2:
-                //if it is in the second sector I need to split another other cell. The neighbour number 1
-                try {
-                    this.computeRealList(Collections.singletonList(1), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 3:
-                //if it is in the third sector I need to split also three other cells. The neighbours number 1,2,4
-                try {
-                    this.computeRealList(Arrays.asList(1,2,4), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 4:
-                //if it is in the fourth sector I need to split another other cell. The neighbour number 3
-                try {
-                    this.computeRealList(Collections.singletonList(3), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 5:
-                //if it is in the fifth sector I don't need to split other cells.
-                try {
-                    this.computeRealList(null, levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 6:
-                //if it is in the sixth sector I need to split another other cell. The neighbour number 4
-                try {
-                    this.computeRealList(Collections.singletonList(4), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 7:
-                //if it is in the seventh sector I need to split also three other cells. The neighbours number 3,5,6
-                try {
-                    this.computeRealList(Arrays.asList(3,5,6), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 8:
-                //if it is in the eighth sector I need to split another other cell. The neighbour number 6
-                try {
-                    this.computeRealList(Collections.singletonList(6), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-            case 9:
-                //if it is in the ninth sector I need to split also three other cells. The neighbours number 4,6,7
-                try {
-                    this.computeRealList(Arrays.asList(4,6,7), levelCell, 4.0);
-                }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                break;
-        }
+        this.discriminateSector(sector,levelCell, null, 4.0);
 
-        //I build first level. From that level I should check in the sub cell of all the ceell that are splittable
+        //I build first level. From that level I should check in the sub cell of all the cells that are splittable
         List<Cell> splittableCells = new ArrayList<>();
         this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
 
+        Double level = 3.0;
         while (!splittableCells.isEmpty()){
             //having this list I should find all the sub cells of these cells
             List<Cell> subSplittableCells = new ArrayList<>();
@@ -401,65 +465,13 @@ public class Matrix{
             //return the sector of this cell
             sector = this.getSector(levelCell, currentPosition);
             //now sector could be from 1 to 9
-            switch (sector){
-                case 1:
-                    //if it is in the first sector I need to split also three other cell.s The neighbours number 0,1,3
-                    try {
-                        this.computeRealList(Arrays.asList(0, 1, 3), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 2:
-                    //if it is in the second sector I need to split another other cell. The neighbour number 1
-                    try {
-                        this.computeRealList(Collections.singletonList(1), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 3:
-                    //if it is in the third sector I need to split also three other cells. The neighbours number 1,2,4
-                    try {
-                        this.computeRealList(Arrays.asList(1,2,4), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 4:
-                    //if it is in the fourth sector I need to split another other cell. The neighbour number 3
-                    try {
-                        this.computeRealList(Collections.singletonList(3), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 5:
-                    //if it is in the fifth sector I don't need to split other cells.
-                    try {
-                        this.computeRealList(null, levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 6:
-                    //if it is in the sixth sector I need to split another other cell. The neighbour number 4
-                    try {
-                        this.computeRealList(Collections.singletonList(4), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 7:
-                    //if it is in the seventh sector I need to split also three other cells. The neighbours number 3,5,6
-                    try {
-                        this.computeRealList(Arrays.asList(3,5,6), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 8:
-                    //if it is in the eighth sector I need to split another other cell. The neighbour number 6
-                    try {
-                        this.computeRealList(Collections.singletonList(6), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-                case 9:
-                    //if it is in the ninth sector I need to split also three other cells. The neighbours number 4,6,7
-                    try {
-                        this.computeRealList(Arrays.asList(4,6,7), levelCell, subSplittableCells);
-                    }catch (Exception e) { }//do nothing. Since they are hardcoded I don't have exception}
-                    break;
-            }
+            this.discriminateSector(sector, levelCell, subSplittableCells, level);
+
             splittableCells.clear();
             subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+            level--;
         }
+
         /*
         //The key of all the levels ordered from the highest level to the lowest
         List<Double> numberOfLevels = Arrays.asList(4.0,3.0,2.0,1.0,0.0);
@@ -532,9 +544,9 @@ public class Matrix{
     //It is using the dynamic map because in that one I have the actual POIs
     //level = level that I am interest in finding all the POI
     //kind of tested
-    private List<POI> getPOIsInSelectedLevel(Double level){
-        List<POI> newPOIsList = new ArrayList<>();
-        this.dynamicMapLevel.get(level).stream().filter(cell -> !cell.isSplittable()).forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
+    private List<Cell> getPOIsInSelectedLevel(Double level){
+        List<Cell> newPOIsList = new ArrayList<>();
+        this.mapLevel.get(level).stream().filter(cell -> !cell.isSplittable()).forEach(newPOIsList::add);
         /*this.dynamicMapLevel.get(level).forEach(cell -> {
             if(!cell.isSplittable()) newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge()));
         });*/
@@ -677,10 +689,12 @@ public class Matrix{
             Double scaled = standard * (max - min) + min;
             cell.setNormalisedPotential(scaled);
         }));*/
+        //reset both potential on the first level (I need this after the compute initial force in all the points )
+        //this.mapLevel.get(0.0).stream().forEach(Cell::resetPotential);
 
         //In first level I am calculating only that are not going to be split
         List<Cell> splittableCells = new ArrayList<>();
-        this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+        this.dynamicMapLevel.get(4.0).stream().filter(cell -> !cell.isSplittable()).forEach(splittableCells::add);
 
         this.setPotentialValueIntoSelectedLevel(4.0, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(splittableCells), this.getPOIsInSelectedLevel(splittableCells)), splittableCells);
 
@@ -688,12 +702,15 @@ public class Matrix{
         List<Double> numberOfRealLevels = Arrays.asList(3.0,2.0,1.0,0.0);
         List<Cell> subSplittableCells = new ArrayList<>();
 
+        //on splittable cell list now I have to put the cell that are splittable, not the others
+        splittableCells.clear();
+        this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+
         numberOfRealLevels.forEach(level -> {
             subSplittableCells.clear();
             splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
 
             //I need to populate second level of the matrix
-            this.dynamicMapLevel.put(level,this.mapLevel.get(level));
             this.setPotentialValueIntoSelectedLevel(level, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(subSplittableCells), this.getPOIsInSelectedLevel(subSplittableCells)), subSplittableCells);
 
             splittableCells.clear();
@@ -715,9 +732,11 @@ public class Matrix{
     public void updatePOIcharge(Point currentPosition, Double angle, Double threshold){
 
         //All the POI in level 4.0
-        List<POI> listOfPOIsToUpdate = this.getPOIsInSelectedLevel(4.0);
+        List<Cell> listOfPOIsToUpdate = new ArrayList<>();
+        this.dynamicMapLevel.get(4.0).stream().filter(cell -> !cell.isSplittable()).forEach(listOfPOIsToUpdate::add);
+        //List<Cell> listOfPOIsToUpdate = this.getPOIsInSelectedLevel(4.0);
 
-        listOfPOIsToUpdate.stream().forEach(aPointsOfInterest ->{
+        listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest ->{
             Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
             //check if the current angle is inside or outside the angle plus or minus the threshold
             if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
@@ -727,7 +746,10 @@ public class Matrix{
                 //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
                 aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
             }
-        });
+        }));
+
+        //calculate new average for every cell used before
+        listOfPOIsToUpdate.stream().forEach(Cell::computeAverageCharge);
 
         //get the splittable cell in last level
         List<Cell> splittableCells = new ArrayList<>();
@@ -739,8 +761,8 @@ public class Matrix{
             subSplittableCells.clear();
             splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
 
-            listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
-            listOfPOIsToUpdate.stream().forEach(aPointsOfInterest ->{
+            //listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
+            subSplittableCells.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest ->{
                 Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
                 //check if the current angle is inside or outside the angle plus or minus the threshold
                 if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
@@ -750,12 +772,14 @@ public class Matrix{
                     //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
                     aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
                 }
-            });
+            }));
+
+            //calculate new average for every cell used before
+            subSplittableCells.stream().forEach(Cell::computeAverageCharge);
 
             splittableCells.clear();
             subSplittableCells.forEach(splittableCells::add);
         }
-
 
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
@@ -829,14 +853,10 @@ public class Matrix{
     public void computeInitialForceInAllOfThePoints(ForceField artPotField){
         //calculating bottom level
         List<POI> newPOIsList = new ArrayList<>();
-        this.mapLevel.get(0.0).stream().forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
+        this.dynamicMapLevel.get(0.0).stream().forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
         List<Point> newPointsList = new ArrayList<>();
-        this.mapLevel.get(0.0).stream().forEach(cell -> newPointsList.add(cell.getCenter()));
+        this.dynamicMapLevel.get(0.0).stream().forEach(cell -> newPointsList.add(cell.getCenter()));
         List<Double> potentialValue = artPotField.calculateForceInAllTheWorld(newPointsList, newPOIsList);
-
-        //set also the other level
-        List<Double> numberOfRealLevels = Arrays.asList(3.0,2.0,1.0,0.0);
-        numberOfRealLevels.forEach(level -> this.dynamicMapLevel.put(level,this.mapLevel.get(level)));
 
         //put the value in it
         List<Cell> selectedLevel = this.dynamicMapLevel.get(0.0);
@@ -869,7 +889,15 @@ public class Matrix{
         numberOfLevels.stream().forEach(level -> this.dynamicMapLevel.get(level).stream().filter(cell -> cell.getPotential() != -900.0).forEach(cell -> {
             Double standard = (cell.getPotential() - minList) / (maxList - minList);
             Double scaled = standard * (max - min) + min;
+            if (scaled.isNaN()) scaled = 0.0;
             cell.setNormalisedPotential(scaled);
         }));
+
     }
+
+    //When I am coping one list to another I need a deep copy otherwise everything screwed up
+    private List<Cell> copyEntireList(List<Cell> list){
+        return list.stream().map(cell -> cell.deepCopy(Boolean.TRUE)).collect(Collectors.toList());
+    }
+
 }

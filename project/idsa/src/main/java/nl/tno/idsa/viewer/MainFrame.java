@@ -88,7 +88,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
     private final PLayer agentLayer;
 
     private final PLayer heatMapPOIsLayer; //Layer for heat map POI
-    private final PLayer heatMapLayer; //Layer for heat map
+    //private final PLayer heatMapLayer; //Layer for heat map
+    private final List<PLayer> listOfHeatMapLayer; //different layer for the heat map (new way of organise it)
     private final PotentialField pot;
     private final TrackingSystem track; //tracking system object, we need it to connect pf with tracking of the agent
     private final MainFrame mainFrame; //this object. I need it to pass to the agent for the observer observable system
@@ -128,21 +129,37 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         this.uiLayer = new PLayer();
         this.agentLayer = new PLayer();
         this.heatMapPOIsLayer = new PLayer(); // Layer for the POI heat map (potential field representation)
-        this.heatMapLayer = new PLayer(); // Layer for the heat map (potential field representation)
+        //this.heatMapLayer = new PLayer(); // Layer for the heat map (potential field representation)
+
+        this.listOfHeatMapLayer = new ArrayList<>();
+        //load the different layer -> same number as the matrix different layer
+        Integer level = this.pot.getDifferentCellSize().size();
+        for(int i = 0; i < level; i++){
+            this.listOfHeatMapLayer.add(new PLayer());
+        }
 
         canvas.getRoot().addChild(areaLayer);
         canvas.getRoot().addChild(edgeLayer);
         canvas.getRoot().addChild(uiLayer);
         canvas.getRoot().addChild(agentLayer);
         canvas.getRoot().addChild(heatMapPOIsLayer); // Adding the POI heat map layer to the root
-        canvas.getRoot().addChild(heatMapLayer); // Adding the heat map layer to the root
+        //canvas.getRoot().addChild(heatMapLayer); // Adding the heat map layer to the root
+
+        for(PLayer pl: this.listOfHeatMapLayer){
+            canvas.getRoot().addChild(pl);
+        }
 
         canvas.getCamera().addLayer(0, edgeLayer);
         canvas.getCamera().addLayer(1, areaLayer);
         canvas.getCamera().addLayer(2, uiLayer);
         canvas.getCamera().addLayer(3, agentLayer);
         canvas.getCamera().addLayer(4, heatMapPOIsLayer); // Assign the POI layer to the camera (with a number)
-        canvas.getCamera().addLayer(5, heatMapLayer); // Assign the layer to the camera (with a number)
+        //canvas.getCamera().addLayer(5, heatMapLayer); // Assign the layer to the camera (with a number)
+
+        for(int i = 0; i < level; i++){
+            canvas.getCamera().addLayer(i + 5, this.listOfHeatMapLayer.get(i));
+        }
+
         this.orderCellsDisplayed = new ArrayList<>();
 
         initControlPanel();
@@ -198,52 +215,81 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         heatMapPOIsLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
 
         //for the heatMapLayer I prepare all the rectangle in the position so later I have only to update the rectangle that I need
+        //I am building the layer from the smallest to the highest (in this case 0.0 -> 4.0) [remember this choice in future]
         TreeMap<Double, Double> differentCellSize = this.pot.getDifferentCellSize();
         differentCellSize.forEach((key,elem) -> {
+            Double specificColumn =  Math.ceil(heightAndWidth.getX() / elem); //compute how many columns we have using the specific size for every level
+            Double specificRow = Math.ceil(heightAndWidth.getY() / elem); //compute how many rows we have using the specific size for every level
             Double coordinateRow = 0.0;
-            for (int i = 0; i < row ; i++){
+            for (int i = 0; i < specificRow ; i++){
                 Double coordinateColumn = 0.0;
-                for (int j = 0; j < column ; j++){
+                for (int j = 0; j < specificColumn ; j++){
                     // coordinatecolumn + heightAndWidth.getX() + heightAndWidth.getX()  -> to move two steps to the right of the map
                     // - coordinaterow -> I need the minus for display correctly the map
                     PPath node = PPath.createRectangle(coordinateColumn + heightAndWidth.getX() + heightAndWidth.getX(), -coordinateRow, elem, elem);
                     node.setPaint(null); // transparent
                     node.setStrokePaint(null);
-                    heatMapLayer.addChild(node);
-                    coordinateColumn += size; //increase the coordinate of the column by cell size
+                    this.listOfHeatMapLayer.get(key.intValue()).addChild(node); //add the child to his layer
+                    //heatMapLayer.addChild(node);
+                    coordinateColumn += elem; //increase the coordinate of the column by cell size
                 }
-                coordinateRow += size; // increase the coordinate of the row by cell size
+                coordinateRow += elem; // increase the coordinate of the row by cell size
             }
         });
         //after this assignment heatMapLayer should have all the cells in the order from the smallest one to the biggest one
 
-        heatMapLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
+        //heatMapLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
+        for(PLayer pl: this.listOfHeatMapLayer){
+            pl.setVisible(Boolean.FALSE);
+        }
     }
 
     //update heat map value
-    private void updateHeatMap(List<Double> heatMapValue){
-        List<PPath> listNodes = (List<PPath>)this.heatMapLayer.getAllNodes();
+    private void updateHeatMap(TreeMap<Double, List<Double>> heatMapValue){
+        //now heatMapValue contains all the element in one list. Maybe is better receive the element split by level
+        //Now heatMapValue contains all the list of the element split per level
+        //loop on heatMapValue because i can receive data only for some level or for all of them
+        heatMapValue.forEach((key,list) -> {
+            List<PPath> listNodes = (List<PPath>)this.listOfHeatMapLayer.get(key.intValue()).getAllNodes();
+            for(int i = 0; i < list.size(); i++){
+                if(list.get(i) != -900.0){
+                    listNodes.get(i + 1).setPaint(new Color(255, list.get(i).intValue(), list.get(i).intValue()));
+                }else{
+                    listNodes.get(i + 1).setPaint(null);
+                }
+            }
+        });
+
+        /*List<PPath> listNodes = (List<PPath>)this.heatMapLayer.getAllNodes();
         for(int i = 0; i < heatMapValue.size(); i++){
             if(heatMapValue.get(i) != -900.0){
                 listNodes.get(i + 1).setPaint(new Color(255, heatMapValue.get(i).intValue(), heatMapValue.get(i).intValue()));
             }
+        }*/
+        //this.heatMapLayer.setVisible(Boolean.TRUE);
+        for(PLayer pl: this.listOfHeatMapLayer){
+            pl.setVisible(Boolean.TRUE);
         }
-        this.heatMapLayer.setVisible(Boolean.TRUE);
     }
 
     //reset the heat map in case of multiple press of track button
     private void resetHeatMaps(Boolean both){
-        List<PPath> listNodes = (List<PPath>)this.heatMapLayer.getAllNodes(); //list of all the nodes inside the layer
-        for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
-            listNodes.get(i).setPaint(null); //reset color heat map
+        for(PLayer pl: this.listOfHeatMapLayer){
+            List<PPath> listNodes = (List<PPath>)pl.getAllNodes(); //list of all the nodes inside the layer
+            for(int i = 1; i < listNodes.size(); i++){ // the loop starts from 1 because first node is the layer and we don't need it
+                listNodes.get(i).setPaint(null); //reset color heat map
+            }
         }
         if(both) {
-            listNodes = (List<PPath>) this.heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
+            List<PPath> listNodes = (List<PPath>) this.heatMapPOIsLayer.getAllNodes(); //list of all the nodes inside the layer
             for (int i = 1; i < listNodes.size(); i++) { // the loop starts from 1 because first node is the layer and we don't need it
                 listNodes.get(i).setPaint(null); //reset color heat map
             }
             this.heatMapPOIsLayer.setVisible(Boolean.FALSE);
-            this.heatMapLayer.setVisible(Boolean.FALSE);
+            //this.heatMapLayer.setVisible(Boolean.FALSE);
+            for(PLayer pl: this.listOfHeatMapLayer){
+                pl.setVisible(Boolean.FALSE);
+            }
         }
 
     }
@@ -1004,8 +1050,8 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                         }
                     }else {
                         //the list is not an instance of Agent so the only thing it could be is Potentialfiled
-                        resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
-                        updateHeatMap((List<Double>) arg); //update the GUI of the heatMap
+                        //resetHeatMaps(false); //reset the color of the heatMap (only the PF map)
+                        //updateHeatMap((List<Double>) arg); //update the GUI of the heatMap
                     }
                 } else {
                     if (selectionObserver.getIncident() != null && selectionObserver.getIncident().getActionPlan() != null) {
@@ -1024,9 +1070,9 @@ public class MainFrame implements IEnvironmentObserver, Observer {
             } else if (arg instanceof Point) {
                 //I am updating the tracking position
                 updateMyPoint((Point) arg);
-            } /*else if (arg instanceof HashMap){
-                updateHeatMap((HashMap<Double, List<Cell>>) arg); //update the GUI of the heatMap
-            }*/
+            } else if (arg instanceof TreeMap){
+                updateHeatMap((TreeMap<Double, List<Double>>) arg); //update the GUI of the heatMap
+            }
         } else {
             // Clear
         }
@@ -1078,7 +1124,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
                 Point converted = new Point(p.getX(), -p.getY()); //translate point in our point class
                 Agent a = sim.getEnvironment().getAgentClosestTo(converted); //find closest agent to the point clicked
                 // Notify info panel that an agent has been selected
-                //Messenger.broadcast(String.format("Display info on agent %s", a));
+                Messenger.broadcast(String.format("Display info on agent %s", a));
                 //selectionObserver.setAgent(a);
                 try {
                     resetHeatMaps(true); //I am resetting also the POI heat map

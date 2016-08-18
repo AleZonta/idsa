@@ -79,20 +79,12 @@ public class MatrixTest {
 
         mat.updatePOIcharge(new Point(0.0,0.0),90.0,45.0);
 
-        List<Double> retList = mat.getChargeInSelectedLevel(4.0);
-        List<Double> expectedResult = Arrays.asList(-900.0,-900.0,0.0,0.0,-900.0,-900.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
-        for(int i = 0; i < retList.size(); i++) assertEquals(expectedResult.get(i), retList.get(i));
+        mat.computeForceInAllOfThePoints(new ElectricPotential());
 
-        retList = mat.getChargeInSelectedLevel(3.0);
-        expectedResult = new ArrayList<>();
-        for(int i = 0; i < 64; i++){
-            if(i == 0 ||i == 1 ||i == 2 ||i == 3 ||i == 8 ||i == 11 ||i == 16 ||i == 19 ||i == 24 ||i == 25 ||i == 26 ||i == 27){
-                expectedResult.add(0.0);
-            }else{
-                expectedResult.add(-900.0);
-            }
-        }
-        for(int i = 0; i < retList.size(); i++) assertEquals(expectedResult.get(i), retList.get(i));
+        List<Double> retList = mat.getChargeInSelectedLevel(4.0);
+        List<Double> retList1 = mat.getChargeInSelectedLevel(3.0);
+        List<Double> retList2 = mat.getChargeInSelectedLevel(2.0);
+
     }
 
     @Test
@@ -151,9 +143,18 @@ public class MatrixTest {
 
         mat.initMap();
         mat.initPOI(listOfPOI);
+        mat.computeInitialForceInAllOfThePoints(new ElectricPotential());
 
         mat.computeActualMatrix(new Point(1000.0,1000.0));
+        mat.updatePOIcharge(new Point(1000.0,1000.0),90.0,45.0);
+        mat.computeForceInAllOfThePoints(new ElectricPotential());
 
+        mat.computeActualMatrix(new Point(1005.0,1005.0));
+        mat.updatePOIcharge(new Point(1005.0,1005.0),90.0,45.0);
+        mat.computeForceInAllOfThePoints(new ElectricPotential());
+
+        mat.computeActualMatrix(new Point(1010.0,1010.0));
+        mat.updatePOIcharge(new Point(1010.0,1010.0),90.0,45.0);
         mat.computeForceInAllOfThePoints(new ElectricPotential());
     }
 

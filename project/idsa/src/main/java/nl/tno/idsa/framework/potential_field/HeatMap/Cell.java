@@ -43,7 +43,7 @@ public class Cell {
         this.POIs = new ArrayList<>();
         this.averageCharge = null;
         this.potential = -900.0;
-        this.normalisedPotential = 0.0;
+        this.normalisedPotential = -900.0;
         this.id = id;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for(int i = 0; i < 8; i++) this.listNeighbors.add(null);
@@ -57,7 +57,7 @@ public class Cell {
         this.POIs = new ArrayList<>();
         this.averageCharge = null;
         this.potential = -900.0;
-        this.normalisedPotential = 0.0;
+        this.normalisedPotential = -900.0;
         this.id = id;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for (int i = 0; i < 8; i++) this.listNeighbors.add(null);
@@ -71,7 +71,7 @@ public class Cell {
         this.POIs = poiList;
         this.averageCharge = charge;
         this.potential = -900.0;
-        this.normalisedPotential = 0.0;
+        this.normalisedPotential = -900.0;
         this.id = id;
         this.listNeighbors = listNeighbors;
     }
@@ -110,6 +110,12 @@ public class Cell {
     public void setNormalisedPotential(Double potential) { this.normalisedPotential = potential; }
 
     public Integer getId(){ return  this.id; }
+
+    //reset the value on the potential fields
+    public void resetPotential(){
+        this.potential = -900.0;
+        this.normalisedPotential = -900.0;
+    }
 
     //add one sub cell to the list
     //implicitly tested
@@ -206,7 +212,9 @@ public class Cell {
     //tested
     public Cell deepCopy(Boolean keepChild){
         if(keepChild){
-            return new Cell(this.size,this.center,this.subCells,this.POIs,this.id,this.averageCharge,this.listNeighbors);
+            Cell newCell = new Cell(this.size,this.center,new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors);
+            this.subCells.stream().forEach(cell -> newCell.addSubCells(cell.deepCopy(Boolean.TRUE)));
+            return newCell;
         }else {
             return new Cell(this.size,this.center, new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors);
         }
