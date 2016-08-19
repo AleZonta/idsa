@@ -41,7 +41,7 @@ public class PotentialField extends Observable{
 
     private TreeMap<Double, List<Double>> heatMapValues; //store all the charge
 
-    static Double commonInitialCharge = 10.0; //common initial charge. Is easier store it here than inside the code
+    static Double commonInitialCharge = 1.0; //common initial charge. Is easier store it here than inside the code
 
     //basic class constructor
     public PotentialField(World world){
@@ -150,7 +150,7 @@ public class PotentialField extends Observable{
                     this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Shop"));
 
                 } else if (poxActivity instanceof PossibleBeAtSportsField) { //if the possible activity is to be at the sport field in the future we add all the sport fields to the POIs list
-                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("SportField"));
+                    this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("SportsField"));
 
                 } else if (poxActivity instanceof PossibleBeAtPlayground) { //if the possible activity is to be at the playground in the future we add all the playgrounds to the POIs list
                     this.fromPoxPOIsToActualPOIs(this.differentAreaType.get("Playground"));
@@ -187,16 +187,10 @@ public class PotentialField extends Observable{
     }
 
     //From a list of possible Area we build our list of POIs
-    //TODO this method sometimes generate a nullpointexception because possiblePOIs is empty. How is this possible? test method that creates that list
     private void fromPoxPOIsToActualPOIs(List<Area> possiblePOIs){
-        try {
-            //iter among all the elemt of the list. All the saved area saved in the init of the program
-            //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later}
-            possiblePOIs.stream().forEach( aPossiblePOI -> this.pointsOfInterest.add(new POI(aPossiblePOI)));
-        }catch (NullPointerException e){
-            String why = "why????";
-             //do nothing
-        }
+        //iter among all the elemt of the list. All the saved area saved in the init of the program
+        //add the real POI using constructor with only one parameter. We don't know how many POI we will have so we set the charge later}
+        possiblePOIs.stream().forEach( aPossiblePOI -> this.pointsOfInterest.add(new POI(aPossiblePOI)));
     }
 
     //initialise the heatmapvalue with zero after having calculate how many position we need and the center of every cell

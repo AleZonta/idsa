@@ -20,6 +20,7 @@ public class Cell {
     private Double normalisedPotential; //normalised Potential of the cell
     private final Integer id; //id of the cell
     private final List<Integer> listNeighbors; //list of all the neighbors of the cell
+    private Point POIsCenterOfMass; //Center of mass of all the POIs in the cell
 
     //constructor without parameters
     public Cell(){
@@ -33,6 +34,7 @@ public class Cell {
         this.id = null;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for(int i = 0; i < 8; i++) this.listNeighbors.add(null);
+        this.POIsCenterOfMass = null;
     }
 
     //constructor with only id
@@ -47,6 +49,7 @@ public class Cell {
         this.id = id;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for(int i = 0; i < 8; i++) this.listNeighbors.add(null);
+        this.POIsCenterOfMass = null;
     }
 
     //constructor with size and center point and id
@@ -61,10 +64,11 @@ public class Cell {
         this.id = id;
         this.listNeighbors = new ArrayList<>(8); //i'm setting the list with 8 position since I can have only 8 neighbors
         for (int i = 0; i < 8; i++) this.listNeighbors.add(null);
+        this.POIsCenterOfMass = null;
     }
 
     //constructor with all the parameters
-    public Cell(Double size, Point center, List<Cell> subCells, List<POI> poiList, Integer id, Double charge, List<Integer> listNeighbors ){
+    public Cell(Double size, Point center, List<Cell> subCells, List<POI> poiList, Integer id, Double charge, List<Integer> listNeighbors, Point centerOfTheMass){
         this.size = size;
         this.center = center;
         this.subCells = subCells;
@@ -74,6 +78,7 @@ public class Cell {
         this.normalisedPotential = -900.0;
         this.id = id;
         this.listNeighbors = listNeighbors;
+        this.POIsCenterOfMass = centerOfTheMass;
     }
 
     //getters
@@ -96,6 +101,8 @@ public class Cell {
     public Double getAverageCharge() {
         return this.averageCharge;
     }
+
+    public Point getPOIsCenterOfMass() { return this.POIsCenterOfMass; }
 
     public Double getPotential() {
         return this.potential;
@@ -138,16 +145,23 @@ public class Cell {
         this.POIs.add(poi);
     }
 
-    //compute average POI
+    //compute average POI (charge and centerPoint)
     //tested
     public void computeAverageCharge(){
         Double averageCharge = 0.0;
+        Double averageX = 0.0;
+        Double averageY = 0.0;
         for(POI aPOI : this.POIs){
             averageCharge += aPOI.getCharge();
+            averageX += aPOI.getArea().getPolygon().getCenterPoint().getX();
+            averageY += aPOI.getArea().getPolygon().getCenterPoint().getY();
         }
         averageCharge /= this.POIs.size();
+        averageX /= this.POIs.size();
+        averageY /= this.POIs.size();
         if(averageCharge.isNaN()) averageCharge = 0.0; //occurs when I don't have POIs in this cell
         this.averageCharge = averageCharge;
+        this.POIsCenterOfMass = new Point(averageX,averageY);
     }
 
     //return left border
@@ -212,11 +226,11 @@ public class Cell {
     //tested
     public Cell deepCopy(Boolean keepChild){
         if(keepChild){
-            Cell newCell = new Cell(this.size,this.center,new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors);
+            Cell newCell = new Cell(this.size,this.center, new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors,this.POIsCenterOfMass);
             this.subCells.stream().forEach(cell -> newCell.addSubCells(cell.deepCopy(Boolean.TRUE)));
             return newCell;
         }else {
-            return new Cell(this.size,this.center, new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors);
+            return new Cell(this.size,this.center, new ArrayList<>(),this.POIs,this.id,this.averageCharge,this.listNeighbors,this.POIsCenterOfMass);
         }
     }
 

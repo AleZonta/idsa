@@ -557,7 +557,7 @@ public class Matrix{
     //kind of tested
     private List<POI> getPOIsInSelectedLevel(List<Cell> cells){
         List<POI> newPOIsList = new ArrayList<>();
-        cells.stream().forEach(cell -> newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge())));
+        cells.stream().forEach(cell -> newPOIsList.add(new POI(cell.getPOIsCenterOfMass(), cell.getAverageCharge())));
         /*cells.forEach(cell -> {
             if(!cell.isSplittable()) newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge()));
         });*/
@@ -730,7 +730,6 @@ public class Matrix{
     //threshold angle
     //kind of tested
     public void updatePOIcharge(Point currentPosition, Double angle, Double threshold){
-
         //All the POI in level 4.0
         List<Cell> listOfPOIsToUpdate = new ArrayList<>();
         this.dynamicMapLevel.get(4.0).stream().filter(cell -> !cell.isSplittable()).forEach(listOfPOIsToUpdate::add);
@@ -761,26 +760,39 @@ public class Matrix{
             subSplittableCells.clear();
             splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
 
-            //listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
-            subSplittableCells.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest ->{
-                Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
-                //check if the current angle is inside or outside the angle plus or minus the threshold
-                if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
-                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                    aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
-                }else{
-                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                    aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
-                }
-            }));
+            //now I need to update the POI only in the cells that are not splittable
+            List<Cell> notSplittableCell = new ArrayList<>();
+            subSplittableCells.stream().filter(cell -> !cell.isSplittable()).forEach(notSplittableCell::add);
+
+            //check if I reach the POI and I am inside it
+            Cell amIinsideAPOI = this.arrivedIntoPOI(currentPosition,notSplittableCell);
+
+            if (amIinsideAPOI == null) {
+                //listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
+                notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
+                    Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+                    //check if the current angle is inside or outside the angle plus or minus the threshold
+                    if (currentAngle >= angle - threshold && currentAngle <= angle + threshold) {
+                        //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                        aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+                    } else {
+                        //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                        aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+                    }
+                }));
+            }else{
+                //I am in the POI, all the other should decrease
+                notSplittableCell.stream().filter(cell -> !cell.getId().equals(amIinsideAPOI.getId())).forEach(c -> c.getPOIs().stream().forEach(poi -> poi.decreaseCharge(0.1)));
+                //the poi should increase
+                amIinsideAPOI.getPOIs().forEach(poi -> poi.increaseCharge(0.1));
+            }
 
             //calculate new average for every cell used before
             subSplittableCells.stream().forEach(Cell::computeAverageCharge);
 
             splittableCells.clear();
-            subSplittableCells.forEach(splittableCells::add);
+            subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
         }
-
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
 
@@ -898,6 +910,15 @@ public class Matrix{
     //When I am coping one list to another I need a deep copy otherwise everything screwed up
     private List<Cell> copyEntireList(List<Cell> list){
         return list.stream().map(cell -> cell.deepCopy(Boolean.TRUE)).collect(Collectors.toList());
+    }
+
+    //Check if the current position is inside a point of interest. Return the Cell where the POI that contains the actual point is. If Cell is null no POIs contain the currentposition
+    private Cell arrivedIntoPOI(Point currentPosition, List<Cell> listCellWithPOItoUpdate){
+        try{
+            return listCellWithPOItoUpdate.stream().filter(cell -> cell.getPOIs().stream().filter(aPointsOfInterest -> aPointsOfInterest.getArea().getPolygon().contains(currentPosition)).findFirst().isPresent()).findFirst().get();
+        }catch (Exception e){
+            return null;
+        }
     }
 
 }
