@@ -161,7 +161,11 @@ public class Cell {
         averageY /= this.POIs.size();
         if(averageCharge.isNaN()) averageCharge = 0.0; //occurs when I don't have POIs in this cell
         this.averageCharge = averageCharge;
-        this.POIsCenterOfMass = new Point(averageX,averageY);
+        if(this.POIs.isEmpty()) {
+            this.POIsCenterOfMass = this.center;
+        }else{
+            this.POIsCenterOfMass = new Point(averageX,averageY);
+        }
     }
 
     //return left border

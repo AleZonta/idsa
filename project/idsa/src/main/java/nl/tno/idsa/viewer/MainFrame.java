@@ -220,15 +220,20 @@ public class MainFrame implements IEnvironmentObserver, Observer {
         differentCellSize.forEach((key,elem) -> {
             Double specificColumn =  Math.ceil(heightAndWidth.getX() / elem); //compute how many columns we have using the specific size for every level
             Double specificRow = Math.ceil(heightAndWidth.getY() / elem); //compute how many rows we have using the specific size for every level
-            Double coordinateRow = 0.0;
+            Double coordinateRow = elem;
+
             for (int i = 0; i < specificRow ; i++){
                 Double coordinateColumn = 0.0;
                 for (int j = 0; j < specificColumn ; j++){
                     // coordinatecolumn + heightAndWidth.getX() + heightAndWidth.getX()  -> to move two steps to the right of the map
                     // - coordinaterow -> I need the minus for display correctly the map
+
                     PPath node = PPath.createRectangle(coordinateColumn + heightAndWidth.getX() + heightAndWidth.getX(), -coordinateRow, elem, elem);
                     node.setPaint(null); // transparent
+
+                    //node.setStrokePaint(new Color(0, 0, 0));
                     node.setStrokePaint(null);
+
                     this.listOfHeatMapLayer.get(key.intValue()).addChild(node); //add the child to his layer
                     //heatMapLayer.addChild(node);
                     coordinateColumn += elem; //increase the coordinate of the column by cell size
@@ -240,7 +245,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
         //heatMapLayer.setVisible(Boolean.FALSE); //set if this layer is visible or not (i can use later to hide or show the layer)
         for(PLayer pl: this.listOfHeatMapLayer){
-            pl.setVisible(Boolean.FALSE);
+            pl.setVisible(Boolean.TRUE);
         }
     }
 

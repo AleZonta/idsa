@@ -181,7 +181,7 @@ public class Matrix{
     //column = number of columns present
     private void buildNeighbourhood(Integer q, Integer z, List<Cell> level, Integer row, Integer column){
         try {
-            Integer pos = (q * row) + z;
+            Integer pos = (q * column) + z;
             //first row
             if (q == 0) {
                 //first position
@@ -557,6 +557,7 @@ public class Matrix{
     //kind of tested
     private List<POI> getPOIsInSelectedLevel(List<Cell> cells){
         List<POI> newPOIsList = new ArrayList<>();
+        //cells.stream().forEach(cell -> newPOIsList.add(new POI(cell.getPOIsCenterOfMass(), cell.getAverageCharge())));
         cells.stream().forEach(cell -> newPOIsList.add(new POI(cell.getPOIsCenterOfMass(), cell.getAverageCharge())));
         /*cells.forEach(cell -> {
             if(!cell.isSplittable()) newPOIsList.add(new POI(cell.getCenter(), cell.getAverageCharge()));
@@ -581,6 +582,7 @@ public class Matrix{
     //kind of tested
     private List<Point> getCenterPointsInSelectedLevel(List<Cell> cells){
         List<Point> newPointsList = new ArrayList<>();
+        //cells.stream().forEach(cell -> newPointsList.add(cell.getCenter()));
         cells.stream().forEach(cell -> newPointsList.add(cell.getCenter()));
         /*cells.forEach(cell -> {
             if(!cell.isSplittable()) newPointsList.add(cell.getCenter());
@@ -590,14 +592,40 @@ public class Matrix{
 
     //put the potential value calculated inside the actual level
     //I need this so when I am going to visualise it I can call directly the matrix instead a simpler vector
-    //level = level that I am interest in finding all the POI
     //List<Double> potentialValue = list with all the calculated potential
-    //List<Cell> cells = if not null These are the cells that have to be updated
+    //List<Cell> cells = These are the cells that have to be updated
     //kind of tested
-    private void setPotentialValueIntoSelectedLevel(Double level, List<Double> potentialValue, List<Cell> cells){
-        List<Cell> listCells = this.dynamicMapLevel.get(level);
+    private void setPotentialValueIntoSelectedLevel(List<Double> potentialValue, List<Cell> cells){
 
-        Integer i = 0;
+        final Integer[] i = {0};
+        for(Cell singleCell : cells){
+            Double level= 0.0;
+            switch (singleCell.getSize().intValue()){
+                case 10:
+                    level = 0.0;
+                    break;
+                case 50:
+                    level = 1.0;
+                    break;
+                case 100:
+                    level = 2.0;
+                    break;
+                case 500:
+                    level = 3.0;
+                    break;
+                case 1000:
+                    level = 4.0;
+                    break;
+            }
+            this.dynamicMapLevel.get(level).stream().filter(aCell -> aCell.getId().equals(singleCell.getId())).findFirst().ifPresent(bCell -> {
+                bCell.setPotential(potentialValue.get(i[0]));
+                i[0]++;
+            });
+        }
+
+
+
+        /*Integer i = 0;
         for(Cell singleCell : cells){
             Cell c = listCells.stream().filter(cell -> cell.getId().equals(singleCell.getId())).findFirst().get();
             if( c != null ){
@@ -605,6 +633,7 @@ public class Matrix{
                 i++;
             }
         }
+        */
 
 
         /*Integer j = 0;
@@ -693,6 +722,8 @@ public class Matrix{
         //this.mapLevel.get(0.0).stream().forEach(Cell::resetPotential);
 
         //In first level I am calculating only that are not going to be split
+
+        /*
         List<Cell> splittableCells = new ArrayList<>();
         this.dynamicMapLevel.get(4.0).stream().filter(cell -> !cell.isSplittable()).forEach(splittableCells::add);
 
@@ -710,16 +741,69 @@ public class Matrix{
             subSplittableCells.clear();
             splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
 
-            //I need to populate second level of the matrix
-            this.setPotentialValueIntoSelectedLevel(level, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(subSplittableCells), this.getPOIsInSelectedLevel(subSplittableCells)), subSplittableCells);
+            //find the cell that I have to compute the potential
+            List<Cell> subNotSplittableCells = new ArrayList<>();
+            subSplittableCells.stream().filter(cell -> !cell.isSplittable()).forEach(subNotSplittableCells::add);
 
+            //I need to populate second level of the matrix
+            this.setPotentialValueIntoSelectedLevel(level, artPotField.calculateForceInAllTheWorld(this.getCenterPointsInSelectedLevel(subNotSplittableCells), this.getPOIsInSelectedLevel(subNotSplittableCells)), subNotSplittableCells);
+
+            //adding for the next loop only the cells that are splittable
             splittableCells.clear();
-            subSplittableCells.forEach(splittableCells::add);
+            subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
         });
 
         //now I have calculated the potential for all the cell, I should normalise it
         List<Double> numberOfLevels = Arrays.asList(4.0,3.0,2.0,1.0,0.0);
         this.normalisePotentialValue(numberOfLevels);
+
+        */
+
+        //What I wrote since now it's bullshit
+        List<Cell> listCellToUpdate = new ArrayList<>();
+        List<POI> listOfAllThePOI = new ArrayList<>();
+        List<Point> listOfAllThePoint = new ArrayList<>();
+
+        List<Cell> splittableCells = new ArrayList<>();
+        this.dynamicMapLevel.get(4.0).stream().filter(c -> !c.getPOIs().isEmpty()).filter(cell -> !cell.isSplittable()).forEach(splittableCells::add);
+        splittableCells.forEach(listCellToUpdate::add); //keep track which cell I need to update
+
+        this.getCenterPointsInSelectedLevel(splittableCells).forEach(listOfAllThePoint::add);
+        this.getPOIsInSelectedLevel(splittableCells).forEach(listOfAllThePOI::add);
+
+        //In second level nad so on I am computing only the sub cell of the cell that can be split in the first level
+        List<Double> numberOfRealLevels = Arrays.asList(3.0,2.0,1.0,0.0);
+        List<Cell> subSplittableCells = new ArrayList<>();
+
+        //on splittable cell list now I have to put the cell that are splittable, not the others
+        splittableCells.clear();
+        this.dynamicMapLevel.get(4.0).stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+
+        numberOfRealLevels.forEach(level -> {
+            subSplittableCells.clear();
+            splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
+
+            //find the cell that I have to compute the potential
+            List<Cell> subNotSplittableCells = new ArrayList<>();
+            subSplittableCells.stream().filter(c -> !c.getPOIs().isEmpty()).filter(cell -> !cell.isSplittable()).forEach(subNotSplittableCells::add);
+            subNotSplittableCells.forEach(listCellToUpdate::add); //keep track which cell I need to update
+
+            this.getCenterPointsInSelectedLevel(subNotSplittableCells).forEach(listOfAllThePoint::add);
+            this.getPOIsInSelectedLevel(subNotSplittableCells).forEach(listOfAllThePOI::add);
+
+
+            //adding for the next loop only the cells that are splittable
+            splittableCells.clear();
+            subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
+        });
+
+        //I need to populate second level of the matrix
+        this.setPotentialValueIntoSelectedLevel(artPotField.calculateForceInAllTheWorld(listOfAllThePoint, listOfAllThePOI), listCellToUpdate);
+
+        //now I have calculated the potential for all the cell, I should normalise it
+        List<Double> numberOfLevels = Arrays.asList(4.0,3.0,2.0,1.0,0.0);
+        this.normalisePotentialValue(numberOfLevels);
+
     }
 
     //update all the POIs charge in the new map
@@ -732,20 +816,30 @@ public class Matrix{
     public void updatePOIcharge(Point currentPosition, Double angle, Double threshold){
         //All the POI in level 4.0
         List<Cell> listOfPOIsToUpdate = new ArrayList<>();
-        this.dynamicMapLevel.get(4.0).stream().filter(cell -> !cell.isSplittable()).forEach(listOfPOIsToUpdate::add);
+        this.dynamicMapLevel.get(4.0).stream().filter(c -> !c.getPOIs().isEmpty()).filter(cell -> !cell.isSplittable()).forEach(listOfPOIsToUpdate::add);
         //List<Cell> listOfPOIsToUpdate = this.getPOIsInSelectedLevel(4.0);
 
-        listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest ->{
-            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
-            //check if the current angle is inside or outside the angle plus or minus the threshold
-            if(currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
-                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
-            }else{
-                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
-            }
-        }));
+        //I should check if I reach the POI(in the lowest level)
+        Cell amInsidePOI = this.arrivedIntoPOI(currentPosition, this.dynamicMapLevel.get(0.0));
+
+        //If I am not inside the POI I act normally
+        if(amInsidePOI == null) {
+            listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
+                Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+                //check if the current angle is inside or outside the angle plus or minus the threshold
+                if (currentAngle >= angle - threshold && currentAngle <= angle + threshold) {
+                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                    aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+                } else {
+                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                    aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+                }
+            }));
+        }else{
+            //If I am inside the POI I All the other cells have to decrease their charge
+            listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(1.0))); //TODO is 1.0 the best value?
+        }
+
 
         //calculate new average for every cell used before
         listOfPOIsToUpdate.stream().forEach(Cell::computeAverageCharge);
@@ -756,18 +850,16 @@ public class Matrix{
         //get sub cell of the splittable
         List<Cell> subSplittableCells = new ArrayList<>();
 
-        while(!splittableCells.isEmpty()){
+        while (!splittableCells.isEmpty()) {
+            //check all the sub cells of the splittable cells
             subSplittableCells.clear();
             splittableCells.forEach(cell -> cell.getSubCells().forEach(subSplittableCells::add));
 
             //now I need to update the POI only in the cells that are not splittable
             List<Cell> notSplittableCell = new ArrayList<>();
-            subSplittableCells.stream().filter(cell -> !cell.isSplittable()).forEach(notSplittableCell::add);
+            subSplittableCells.stream().filter(c -> !c.getPOIs().isEmpty()).filter(cell -> !cell.isSplittable()).forEach(notSplittableCell::add);
 
-            //check if I reach the POI and I am inside it
-            Cell amIinsideAPOI = this.arrivedIntoPOI(currentPosition,notSplittableCell);
-
-            if (amIinsideAPOI == null) {
+            if(amInsidePOI == null) {
                 //listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
                 notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
                     Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
@@ -781,18 +873,20 @@ public class Matrix{
                     }
                 }));
             }else{
-                //I am in the POI, all the other should decrease
-                notSplittableCell.stream().filter(cell -> !cell.getId().equals(amIinsideAPOI.getId())).forEach(c -> c.getPOIs().stream().forEach(poi -> poi.decreaseCharge(0.1)));
-                //the poi should increase
-                amIinsideAPOI.getPOIs().forEach(poi -> poi.increaseCharge(0.1));
+                //If I am inside the POI I All the other cells have to decrease their charge
+                notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(1.0))); //TODO is 1.0 the best value?
             }
 
+
             //calculate new average for every cell used before
-            subSplittableCells.stream().forEach(Cell::computeAverageCharge);
+            notSplittableCell.stream().forEach(Cell::computeAverageCharge);
 
             splittableCells.clear();
             subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
         }
+        //If I am in the POI after having decreased all the other POI I have to increase this POI
+        if(amInsidePOI != null) amInsidePOI.getPOIs().stream().forEach(aPointOfInterest -> aPointOfInterest.increaseCharge(1.0));
+
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
 
