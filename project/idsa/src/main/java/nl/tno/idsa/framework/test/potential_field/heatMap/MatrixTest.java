@@ -8,10 +8,7 @@ import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.Polygon;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -41,7 +38,13 @@ public class MatrixTest {
         listOfPOI.add(poi2);
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -70,7 +73,13 @@ public class MatrixTest {
         listOfPOI.add(poi2);
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -108,7 +117,13 @@ public class MatrixTest {
         listOfPOI.add(poi2);
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -139,7 +154,13 @@ public class MatrixTest {
         listOfPOI.add(poi2);
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -179,7 +200,13 @@ public class MatrixTest {
         listOfPOI.add(poi2);
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
         mat.initMap();
 
         mat.initPOI(listOfPOI);
@@ -191,7 +218,13 @@ public class MatrixTest {
     public void initMap() throws Exception {
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
         mat.initMap();
 
         //i don't have method that returns the private fields so I debugged and seems everything fine
@@ -217,7 +250,13 @@ public class MatrixTest {
         listOfPOI.add(poi2);
 
         //declare the matrix
-        Matrix mat = new Matrix(4000.0,4000.0);
+        TreeMap<Double, Double> differentCellSize = new TreeMap<>();
+        differentCellSize.put(0.0,10.0);
+        differentCellSize.put(1.0,50.0);
+        differentCellSize.put(2.0,100.0);
+        differentCellSize.put(3.0,500.0);
+        differentCellSize.put(4.0,1000.0);
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
 
         mat.initMap();
         mat.initPOI(listOfPOI);

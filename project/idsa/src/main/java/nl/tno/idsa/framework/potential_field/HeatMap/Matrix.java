@@ -19,18 +19,14 @@ public class Matrix{
     private final TreeMap<Double, Double> differentCellSize; //all the different cell size for the map -> is a tree map because it preserves the order
 
     //simple constructor
-    public Matrix(Double height, Double width){
+    public Matrix(Double height, Double width, TreeMap<Double, Double> differentCellSize){
         this.worldHeight = height;
         this.worldWidth = width;
         this.mapLevel = new HashMap<>();
         this.dynamicMapLevel = new HashMap<>();
         this.differentCellSize = new TreeMap<>();
         //adding hardcoded level
-        this.differentCellSize.put(0.0,10.0);
-        this.differentCellSize.put(1.0,50.0);
-        this.differentCellSize.put(2.0,100.0);
-        this.differentCellSize.put(3.0,500.0);
-        this.differentCellSize.put(4.0,1000.0);
+        differentCellSize.forEach(this.differentCellSize::put);
     }
 
     //getDifferentCellSize

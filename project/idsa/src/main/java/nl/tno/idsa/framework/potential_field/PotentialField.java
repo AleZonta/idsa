@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.potential_field;
 
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
 import nl.tno.idsa.framework.behavior.activities.possible.PossibleActivity;
@@ -43,19 +44,24 @@ public class PotentialField extends Observable{
 
     private Boolean typologyOfMatrix; //If it is true I am using the tile optimisation otherwise I am using the normal matrix
 
-    private static Double commonInitialCharge = 1.0; //common initial charge. Is easier store it here than inside the code
+    private Double commonInitialCharge; //common initial charge. Is easier store it here than inside the code
+
+    private ConfigFile conf; //config file with the field loaded from json
 
     //basic class constructor
-    public PotentialField(World world){
+    public PotentialField(World world, ConfigFile conf){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
         this.worldHeight = world.getGeoMisure().getY(); //Height is in the y position of the point
         this.worldWidth = world.getGeoMisure().getX(); //Width is in the x position of the point
 
-        this.typologyOfMatrix = Boolean.FALSE;
+        this.conf = conf;
+        this.typologyOfMatrix = this.conf.getTileOptimisation();
+        this.commonInitialCharge = this.conf.getCommonInitialCharge();
+
         if(this.typologyOfMatrix){
-            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth);
+            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize());
         }else{
             this.heatMapTilesOptimisation = null;
         }
@@ -197,7 +203,7 @@ public class PotentialField extends Observable{
         }
 */
         //for now is better assign to every point the same charge
-        this.pointsOfInterest.stream().forEach(p -> p.setCharge(commonInitialCharge));
+        this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.commonInitialCharge));
     }
 
     //From a list of possible Area we build our list of POIs
@@ -260,6 +266,8 @@ public class PotentialField extends Observable{
             default:
                 throw new ParameterNotDefinedException("Typology of Potential Field not declared"); //Parameter is not correct
         }
+        //set the variable
+        this.artificialPotentialField.setConstant(this.conf.getThresholdPotential(),this.conf.getConstantPotential());
         //calculate the value of the potential field
         //calling the method of the  heat map system
         if(this.typologyOfMatrix){ //If it is true I am using the tile optimisation

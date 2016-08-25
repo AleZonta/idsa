@@ -15,8 +15,8 @@ public abstract class ForceField {
     protected abstract Point repulsiveForce(Point currentPosition, Double potentialRepulsivePower, Point obstacle, Double influenceDistance); //abstract method that should implement equation for the repulsive force
     public abstract List<Double> calculateForceInAllTheWorld(List<Point> centerPoint, List<POI> pointsOfInterest); //abstract method that should implement how retrieve the force in every points of the world
 
-    static Double maximumValuePermittedForThePotential = 400.0; //It's easier to store here than inside the code. The potential could go to infinitive, so it needs a upper bound
-    static Double constantNeededForThePotentialCalculation = 100000.0; //constant used in the formula for the computation of the attractiveness or repulsiveness
+    protected Double maximumValuePermittedForThePotential; //It's easier to store here than inside the code. The potential could go to infinitive, so it needs a upper bound
+    protected Double constantNeededForThePotentialCalculation; //constant used in the formula for the computation of the attractiveness or repulsiveness
 
     //method that return the potential force in the current position
     //currentPosition -> current position of the tracked person where we want to know how strong is the acctraction
@@ -29,6 +29,12 @@ public abstract class ForceField {
         }else{
             return this.repulsiveForce(currentPosition, point.getCharge(), point.getArea().getPolygon().getClosestPoint(currentPosition), point.getInfluenceDistance());
         }
+    }
+
+    //method that set the two constant
+    public void setConstant(Double maxValuePermittedForThePotential, Double constNeededForThePotentialCalculation){
+        maximumValuePermittedForThePotential = maxValuePermittedForThePotential;
+        constantNeededForThePotentialCalculation = constNeededForThePotentialCalculation;
     }
 
 

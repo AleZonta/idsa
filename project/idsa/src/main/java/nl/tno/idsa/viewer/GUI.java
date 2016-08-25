@@ -1,6 +1,7 @@
 package nl.tno.idsa.viewer;
 
 import nl.tno.idsa.Constants;
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
@@ -94,7 +95,9 @@ public class GUI {
         //Loading the potential field
         ProgressNotifier.notifyProgressMessage("Loading potential field...");
         ProgressNotifier.notifyUnknownProgress();
-        PotentialField pot = new PotentialField(world);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile(); // load config file
+        PotentialField pot = new PotentialField(world, conf);
 
         ProgressNotifier.notifyProgress(100);
 
