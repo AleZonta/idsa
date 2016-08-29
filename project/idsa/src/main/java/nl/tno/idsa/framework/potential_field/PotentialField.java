@@ -333,7 +333,6 @@ public class PotentialField extends Observable{
         return heatMapChargeValues;
     }
 
-
     //normalise and scale heatMapValue for use the result like a rgb value
     //Print the heat map value on a file
     //Instead from 0 to 255 I am scaling the value from 255 to 0 (inverted) so I can print only the attractive points
