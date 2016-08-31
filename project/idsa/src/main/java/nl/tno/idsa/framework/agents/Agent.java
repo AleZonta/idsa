@@ -529,6 +529,6 @@ public class Agent extends Observable implements ISimulatedObject  {
     //set the observer for this agent
     public void setTracked(TrackingSystem track, MainFrame mainFrame){
         this.addObserver(track);
-        this.addObserver(mainFrame);
+        if(mainFrame!=null) this.addObserver(mainFrame);
     }
 }

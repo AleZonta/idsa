@@ -28,7 +28,7 @@ public class Sim {
     private boolean requestPause;
     private boolean isPaused;
     private boolean isRunning;
-    private PotentialField pot; //Istance of the potential field class
+    private PotentialField pot; //Instance of the potential field class. Only one. All the other will derive from this one
 
     public PotentialField getPot() { return this.pot; } //getter
     public void setPot(PotentialField pot) { this.pot = pot; } //setter
@@ -153,6 +153,8 @@ public class Sim {
                 simulatedObject.nextStep(durationInSeconds);
             }
         }
+
+
     }
 
     public boolean isRunning() {

@@ -31,7 +31,7 @@ public class TrackingSystem implements Observer  {
     }
 
     //update the potential field having the point where the tracked person is now
-    public void update(Point point){
+    private void update(Point point){
         //call the function of the potential field to update it
         this.pot.trackAndUpdate(point);
     }

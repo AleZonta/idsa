@@ -5,6 +5,7 @@ import nl.tno.idsa.framework.behavior.likelihoods.ActivityLikelihoodMap;
 import nl.tno.idsa.framework.behavior.likelihoods.DayOfWeek;
 import nl.tno.idsa.framework.behavior.multipliers.ISeason;
 import nl.tno.idsa.framework.behavior.multipliers.ITimeOfYear;
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.semantics_base.enumerations.RuntimeEnum;
 import nl.tno.idsa.framework.utils.TextUtils;
 import nl.tno.idsa.framework.world.Day;
@@ -17,6 +18,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Vector;
 
 /**
@@ -49,6 +52,33 @@ public class MultiplierSettingDialog extends JDialog {
     public MultiplierSettingDialog(JDialog owner, final Environment environment) {
         super(owner, CAPTION, ModalityType.APPLICATION_MODAL);
         createDialog(environment);
+    }
+
+    //Constructor for the without GUI version
+    public MultiplierSettingDialog(ConfigFile conf){
+        cancelled = false;
+
+        //select the day
+        Vector<DayOfWeek> days = new Vector<>(RuntimeEnum.getInstance(DayOfWeek.class).listOptions());
+        //zero is sunday, one is monday, two is friday and three is saturday
+        selectedDayOfWeek = days.get(conf.getDayOfWeek());
+
+        //select the season
+        Vector<ISeason> seasons = new Vector<>(RuntimeEnum.getInstance(ISeason.class).listOptions());
+        UnspecifiedSeason unspecifiedSeason = new UnspecifiedSeason();
+        seasons.insertElementAt(unspecifiedSeason, 0);
+        //zero is unspecified, one is winter and two is summer
+        selectedSeason = seasons.get(conf.getSeason());
+
+        //select Time of the year
+        Vector<ITimeOfYear> timesOfYear = new Vector<>(RuntimeEnum.getInstance(ITimeOfYear.class).listOptions());
+        UnspecifiedTimeOfYear unspecifiedTimeOfTheYear = new UnspecifiedTimeOfYear();
+        timesOfYear.insertElementAt(unspecifiedTimeOfTheYear, 0);
+        //zero is unspecified and one is pre christmas
+        selectedTimeOfYear = timesOfYear.elementAt(conf.getTimeOfTheYear());
+
+
+        selectedTime = conf.getTime();
     }
 
     private void createDialog(final Environment environment) {

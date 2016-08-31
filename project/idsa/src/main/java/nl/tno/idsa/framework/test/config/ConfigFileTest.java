@@ -1,6 +1,7 @@
 package nl.tno.idsa.framework.test.config;
 
 import nl.tno.idsa.framework.config.ConfigFile;
+import nl.tno.idsa.framework.world.Time;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -14,8 +15,8 @@ public class ConfigFileTest {
         ConfigFile file = new ConfigFile();
         file.loadFile();
 
-        assertEquals(Boolean.TRUE, file.getGUI());
-        assertEquals(Boolean.TRUE, file.getTileOptimisation());
+        assertEquals(Boolean.FALSE, file.getGUI());
+        assertEquals(Boolean.FALSE, file.getTileOptimisation());
         assertEquals(new Double(1.0), file.getCommonInitialCharge());
         assertEquals(new Double(400.0), file.getThresholdPotential());
         assertEquals(new Double(100000.0), file.getConstantPotential());
@@ -24,6 +25,13 @@ public class ConfigFileTest {
         assertEquals(new Double(100.0), file.getDifferentCellSize().get(2.0));
         assertEquals(new Double(500.0), file.getDifferentCellSize().get(3.0));
         assertEquals(new Double(1000.0), file.getDifferentCellSize().get(4.0));
+        assertEquals(new Integer(0), file.getDayOfWeek());
+        assertEquals(new Integer(0), file.getSeason());
+        assertEquals(new Integer(0), file.getTimeOfTheYear());
+        assertEquals(new Time(12,0,0).getHour(), file.getTime().getHour());
+        assertEquals(new Time(12,0,0).getMinute(), file.getTime().getMinute());
+        assertEquals(new Time(12,0,0).getSecond(), file.getTime().getSecond());
+        assertEquals(new Integer(999999), file.getMaxNumberOfTrackedPeople());
 
     }
 

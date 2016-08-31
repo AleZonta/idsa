@@ -33,7 +33,7 @@ public class SaveToFile {
     //method that set the info for the tracked agent
     public void setTrackedAgent(Agent agent){
         this.trackedAgent = agent;
-        this.currentPath = this.currentPath + "/" + agent.getFirstName();
+        this.currentPath = this.currentPath + "/" + agent.getFirstName() + System.currentTimeMillis();
         new File(this.currentPath).mkdirs();
         this.pointsOfThePath.add(agent.getLocation());
     }
@@ -76,7 +76,7 @@ public class SaveToFile {
                     outputWriter.newLine();
                 }
             }
-            System.out.println("Successfully Saved CSV File...");
+            System.out.println("Successfully Saved CSV File number " + this.fileCount.toString() +"...");
             outputWriter.flush();
             outputWriter.close();
         }catch (Exception e){}

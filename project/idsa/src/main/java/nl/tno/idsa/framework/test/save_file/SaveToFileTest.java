@@ -36,6 +36,10 @@ public class SaveToFileTest {
         savingApp.setTrackedAgent(fakeAgent);
         savingApp.saveAgentInfo();
 
+        //check what happen with two person with the same name
+        SaveToFile savingApp2 = new SaveToFile();
+        savingApp2.setTrackedAgent(fakeAgent);
+        savingApp2.saveAgentInfo();
         //checked in debug, it works
     }
 

@@ -2,6 +2,7 @@ package nl.tno.idsa.framework.config;
 
 
 
+import nl.tno.idsa.framework.world.Time;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -23,6 +24,11 @@ public class ConfigFile {
     private Double thresholdPotential;
     private Double constantPotential;
     private final TreeMap<Double, Double> differentCellSize;
+    private Double dayOfWeek;
+    private Double season;
+    private Double timeOfTheYear;
+    private Time time;
+    private Integer maxNumberOfTrackedPeople;
 
     //constructor
     public ConfigFile(){
@@ -33,6 +39,12 @@ public class ConfigFile {
         this.commonInitialCharge = null;
         this.GUI = null;
         this.tileOptimisation = null;
+        this.dayOfWeek = null;
+        this.season = null;
+        this.timeOfTheYear = null;
+        this.time = null;
+        this.maxNumberOfTrackedPeople = null;
+
     }
 
     //method that reads the configfile
@@ -53,6 +65,14 @@ public class ConfigFile {
         for(Integer i = 0; i < levels.size(); i++){
             this.differentCellSize.put(i.doubleValue(), (Double) levels.get(i));
         }
+
+        this.dayOfWeek = (Double) jsonObject.get("DayOfWeek");//zero is sunday, one is monday, two is friday and three is saturday
+        this.season = (Double) jsonObject.get("Season");//zero is unspecified, one is winter and two is summer
+        this.timeOfTheYear = (Double) jsonObject.get("TimeOfTheYear");//zero is unspecified and one is pre christmas
+        JSONArray time= (JSONArray) jsonObject.get("Time");
+        this.time = new Time(((Long) time.get(0)).intValue(),((Long) time.get(1)).intValue(),((Long) time.get(2)).intValue());
+
+        this.maxNumberOfTrackedPeople = ((Long) jsonObject.get("MaxNumberOfTrackedPeople")).intValue();
 
     }
 
@@ -79,4 +99,23 @@ public class ConfigFile {
 
     public TreeMap<Double,Double> getDifferentCellSize() { return  this.differentCellSize; }
 
+    public Integer getDayOfWeek() {
+        return this.dayOfWeek.intValue();
+    }
+
+    public Integer getSeason() {
+        return this.season.intValue();
+    }
+
+    public Integer getTimeOfTheYear() {
+        return this.timeOfTheYear.intValue();
+    }
+
+    public Time getTime() {
+        return this.time;
+    }
+
+    public Integer getMaxNumberOfTrackedPeople() {
+        return this.maxNumberOfTrackedPeople;
+    }
 }

@@ -9,6 +9,7 @@ import nl.tno.idsa.framework.force_field.ElectricPotential;
 import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.force_field.KathibFormulation;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
+import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationFunction;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
@@ -43,22 +44,31 @@ public class PotentialField extends Observable{
     private List<Point> centerPoint; //list with all the center
 
     private Boolean typologyOfMatrix; //If it is true I am using the tile optimisation otherwise I am using the normal matrix
-
     private Double commonInitialCharge; //common initial charge. Is easier store it here than inside the code
+    private Double thresholdPotential; //Threshold used for computing the potential value
+    private Double constantPotential; //Constant use in the formula for computing the potential
 
     private ConfigFile conf; //config file with the field loaded from json
+
+    private SaveToFile storage; //save tracked person info to file
+
+    //private final World world; //save world object
+    private Collection<Area> areaInTheWorld; //Save all the areas in the world (Need this to save memory)
 
     //basic class constructor
     public PotentialField(World world, ConfigFile conf){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
+        //this.world = world;
         this.worldHeight = world.getGeoMisure().getY(); //Height is in the y position of the point
         this.worldWidth = world.getGeoMisure().getX(); //Width is in the x position of the point
 
         this.conf = conf;
         this.typologyOfMatrix = this.conf.getTileOptimisation();
         this.commonInitialCharge = this.conf.getCommonInitialCharge();
+        this.thresholdPotential = this.conf.getThresholdPotential();
+        this.constantPotential = this.conf.getConstantPotential();
 
         if(this.typologyOfMatrix){
             this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize());
@@ -75,7 +85,46 @@ public class PotentialField extends Observable{
         this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
 
         this.previousPoint = null;
-        this.initDifferentAreaType(world); //loading the lists with all the places
+        this.areaInTheWorld = world.getAreas();
+        this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
+
+        this.storage = new SaveToFile();
+    }
+
+    //constructor used for the deep copy
+    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential){
+        this.pointsOfInterest = new ArrayList<>();
+        this.differentAreaType = new HashMap<>();
+        this.trackedAgent = null;
+        //this.world = world;
+        this.worldHeight = worldHeight; //Height is in the y position of the point
+        this.worldWidth = worldWidth; //Width is in the x position of the point
+
+        this.conf = null;
+        this.typologyOfMatrix = typologyOfMatrix;
+        this.commonInitialCharge = commonInitialCharge;
+        this.constantPotential = constantPotential;
+        this.thresholdPotential = thresholdPotential;
+
+        if(this.typologyOfMatrix){
+            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize);
+        }else{
+            this.heatMapTilesOptimisation = null;
+        }
+
+        this.heatMapValues = new TreeMap<>();
+        this.heatMapValuesSingleLevel = new ArrayList<>();
+        this.centerPoint = new ArrayList<>();
+
+
+        this.initialiseHeatMap(); //initialise heat map
+        this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
+
+        this.previousPoint = null;
+        this.areaInTheWorld = areaInTheWorld;
+        this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
+
+        this.storage = new SaveToFile();
     }
 
     //getter for the matrix dynamic map level
@@ -108,14 +157,17 @@ public class PotentialField extends Observable{
 
         //populate the new version of the matrix with the POI
         if(this.typologyOfMatrix) this.heatMapTilesOptimisation.initPOI(this.pointsOfInterest);
+
+        //save this agent info to file and crate the folder with the person name
+        this.storage.setTrackedAgent(trackedAgent);
+        this.storage.saveAgentInfo();
     }
 
     //getter for cellSide
     public Double getCellSize() { return this.cellSide; }
 
     //build the differentAreaType list from the world
-    private void initDifferentAreaType(World world){
-        Collection<Area> listOfAreas = world.getAreas(); //return all the areas from the world
+    private void initDifferentAreaType(Collection<Area> listOfAreas){
         Iterator it = listOfAreas.iterator(); //iterate all the areas
 
         while(it.hasNext()){
@@ -134,7 +186,7 @@ public class PotentialField extends Observable{
                     }
 
                 } else { //if the map is not present in the list i have to create it and add the area to the list
-                    differentAreaType.put(nameOfTheFunction, new ArrayList<Area>());
+                    differentAreaType.put(nameOfTheFunction, new ArrayList<>());
                     differentAreaType.get(nameOfTheFunction).add(extractedArea);
                 }
             }
@@ -267,7 +319,7 @@ public class PotentialField extends Observable{
                 throw new ParameterNotDefinedException("Typology of Potential Field not declared"); //Parameter is not correct
         }
         //set the variable
-        this.artificialPotentialField.setConstant(this.conf.getThresholdPotential(),this.conf.getConstantPotential());
+        this.artificialPotentialField.setConstant(this.thresholdPotential,this.constantPotential);
         //calculate the value of the potential field
         //calling the method of the  heat map system
         if(this.typologyOfMatrix){ //If it is true I am using the tile optimisation
@@ -281,6 +333,8 @@ public class PotentialField extends Observable{
             //notify that I have updated the charge
             setChanged();
             notifyObservers(this.heatMapValues);
+
+            //TODO save also the different level???
         }else{
             this.heatMapValuesSingleLevel = this.artificialPotentialField.calculateForceInAllTheWorld(this.centerPoint,this.pointsOfInterest);
             this.normaliseHeatMapValue(); // normalise and scale the list
@@ -291,8 +345,12 @@ public class PotentialField extends Observable{
     //function called after having select the person to track.
     //position is the real-time position
     public void trackAndUpdate(Point currentPosition){
+        System.out.println("Updating "+ this.trackedAgent.getFirstName() +"'s position and potential field...");
         //compute the actual map that I will use only If this.typologyOfMatrix is true I am using the tile optimisation
         if(this.typologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
+
+        //add the current position to the path to save on file
+        this.storage.addPointToPath(currentPosition);
 
         //this is the angle that the tracked person is using to move respect the x axis
         Double angle = Math.toDegrees(Math.atan2(currentPosition.getY() - this.previousPoint.getY(), currentPosition.getX() - this.previousPoint.getX()));
@@ -356,6 +414,9 @@ public class PotentialField extends Observable{
         //notify that I have updated the charge
         setChanged();
         notifyObservers(this.heatMapValuesSingleLevel);
+
+        //print heat map to file
+        this.storage.saveHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
     }
 
     //update all the POIs charge in the new map
@@ -378,5 +439,11 @@ public class PotentialField extends Observable{
             }
         });
     }
+
+    //Deep copy of all the fields of this object
+    public PotentialField deepCopy(){
+        return new PotentialField(this.worldHeight,this.worldWidth,this.typologyOfMatrix,this.commonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.thresholdPotential, this.constantPotential);
+    }
+
 
 }
