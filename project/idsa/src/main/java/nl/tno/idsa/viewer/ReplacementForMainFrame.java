@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by alessandrozonta on 30/08/16.
  */
-public class ReplacementForGUI {
+public class ReplacementForMainFrame {
 
     private final Sim sim;
     private final PotentialField pot; //This is the base instance of the pot
@@ -22,7 +22,7 @@ public class ReplacementForGUI {
     private List<TrackingSystem> listTrack; //Every tracked agent need its own tracking system. I will deep copy the base instance for all the tracked agents and I will store them here
     private final Integer maxNumberOfElementTrackable;
 
-    public ReplacementForGUI(Sim sim, Integer number){
+    public ReplacementForMainFrame(Sim sim, Integer number){
         this.sim = sim;
         this.pot = sim.getPot();
         this.maxNumberOfElementTrackable = number;
@@ -49,6 +49,8 @@ public class ReplacementForGUI {
                 //Add potential field and tracking system to their list
                 this.listPot.add(fieldForTheTrackedAgent);
                 this.listTrack.add(trackingForTheTrackedAgent);
+                System.out.println("Loaded Potential Field for gent number " + this.listPot.size() + "...");
+
 
             } catch (EmptyActivityException | ActivityNotImplementedException e) {
                 //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list

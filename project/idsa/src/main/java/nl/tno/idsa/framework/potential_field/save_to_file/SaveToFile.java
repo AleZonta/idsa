@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,8 @@ public class SaveToFile {
 
     //constructor
     public SaveToFile(){
-        this.currentPath = this.getClass().getClassLoader().getResource("").getPath() + this.getClass().getName().replace(".", File.separator).substring(0, this.getClass().getName().replace(".", File.separator).lastIndexOf(File.separator));
+        this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/Output";
+        new File(this.currentPath).mkdirs();
         this.fileCount = -1;
         this.pointsOfThePath = new ArrayList<>();
     }

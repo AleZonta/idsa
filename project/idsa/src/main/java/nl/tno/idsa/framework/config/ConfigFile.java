@@ -1,7 +1,6 @@
 package nl.tno.idsa.framework.config;
 
 
-
 import nl.tno.idsa.framework.world.Time;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -11,6 +10,7 @@ import org.json.simple.parser.ParseException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.TreeMap;
 
 /**
@@ -32,7 +32,7 @@ public class ConfigFile {
 
     //constructor
     public ConfigFile(){
-        this.currentPath = this.getClass().getClassLoader().getResource("").getPath() + this.getClass().getName().replace(".", File.separator).substring(0, this.getClass().getName().replace(".", File.separator).lastIndexOf(File.separator)) + "/config.json";
+        this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/config.json";
         this.differentCellSize = new TreeMap<>();
         this.constantPotential = null;
         this.thresholdPotential = null;
@@ -73,7 +73,6 @@ public class ConfigFile {
         this.time = new Time(((Long) time.get(0)).intValue(),((Long) time.get(1)).intValue(),((Long) time.get(2)).intValue());
 
         this.maxNumberOfTrackedPeople = ((Long) jsonObject.get("MaxNumberOfTrackedPeople")).intValue();
-
     }
 
     //getter

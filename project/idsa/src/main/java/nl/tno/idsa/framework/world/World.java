@@ -212,7 +212,7 @@ public class World {
             this.pathFinder = new IndexedAStarPathFinder<Vertex>(graph);
         }
         GraphPath<Vertex> path = new DefaultGraphPath<Vertex>();
-        this.pathFinder.searchNodePath(v1, v2, euclideanDistance, path);
+        this.pathFinder.searchNodePath(v1, v2, euclideanDistance, path); //TODO here some exception is raised, I don't know why. Only in a parallel version of the doStep
         List<Point> result = new ArrayList<>();
         for (int i = 0; i < path.getCount() - 1; ++i) {
             result.add(path.get(i).getPoint());

@@ -162,7 +162,7 @@ public class GUI {
             mf.show();
         }else{//If I am not using the GUI i should select all the point that I need to track
             System.out.println("Connecting the potential field to the people tracked...");
-            ReplacementForGUI mf = new ReplacementForGUI(sim,conf.getMaxNumberOfTrackedPeople());
+            ReplacementForMainFrame mf = new ReplacementForMainFrame(sim,conf.getMaxNumberOfTrackedPeople());
             //track all the people outside a building
             mf.trackEveryone();
         }
