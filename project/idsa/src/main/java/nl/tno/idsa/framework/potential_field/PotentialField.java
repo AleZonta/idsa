@@ -416,7 +416,8 @@ public class PotentialField extends Observable{
         notifyObservers(this.heatMapValuesSingleLevel);
 
         //print heat map to file
-        this.storage.saveHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
+        //this.storage.saveHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
+        this.storage.saveZipHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
     }
 
     //update all the POIs charge in the new map

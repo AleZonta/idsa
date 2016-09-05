@@ -6,13 +6,13 @@ import nl.tno.idsa.framework.world.Point;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Created by alessandrozonta on 25/08/16.
@@ -81,6 +81,34 @@ public class SaveToFile {
             System.out.println("Successfully Saved CSV File number " + this.fileCount.toString() +"...");
             outputWriter.flush();
             outputWriter.close();
+        }catch (Exception e){}
+    }
+
+    //method to save the heat map into a zip file -> only for the single level heat map
+    public void saveZipHeatMap(Double worldWidth, Double cellSize, List<Double> heatMapValue){
+        this.fileCount++;
+        Double localCount = 0.0;
+        Double column =  Math.ceil(worldWidth / cellSize);
+
+        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/heatMapValue" + this.fileCount + ".zip"));
+             ZipOutputStream zos = new ZipOutputStream(zipFile);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+        ){
+
+            ZipEntry csvFile = new ZipEntry("/heatMapValue" + this.fileCount + ".csv");
+            zos.putNextEntry(csvFile);
+
+            List<String> rowContent = new LinkedList<>();
+            for (Double aHeatMapValue : heatMapValue) {
+                rowContent.add(Double.toString(aHeatMapValue));
+                localCount++;
+                if(localCount.equals(column)){
+                    localCount = 0.0;
+                    writer.append(String.join(",", rowContent)).append("\n");
+                    rowContent.clear();
+                }
+            }
+            System.out.println("Successfully Saved CSV File number " + this.fileCount.toString() +"...");
         }catch (Exception e){}
     }
 
