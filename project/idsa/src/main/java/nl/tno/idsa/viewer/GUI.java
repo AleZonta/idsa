@@ -16,6 +16,8 @@ import nl.tno.idsa.framework.world.World;
 import nl.tno.idsa.framework.world.WorldGenerator;
 import nl.tno.idsa.library.locations.PoliceSpawnPoint;
 import nl.tno.idsa.viewer.components.ProgressDialog;
+import nl.tno.idsa.viewer.dialogs.DataSourceInterface;
+import nl.tno.idsa.viewer.dialogs.DataSourceSelection;
 import nl.tno.idsa.viewer.dialogs.DataSourceSelectionDialog;
 import nl.tno.idsa.viewer.dialogs.MultiplierSettingDialog;
 
@@ -47,7 +49,7 @@ public class GUI {
             // Ask the user which data must be loaded.
             ProgressNotifier.notifyProgressMessage("Loading world data...");
             ProgressNotifier.notifyUnknownProgress();
-            DataSourceSelectionDialog dataSourceSelectionDialog = new DataSourceSelectionDialog(progressDialog);
+            DataSourceInterface dataSourceSelectionDialog = new DataSourceSelectionDialog(progressDialog);
             if (dataSourceSelectionDialog.isCancelled()) {
                 System.exit(0);
             }
@@ -58,7 +60,7 @@ public class GUI {
             dataSource = dataSourceSelectionDialog.getSelectedDataSource();
         }else{
             //initialise the data source with the hardcoded verion
-            DataSourceSelectionDialog dataSourceSelectionDialog = new DataSourceSelectionDialog();
+            DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
             dataSource = dataSourceSelectionDialog.getSelectedDataSource();
             System.out.println("Data source selected is" + dataSource.getPath() + "...");
         }

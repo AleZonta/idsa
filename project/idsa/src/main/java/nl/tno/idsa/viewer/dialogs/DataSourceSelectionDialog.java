@@ -12,9 +12,7 @@ import java.util.Vector;
 /**
  * Dialog allowing choice between the different data sources.
  */
-public class DataSourceSelectionDialog extends JDialog {
-
-    private static final String CAPTION = "Pick data source";
+public class DataSourceSelectionDialog extends JDialog implements  DataSourceInterface{
 
     private boolean dataSourcesPresent;
     private boolean cancelled;
@@ -30,22 +28,7 @@ public class DataSourceSelectionDialog extends JDialog {
         createDialog();
     }
 
-    //constructor for the version without dialog
-    public DataSourceSelectionDialog(){
-        List<DataSourceFinder.DataSource> dataSources;
-        DataSourceFinder.DataSource defaultDataSource;
-        try {
-            dataSources = DataSourceFinder.listDataSources();
-            defaultDataSource = dataSources.get(0);
-            dataSourcesPresent = true;
-        }
-        catch(Exception e) {
-            dataSourcesPresent = false;
-            return;
-        }
-        cancelled = false;
-        selectedDataSource = defaultDataSource;
-    }
+
 
     private void createDialog() {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);

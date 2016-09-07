@@ -4,8 +4,11 @@ import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.population.Gender;
 import nl.tno.idsa.framework.population.HouseholdRoles;
 import nl.tno.idsa.framework.population.HouseholdTypes;
+import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
+import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
+import nl.tno.idsa.framework.world.Polygon;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -18,6 +21,49 @@ import static org.junit.Assert.*;
  * Created by alessandrozonta on 29/08/16.
  */
 public class SaveToFileTest {
+    @Test
+    //Test id save correctly the info into a zip file
+    public void saveZipHeatMap() throws Exception {
+        SaveToFile savingApp = new SaveToFile();
+        Agent fakeAgent = new Agent(24.0, Gender.FEMALE, HouseholdTypes.PAIR, HouseholdRoles.FATHER, 1990);
+        savingApp.setTrackedAgent(fakeAgent);
+
+        Double wordWidth = 1000.0;
+        Double cellSize = 100.0;
+
+        Random rand = new Random();
+
+        List<Double> list = new ArrayList<>();
+        for(int i = 0; i < 100; i++){
+            list.add(rand.nextDouble());
+        }
+        savingApp.saveZipHeatMap(wordWidth,cellSize,list);
+    }
+
+    @Test
+    //test if save correctly the POIs info
+    public void savePOIsCharge() throws Exception {
+        //generate random charge for a random number of POI
+        List<POI> listOfPOI = new ArrayList<>();
+        Random randomGenerator = new Random();
+
+        List<Double> values = new ArrayList<>();
+        values.add(randomGenerator.nextDouble());
+        values.add(randomGenerator.nextDouble());
+
+        Point[] array = {new Point(5.0,5.0), new Point(8.0,6.0), new Point(14.0,3.0), new Point(9.0,0.0)};
+        POI poi = new POI(new Area(1, new Polygon(array), null), values.get(0), null);
+
+        Point[] array2 = {new Point(50.0,50.0), new Point(80.0,60.0), new Point(140.0,30.0), new Point(90.0,30.0)};
+        POI poi2 = new POI(new Area(2, new Polygon(array2), null), values.get(1), null);
+
+        listOfPOI.add(poi);
+        listOfPOI.add(poi2);
+
+        SaveToFile savingApp = new SaveToFile();
+        savingApp.savePOIsCharge(new Point(0.0,0.0),listOfPOI);
+    }
+
     @Test
     //test if it adds correctly the agent and if it creates the right folder
     public void setTrackedAgent() throws Exception {

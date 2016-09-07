@@ -3,6 +3,7 @@ package nl.tno.idsa.framework.test.potential_field.heatMap;
 import nl.tno.idsa.framework.force_field.ElectricPotential;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
+import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.Polygon;
@@ -44,7 +45,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -79,7 +81,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -123,7 +126,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -160,7 +164,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -206,7 +211,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
         mat.initMap();
 
         mat.initPOI(listOfPOI);
@@ -224,7 +230,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize, storage);
         mat.initMap();
 
         //i don't have method that returns the private fields so I debugged and seems everything fine
@@ -256,7 +263,8 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize);
+        SaveToFile storage = new SaveToFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
 
         mat.initMap();
         mat.initPOI(listOfPOI);

@@ -1,7 +1,5 @@
 package nl.tno.idsa.framework.world;
 
-import sun.jvm.hotspot.debugger.cdbg.PointerType;
-
 import java.awt.geom.Line2D;
 
 public class Polygon implements IGeometry {

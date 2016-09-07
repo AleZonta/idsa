@@ -5,6 +5,8 @@ import nl.tno.idsa.framework.potential_field.ActivityNotImplementedException;
 import nl.tno.idsa.framework.potential_field.EmptyActivityException;
 import nl.tno.idsa.framework.potential_field.PotentialField;
 import nl.tno.idsa.framework.potential_field.TrackingSystem;
+import nl.tno.idsa.framework.potential_field.performance_checker.PerformanceChecker;
+import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.simulator.Sim;
 import nl.tno.idsa.framework.world.Environment;
 
@@ -21,6 +23,7 @@ public class ReplacementForMainFrame {
     private List<PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here
     private List<TrackingSystem> listTrack; //Every tracked agent need its own tracking system. I will deep copy the base instance for all the tracked agents and I will store them here
     private final Integer maxNumberOfElementTrackable;
+    private final PerformanceChecker performance; //keep track of the performance of the simulator
 
     public ReplacementForMainFrame(Sim sim, Integer number){
         this.sim = sim;
@@ -28,6 +31,7 @@ public class ReplacementForMainFrame {
         this.maxNumberOfElementTrackable = number;
         this.listPot = new ArrayList<>();
         this.listTrack = new ArrayList<>();
+        this.performance = new PerformanceChecker();
     }
 
     //Method that is finding all the people outside a building and checking if the number found is under the limit set by config file
@@ -41,6 +45,10 @@ public class ReplacementForMainFrame {
                 //new agent tracked new potential field for him
                 PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
                 TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+
+                PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
+                fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
+                this.performance.addPersonalPerformance(a.getId(),personalPerformance); //connect performance with id person and put them together in a list
 
                 fieldForTheTrackedAgent.setTrackedAgent(a);
                 a.deleteObservers(); //delete old observers

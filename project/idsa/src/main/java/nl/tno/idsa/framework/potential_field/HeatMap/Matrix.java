@@ -1,7 +1,9 @@
 package nl.tno.idsa.framework.potential_field.heatMap;
 
 import nl.tno.idsa.framework.force_field.ForceField;
+import nl.tno.idsa.framework.force_field.UpdateRules;
 import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Point;
 
 import java.util.*;
@@ -17,14 +19,16 @@ public class Matrix{
     private final Double worldHeight; //height of the map
     private final Double worldWidth; //width of the map
     private final TreeMap<Double, Double> differentCellSize; //all the different cell size for the map -> is a tree map because it preserves the order
+    private SaveToFile storage; //save tracked person info to file
 
     //simple constructor
-    public Matrix(Double height, Double width, TreeMap<Double, Double> differentCellSize){
+    public Matrix(Double height, Double width, TreeMap<Double, Double> differentCellSize, SaveToFile storage){
         this.worldHeight = height;
         this.worldWidth = width;
         this.mapLevel = new HashMap<>();
         this.dynamicMapLevel = new HashMap<>();
         this.differentCellSize = new TreeMap<>();
+        this.storage = storage;
         //adding hardcoded level
         differentCellSize.forEach(this.differentCellSize::put);
     }
@@ -809,7 +813,9 @@ public class Matrix{
     //angle -> this is the angle that the tracked person is using to move respect the x axis
     //threshold angle
     //kind of tested
-    public void updatePOIcharge(Point currentPosition, Double angle, Double threshold){
+    public void updatePOIcharge(Point currentPosition, UpdateRules updateRule){
+        //list of all the POIs -> I need this list to save them on file
+        List<POI> totalList = new ArrayList<>();
         //All the POI in level 4.0
         List<Cell> listOfPOIsToUpdate = new ArrayList<>();
         this.dynamicMapLevel.get(4.0).stream().filter(c -> !c.getPOIs().isEmpty()).filter(cell -> !cell.isSplittable()).forEach(listOfPOIsToUpdate::add);
@@ -821,24 +827,27 @@ public class Matrix{
         //If I am not inside the POI I act normally
         if(amInsidePOI == null) {
             listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
-                Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+                updateRule.computeUpdateRule(currentPosition,aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                 //check if the current angle is inside or outside the angle plus or minus the threshold
-                if (currentAngle >= angle - threshold && currentAngle <= angle + threshold) {
+                if (updateRule.doINeedToUpdate()) {
                     //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                    aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge()); //TODO is 0.1 the best value?
                 } else {
                     //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                    aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge()); //TODO is 0.1 the best value?
                 }
             }));
         }else{
             //If I am inside the POI I All the other cells have to decrease their charge
-            listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(1.0))); //TODO is 1.0 the best value?
+            listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI()))); //TODO is 1.0 the best value?
         }
-
-
         //calculate new average for every cell used before
         listOfPOIsToUpdate.stream().forEach(Cell::computeAverageCharge);
+
+        //remember POI
+        listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(totalList::add));
+
+
 
         //get the splittable cell in last level
         List<Cell> splittableCells = new ArrayList<>();
@@ -858,31 +867,37 @@ public class Matrix{
             if(amInsidePOI == null) {
                 //listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
                 notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
-                    Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
+                    updateRule.computeUpdateRule(currentPosition,aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                     //check if the current angle is inside or outside the angle plus or minus the threshold
-                    if (currentAngle >= angle - threshold && currentAngle <= angle + threshold) {
+                    if (updateRule.doINeedToUpdate()) {
                         //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                        aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
+                        aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge()); //TODO is 0.1 the best value?
                     } else {
                         //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                        aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
+                        aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge()); //TODO is 0.1 the best value?
                     }
                 }));
             }else{
                 //If I am inside the POI I All the other cells have to decrease their charge
-                notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(1.0))); //TODO is 1.0 the best value?
+                notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI()))); //TODO is 1.0 the best value?
             }
-
-
             //calculate new average for every cell used before
             notSplittableCell.stream().forEach(Cell::computeAverageCharge);
+            //remember POI
+            notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(totalList::add));
 
             splittableCells.clear();
             subSplittableCells.stream().filter(Cell::isSplittable).forEach(splittableCells::add);
         }
         //If I am in the POI after having decreased all the other POI I have to increase this POI
-        if(amInsidePOI != null) amInsidePOI.getPOIs().stream().forEach(aPointOfInterest -> aPointOfInterest.increaseCharge(1.0));
+        if(amInsidePOI != null) {
+            amInsidePOI.getPOIs().stream().forEach(aPointOfInterest -> aPointOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheChargeInsidePOI()));
+            //remember POI
+            amInsidePOI.getPOIs().stream().forEach(totalList::add);
+        }
 
+        //save POIs
+        //this.storage.savePOIsCharge(currentPosition,totalList);
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
 

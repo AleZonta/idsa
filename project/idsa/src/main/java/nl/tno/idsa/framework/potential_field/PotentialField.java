@@ -4,11 +4,9 @@ import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
 import nl.tno.idsa.framework.behavior.activities.possible.PossibleActivity;
-import nl.tno.idsa.framework.force_field.ArambulaPadillaFormulation;
-import nl.tno.idsa.framework.force_field.ElectricPotential;
-import nl.tno.idsa.framework.force_field.ForceField;
-import nl.tno.idsa.framework.force_field.KathibFormulation;
+import nl.tno.idsa.framework.force_field.*;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
+import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationFunction;
 import nl.tno.idsa.framework.world.Area;
@@ -43,14 +41,18 @@ public class PotentialField extends Observable{
     private List<Double> heatMapValuesSingleLevel; //store all the charges (when I am using only one layer)
     private List<Point> centerPoint; //list with all the center
 
-    private Boolean typologyOfMatrix; //If it is true I am using the tile optimisation otherwise I am using the normal matrix
-    private Double commonInitialCharge; //common initial charge. Is easier store it here than inside the code
-    private Double thresholdPotential; //Threshold used for computing the potential value
-    private Double constantPotential; //Constant use in the formula for computing the potential
+    private final Boolean typologyOfMatrix; //If it is true I am using the tile optimisation otherwise I am using the normal matrix
+    private final Double commonInitialCharge; //common initial charge. Is easier store it here than inside the code
+    private final Double thresholdPotential; //Threshold used for computing the potential value
+    private final Double constantPotential; //Constant use in the formula for computing the potential
 
-    private ConfigFile conf; //config file with the field loaded from json
+    private final ConfigFile conf; //config file with the field loaded from json
 
-    private SaveToFile storage; //save tracked person info to file
+    private final SaveToFile storage; //save tracked person info to file
+
+    private final UpdateRules updateRule; //select the typology of update rule that i want now
+
+    private PersonalPerformance performance; //keep track on my performance
 
     //private final World world; //save world object
     private Collection<Area> areaInTheWorld; //Save all the areas in the world (Need this to save memory)
@@ -70,8 +72,10 @@ public class PotentialField extends Observable{
         this.thresholdPotential = this.conf.getThresholdPotential();
         this.constantPotential = this.conf.getConstantPotential();
 
+        this.storage = new SaveToFile();
+
         if(this.typologyOfMatrix){
-            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize());
+            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize(),this.storage);
         }else{
             this.heatMapTilesOptimisation = null;
         }
@@ -88,7 +92,7 @@ public class PotentialField extends Observable{
         this.areaInTheWorld = world.getAreas();
         this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
-        this.storage = new SaveToFile();
+        this.updateRule = new PacmanRule(); //select Pacman rule
     }
 
     //constructor used for the deep copy
@@ -106,8 +110,10 @@ public class PotentialField extends Observable{
         this.constantPotential = constantPotential;
         this.thresholdPotential = thresholdPotential;
 
+        this.storage = new SaveToFile();
+
         if(this.typologyOfMatrix){
-            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize);
+            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize, this.storage);
         }else{
             this.heatMapTilesOptimisation = null;
         }
@@ -124,7 +130,7 @@ public class PotentialField extends Observable{
         this.areaInTheWorld = areaInTheWorld;
         this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
-        this.storage = new SaveToFile();
+        this.updateRule = new PacmanRule(); //select Pacman rule
     }
 
     //getter for the matrix dynamic map level
@@ -132,6 +138,9 @@ public class PotentialField extends Observable{
 
     //getter for the matrix map level
     //public HashMap<Double, List<Cell>> getMapLevel(){ return this.heatMapTilesOptimisation.getMapLevel(); }
+
+    //setter for the performance
+    public void setPerformance(PersonalPerformance performance) { this.performance = performance; }
 
     //getter for the typology of the matrix
     public Boolean getTypologyOfMatrix() { return this.typologyOfMatrix; }
@@ -256,6 +265,7 @@ public class PotentialField extends Observable{
 */
         //for now is better assign to every point the same charge
         this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.commonInitialCharge));
+        this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
     }
 
     //From a list of possible Area we build our list of POIs
@@ -303,7 +313,7 @@ public class PotentialField extends Observable{
     //Calculate potential in all the map for the GUI
     //parameter integer type -> 0 = ArambullaPadillaFormulation, 1 = KathibFormulation, 2 = ElectricPotential
     //Boolean disclaimer = True if is the first calculation of the bottom level, FALSE if is all the other computation
-    public void calculatePotentialFieldInAllTheWorld(Integer typology, Boolean disclaimer) throws ParameterNotDefinedException {
+    private void calculatePotentialFieldInAllTheWorld(Integer typology, Boolean disclaimer) throws ParameterNotDefinedException {
         //declare the typology of potential field we are gonna use
         switch (typology){
             case 0:
@@ -352,17 +362,16 @@ public class PotentialField extends Observable{
         //add the current position to the path to save on file
         this.storage.addPointToPath(currentPosition);
 
-        //this is the angle that the tracked person is using to move respect the x axis
-        Double angle = Math.toDegrees(Math.atan2(currentPosition.getY() - this.previousPoint.getY(), currentPosition.getX() - this.previousPoint.getX()));
-        //threshold angle
-        Double threshold = 45.0; // TODO find the best value for this threshold
+        //set previous point for the update rule computation
+        this.updateRule.setPreviousPoint(this.previousPoint);
 
         if(this.typologyOfMatrix){ //If it is true I am using the tile optimisation
             //calling the method of the  heat map system
-            this.heatMapTilesOptimisation.updatePOIcharge(currentPosition,angle,threshold);
+            this.heatMapTilesOptimisation.updatePOIcharge(currentPosition,this.updateRule);
         }else{
-            this.updatePOIcharge(currentPosition,angle,threshold);
+            this.updatePOIcharge(currentPosition,this.updateRule);
         }
+        this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
 
         //after having modified all the poi we need to calculate again the POI
         try {
@@ -426,19 +435,30 @@ public class PotentialField extends Observable{
     //currentPosition -> point where the tracked person is right now
     //angle -> this is the angle that the tracked person is using to move respect the x axis
     //threshold angle
-    private void updatePOIcharge(Point currentPosition, Double angle, Double threshold){
-        //parallel version of the loop to check and update every point of interest
-        this.pointsOfInterest.parallelStream().forEach(aPointsOfInterest -> {
-            Double currentAngle = Math.toDegrees(Math.atan2(aPointsOfInterest.getArea().getPolygon().getCenterPoint().getY() - currentPosition.getY(), aPointsOfInterest.getArea().getPolygon().getCenterPoint().getX() - currentPosition.getX()));
-            //check if the current angle is inside or outside the angle plus or minus the threshold
-            if(currentAngle > angle - threshold && currentAngle < angle + threshold ){
-                //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                aPointsOfInterest.increaseCharge(0.1); //TODO is 0.1 the best value?
-            }else{
-                //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                aPointsOfInterest.decreaseCharge(0.1); //TODO is 0.1 the best value?
-            }
-        });
+    private void updatePOIcharge(Point currentPosition, UpdateRules updateRule){
+        //Am i in the target?
+        POI amInsidePOI = this.arrivedIntoPOI(currentPosition);
+        if(amInsidePOI == null) {
+            //parallel version of the loop to check and update every point of interest
+            this.pointsOfInterest.parallelStream().forEach(aPointsOfInterest -> {
+                updateRule.computeUpdateRule(currentPosition, aPointsOfInterest.getArea().getPolygon().getCenterPoint());
+                //check if I need to update
+                if (updateRule.doINeedToUpdate()) {
+                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge()); //TODO is 0.1 the best value?
+                } else {
+                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge()); //TODO is 0.1 the best value?
+                }
+            });
+        }else{
+            //I am inside the POI
+            this.pointsOfInterest.stream().filter(poi -> !poi.equals(amInsidePOI)).forEach(aPointOfInterest -> aPointOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI()));
+            amInsidePOI.increaseCharge(updateRule.getHowMuchIncreaseTheChargeInsidePOI());
+        }
+
+        //save all the POIs and their charge
+        //this.storage.savePOIsCharge(currentPosition,this.pointsOfInterest);
     }
 
     //Deep copy of all the fields of this object
@@ -446,5 +466,14 @@ public class PotentialField extends Observable{
         return new PotentialField(this.worldHeight,this.worldWidth,this.typologyOfMatrix,this.commonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.thresholdPotential, this.constantPotential);
     }
 
+    //Am I at the target?
+    //I need to test this method
+    private POI arrivedIntoPOI(Point currentPosition){
+        try {
+            return this.pointsOfInterest.stream().filter(poi -> poi.getArea().getPolygon().contains(currentPosition)).findFirst().get();
+        }catch (Exception e){
+            return null;
+        }
+    }
 
 }

@@ -27,6 +27,7 @@ public class SaveToFile {
     //constructor
     public SaveToFile(){
         this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/Output";
+        //this.currentPath = "/var/scratch/ama228/Output";
         new File(this.currentPath).mkdirs();
         this.fileCount = -1;
         this.pointsOfThePath = new ArrayList<>();
@@ -134,5 +135,29 @@ public class SaveToFile {
         }
     }
 
+    //With this method I save all the charge of the POIs with the current position
+    public void savePOIsCharge(Point currentPosition, List<POI> listWithAllThePOIs){
+        //I will save a Json File with the info of the agent
+        JSONObject obj = new JSONObject();
+        obj.put("Position",currentPosition);
+
+        JSONArray POIs = new JSONArray();
+        JSONObject subObj = new JSONObject();
+        for(POI poi:listWithAllThePOIs)
+        {
+            subObj.put("Loc",poi.getArea().getPolygon().getCenterPoint());
+            subObj.put("Charge",poi.getCharge());
+            POIs.add(subObj);
+        }
+        obj.put("POIs",POIs);
+
+
+        try (FileWriter file = new FileWriter(this.currentPath + "/POIs.JSON")) {
+            file.write(obj.toJSONString());
+            System.out.println("Successfully Copied JSON Object to File...");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
