@@ -11,6 +11,7 @@ import nl.tno.idsa.framework.simulator.Sim;
 import nl.tno.idsa.framework.world.Environment;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -20,8 +21,8 @@ public class ReplacementForMainFrame {
 
     private final Sim sim;
     private final PotentialField pot; //This is the base instance of the pot
-    private List<PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here
-    private List<TrackingSystem> listTrack; //Every tracked agent need its own tracking system. I will deep copy the base instance for all the tracked agents and I will store them here
+    private HashMap<Long,PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
+    private HashMap<Long,TrackingSystem> listTrack; //Every tracked agent need its own tracking system. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
     private final Integer maxNumberOfElementTrackable;
     private final PerformanceChecker performance; //keep track of the performance of the simulator
 
@@ -29,8 +30,8 @@ public class ReplacementForMainFrame {
         this.sim = sim;
         this.pot = sim.getPot();
         this.maxNumberOfElementTrackable = number;
-        this.listPot = new ArrayList<>();
-        this.listTrack = new ArrayList<>();
+        this.listPot = new HashMap<>();
+        this.listTrack = new HashMap<>();
         this.performance = new PerformanceChecker();
     }
 
@@ -50,13 +51,14 @@ public class ReplacementForMainFrame {
                 fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
                 this.performance.addPersonalPerformance(a.getId(),personalPerformance); //connect performance with id person and put them together in a list
 
+                fieldForTheTrackedAgent.setMainFrameReference(this);
                 fieldForTheTrackedAgent.setTrackedAgent(a);
                 a.deleteObservers(); //delete old observers
                 a.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
 
                 //Add potential field and tracking system to their list
-                this.listPot.add(fieldForTheTrackedAgent);
-                this.listTrack.add(trackingForTheTrackedAgent);
+                this.listPot.put(a.getId(),fieldForTheTrackedAgent);
+                this.listTrack.put(a.getId(),trackingForTheTrackedAgent);
                 System.out.println("Loaded Potential Field for gent number " + this.listPot.size() + "...");
 
 
@@ -65,8 +67,31 @@ public class ReplacementForMainFrame {
                 e.printStackTrace();
             }
         });
+    }
 
 
+    //remove the tracked person from the list
+    //Input
+    //Long Id -> Person id that i have to remove from the list
+    public void removeFromTheLists(Long agentId){
+        this.listPot.remove(agentId);
+        this.listTrack.remove(agentId);
+        System.out.println("Removing tracked agent from the list. Remaining agents -> " + this.listPot.size() + "...");
+        //once I removed the agent i should check how many of them are still alive
+        //If no one is alive stop the simulation
+        if(this.listPot.isEmpty()){
+            //now I should also save all the performance of all the person
+            //I have to compute the total performance before saving it
+            Integer value = this.pot.getConfig().getPerformance();
+            if(value == 1 || value == 2) {
+                this.performance.computeGraph();
+                System.out.println("Saving performance...");
+                //I am using the base instance of pot because it has still the correct path to save this fill
+                this.performance.saveTotalPerformance(this.pot.getStorage());
+            }
+            this.sim.setDone(Boolean.TRUE);
+            System.out.println("Stopping simulation...");
+        }
     }
 
 }

@@ -13,6 +13,7 @@ import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
 import nl.tno.idsa.library.activities.possible.*;
+import nl.tno.idsa.viewer.ReplacementForMainFrame;
 
 import java.util.*;
 
@@ -41,21 +42,29 @@ public class PotentialField extends Observable{
     private List<Double> heatMapValuesSingleLevel; //store all the charges (when I am using only one layer)
     private List<Point> centerPoint; //list with all the center
 
-    private final Boolean typologyOfMatrix; //If it is true I am using the tile optimisation otherwise I am using the normal matrix
-    private final Double commonInitialCharge; //common initial charge. Is easier store it here than inside the code
-    private final Double thresholdPotential; //Threshold used for computing the potential value
-    private final Double constantPotential; //Constant use in the formula for computing the potential
+    private final Boolean confTypologyOfMatrix; //If it is true I am using the tile optimisation otherwise I am using the normal matrix
+    private final Double confCommonInitialCharge; //common initial charge. Is easier store it here than inside the code
+    private final Double confThresholdPotential; //Threshold used for computing the potential value
+    private final Double confConfConstantPotential; //Constant use in the formula for computing the potential
+    private final Integer confPerformance; //keep track of what i want to save (for deepcopy)
+    private final Integer confHeatMap; //keep track of what i want to save (for deepcopy)
+    private final Integer confPOIs; //keep track of what i want to save (for deepcopy)
+
 
     private final ConfigFile conf; //config file with the field loaded from json
 
+
     private final SaveToFile storage; //save tracked person info to file
 
-    private final UpdateRules updateRule; //select the typology of update rule that i want now
+    private UpdateRules updateRule; //select the typology of update rule that i want now
 
     private PersonalPerformance performance; //keep track on my performance
 
     //private final World world; //save world object
     private Collection<Area> areaInTheWorld; //Save all the areas in the world (Need this to save memory)
+    private Integer targetCounter; //Count time step after reached the target
+
+    private ReplacementForMainFrame mainFrameReference; //reference of the class ReplacementForMainFrame
 
     //basic class constructor
     public PotentialField(World world, ConfigFile conf){
@@ -67,15 +76,18 @@ public class PotentialField extends Observable{
         this.worldWidth = world.getGeoMisure().getX(); //Width is in the x position of the point
 
         this.conf = conf;
-        this.typologyOfMatrix = this.conf.getTileOptimisation();
-        this.commonInitialCharge = this.conf.getCommonInitialCharge();
-        this.thresholdPotential = this.conf.getThresholdPotential();
-        this.constantPotential = this.conf.getConstantPotential();
+        this.confTypologyOfMatrix = this.conf.getTileOptimisation();
+        this.confCommonInitialCharge = this.conf.getCommonInitialCharge();
+        this.confThresholdPotential = this.conf.getThresholdPotential();
+        this.confConfConstantPotential = this.conf.getConstantPotential();
+        this.confHeatMap = this.conf.getHeatMap();
+        this.confPerformance = this.conf.getPerformance();
+        this.confPOIs = this.conf.getPOIs();
 
         this.storage = new SaveToFile();
 
-        if(this.typologyOfMatrix){
-            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize(),this.storage);
+        if(this.confTypologyOfMatrix){
+            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize(),this.storage, this.conf);
         }else{
             this.heatMapTilesOptimisation = null;
         }
@@ -92,11 +104,18 @@ public class PotentialField extends Observable{
         this.areaInTheWorld = world.getAreas();
         this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
-        this.updateRule = new PacmanRule(); //select Pacman rule
+        Integer value = this.conf.getUpdateRules();
+        switch (value){
+            case 0:
+                this.updateRule = new PacmanRule(); //select Pacman rule
+                break;
+        }
+
+        this.targetCounter = 0;
     }
 
     //constructor used for the deep copy
-    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential){
+    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential, UpdateRules updateRule, Integer confHeatMap, Integer confPerformance, Integer confPOIs){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -105,15 +124,18 @@ public class PotentialField extends Observable{
         this.worldWidth = worldWidth; //Width is in the x position of the point
 
         this.conf = null;
-        this.typologyOfMatrix = typologyOfMatrix;
-        this.commonInitialCharge = commonInitialCharge;
-        this.constantPotential = constantPotential;
-        this.thresholdPotential = thresholdPotential;
+        this.confTypologyOfMatrix = typologyOfMatrix;
+        this.confCommonInitialCharge = commonInitialCharge;
+        this.confConfConstantPotential = constantPotential;
+        this.confThresholdPotential = thresholdPotential;
+        this.confHeatMap = confHeatMap;
+        this.confPerformance = confPerformance;
+        this.confPOIs = confPOIs;
 
         this.storage = new SaveToFile();
 
-        if(this.typologyOfMatrix){
-            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize, this.storage);
+        if(this.confTypologyOfMatrix){
+            this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize, this.storage, null); //TODO think about this null. For now I will never use the tile on multiple simulation, maybe in future
         }else{
             this.heatMapTilesOptimisation = null;
         }
@@ -130,7 +152,9 @@ public class PotentialField extends Observable{
         this.areaInTheWorld = areaInTheWorld;
         this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
-        this.updateRule = new PacmanRule(); //select Pacman rule
+        this.updateRule = updateRule; //select Pacman rule
+
+        this.targetCounter = 0;
     }
 
     //getter for the matrix dynamic map level
@@ -139,11 +163,20 @@ public class PotentialField extends Observable{
     //getter for the matrix map level
     //public HashMap<Double, List<Cell>> getMapLevel(){ return this.heatMapTilesOptimisation.getMapLevel(); }
 
+    //getter for config
+    public ConfigFile getConfig() { return this.conf; }
+
+    //getter for storage
+    public SaveToFile getStorage() { return this.storage; }
+
+    //setter for mainframereference
+    public void setMainFrameReference(ReplacementForMainFrame mainFrameReference) { this.mainFrameReference = mainFrameReference; }
+
     //setter for the performance
     public void setPerformance(PersonalPerformance performance) { this.performance = performance; }
 
     //getter for the typology of the matrix
-    public Boolean getTypologyOfMatrix() { return this.typologyOfMatrix; }
+    public Boolean getTypologyOfMatrix() { return this.confTypologyOfMatrix; }
 
     //getter for the different cell size
     public TreeMap<Double, Double> getDifferentCellSize(){ return this.heatMapTilesOptimisation.getDifferentCellSize(); }
@@ -165,7 +198,7 @@ public class PotentialField extends Observable{
         this.previousPoint = trackedAgent.getLocation();
 
         //populate the new version of the matrix with the POI
-        if(this.typologyOfMatrix) this.heatMapTilesOptimisation.initPOI(this.pointsOfInterest);
+        if(this.confTypologyOfMatrix) this.heatMapTilesOptimisation.initPOI(this.pointsOfInterest);
 
         //save this agent info to file and crate the folder with the person name
         this.storage.setTrackedAgent(trackedAgent);
@@ -264,7 +297,7 @@ public class PotentialField extends Observable{
         }
 */
         //for now is better assign to every point the same charge
-        this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.commonInitialCharge));
+        this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.confCommonInitialCharge));
         this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
     }
 
@@ -277,7 +310,7 @@ public class PotentialField extends Observable{
 
     //initialise the heatmapvalue with zero after having calculate how many position we need and the center of every cell
     private void initialiseHeatMap(){
-        if(this.typologyOfMatrix){ //If it is true I am using the tile optimisation
+        if(this.confTypologyOfMatrix){ //If it is true I am using the tile optimisation
             //initialise the new version of the heat map -> calling Matrix.init
             this.heatMapTilesOptimisation.initMap();
         }else{
@@ -329,10 +362,10 @@ public class PotentialField extends Observable{
                 throw new ParameterNotDefinedException("Typology of Potential Field not declared"); //Parameter is not correct
         }
         //set the variable
-        this.artificialPotentialField.setConstant(this.thresholdPotential,this.constantPotential);
+        this.artificialPotentialField.setConstant(this.confThresholdPotential,this.confConfConstantPotential);
         //calculate the value of the potential field
         //calling the method of the  heat map system
-        if(this.typologyOfMatrix){ //If it is true I am using the tile optimisation
+        if(this.confTypologyOfMatrix){ //If it is true I am using the tile optimisation
             if(disclaimer){
                 this.heatMapTilesOptimisation.computeInitialForceInAllOfThePoints(this.artificialPotentialField);
             }else {
@@ -356,8 +389,8 @@ public class PotentialField extends Observable{
     //position is the real-time position
     public void trackAndUpdate(Point currentPosition){
         System.out.println("Updating "+ this.trackedAgent.getFirstName() +"'s position and potential field...");
-        //compute the actual map that I will use only If this.typologyOfMatrix is true I am using the tile optimisation
-        if(this.typologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
+        //compute the actual map that I will use only If this.confTypologyOfMatrix is true I am using the tile optimisation
+        if(this.confTypologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
 
         //add the current position to the path to save on file
         this.storage.addPointToPath(currentPosition);
@@ -365,13 +398,13 @@ public class PotentialField extends Observable{
         //set previous point for the update rule computation
         this.updateRule.setPreviousPoint(this.previousPoint);
 
-        if(this.typologyOfMatrix){ //If it is true I am using the tile optimisation
+        if(this.confTypologyOfMatrix){ //If it is true I am using the tile optimisation
             //calling the method of the  heat map system
             this.heatMapTilesOptimisation.updatePOIcharge(currentPosition,this.updateRule);
         }else{
             this.updatePOIcharge(currentPosition,this.updateRule);
         }
-        this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+
 
         //after having modified all the poi we need to calculate again the POI
         try {
@@ -425,8 +458,12 @@ public class PotentialField extends Observable{
         notifyObservers(this.heatMapValuesSingleLevel);
 
         //print heat map to file
-        //this.storage.saveHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
-        this.storage.saveZipHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
+        if(this.confHeatMap  == 0){
+            this.storage.saveHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
+        }else if(this.confHeatMap  == 1){
+            this.storage.saveZipHeatMap(this.worldWidth,this.cellSide,this.heatMapValuesSingleLevel);
+        }
+
     }
 
     //update all the POIs charge in the new map
@@ -445,29 +482,37 @@ public class PotentialField extends Observable{
                 //check if I need to update
                 if (updateRule.doINeedToUpdate()) {
                     //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge()); //TODO is 0.1 the best value?
+                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
                 } else {
                     //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge()); //TODO is 0.1 the best value?
+                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
                 }
             });
+            //I am not inside a POI so i do not need to increase the value. I
+            //If i stayed less than n time step inside a POI I reset the value
+            this.checkTimeStepAfterTarget(Boolean.FALSE);
         }else{
             //I am inside the POI
             this.pointsOfInterest.stream().filter(poi -> !poi.equals(amInsidePOI)).forEach(aPointOfInterest -> aPointOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI()));
             amInsidePOI.increaseCharge(updateRule.getHowMuchIncreaseTheChargeInsidePOI());
+            //I am inside a POI, I should count how many time step before stop the tracking
+            this.checkTimeStepAfterTarget(Boolean.TRUE);
         }
 
         //save all the POIs and their charge
-        //this.storage.savePOIsCharge(currentPosition,this.pointsOfInterest);
+        if(this.confPOIs == 0) this.storage.savePOIsCharge(currentPosition,this.pointsOfInterest);
+        //save performance
+        this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
     }
 
     //Deep copy of all the fields of this object
     public PotentialField deepCopy(){
-        return new PotentialField(this.worldHeight,this.worldWidth,this.typologyOfMatrix,this.commonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.thresholdPotential, this.constantPotential);
+        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.confThresholdPotential, this.confConfConstantPotential, this.updateRule, this.confHeatMap, this.confPerformance, this.confPOIs);
     }
 
     //Am I at the target?
     //I need to test this method
+    //Input Point currentPosition -> point where the tracked person is right now
     private POI arrivedIntoPOI(Point currentPosition){
         try {
             return this.pointsOfInterest.stream().filter(poi -> poi.getArea().getPolygon().contains(currentPosition)).findFirst().get();
@@ -475,5 +520,29 @@ public class PotentialField extends Observable{
             return null;
         }
     }
+
+    //when I reach The first POI I wait other n time step and then I stop the simulation
+    //Input Boolean Inside -> TRUE when I am inside the POI, FALSE I am not and if the counter is grater than 0 i need to decrease to zero
+    private void checkTimeStepAfterTarget(Boolean inside){
+        if(!inside){
+            this.targetCounter = 0;
+        }else{
+            this.targetCounter++;
+            //How many time step do we wait before stopping the tracking?
+            //Hardcoded value -> 20
+            if(this.targetCounter == 20){
+                //Stop the tracking and save all the information
+                //remove observer from agent
+                this.trackedAgent.deleteObservers();
+                //save track
+                this.storage.savePathToFile();
+                if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
+                //remove from main list of tracked people on replacementformainframe. Last thing to do, I need to save the info before eventually stop the simulation
+                this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
+            }
+        }
+    }
+
+
 
 }

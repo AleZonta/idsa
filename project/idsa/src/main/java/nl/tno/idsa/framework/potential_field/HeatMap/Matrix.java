@@ -1,8 +1,10 @@
 package nl.tno.idsa.framework.potential_field.heatMap;
 
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.force_field.UpdateRules;
 import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Point;
 
@@ -20,16 +22,23 @@ public class Matrix{
     private final Double worldWidth; //width of the map
     private final TreeMap<Double, Double> differentCellSize; //all the different cell size for the map -> is a tree map because it preserves the order
     private SaveToFile storage; //save tracked person info to file
+    private ConfigFile conf; //config file
+    private Integer targetCounter; //Count time step after reached the target
+    private PersonalPerformance performance; //keep track on my performance
+
 
     //simple constructor
-    public Matrix(Double height, Double width, TreeMap<Double, Double> differentCellSize, SaveToFile storage){
+    public Matrix(Double height, Double width, TreeMap<Double, Double> differentCellSize, SaveToFile storage, ConfigFile conf){
         this.worldHeight = height;
         this.worldWidth = width;
         this.mapLevel = new HashMap<>();
         this.dynamicMapLevel = new HashMap<>();
         this.differentCellSize = new TreeMap<>();
         this.storage = storage;
-        //adding hardcoded level
+        this.conf = conf;
+        this.targetCounter = 0;
+        this.performance = new PersonalPerformance();
+        //adding level from file
         differentCellSize.forEach(this.differentCellSize::put);
     }
 
@@ -96,6 +105,7 @@ public class Matrix{
 
         //initialise also dynamic map level
         this.differentCellSize.forEach((key,size) -> this.dynamicMapLevel.put(key,this.copyEntireList(this.mapLevel.get(key))));
+        this.performance.addValue(pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
     }
 
     //add this cell in the biggest cell
@@ -831,15 +841,18 @@ public class Matrix{
                 //check if the current angle is inside or outside the angle plus or minus the threshold
                 if (updateRule.doINeedToUpdate()) {
                     //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge()); //TODO is 0.1 the best value?
+                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
                 } else {
                     //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge()); //TODO is 0.1 the best value?
+                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
                 }
             }));
+            //I am not inside a POI so i do not need to increase the value. I
+            //If i stayed less than n time step inside a POI I reset the value
+            this.checkTimeStepAfterTarget(Boolean.FALSE);
         }else{
             //If I am inside the POI I All the other cells have to decrease their charge
-            listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI()))); //TODO is 1.0 the best value?
+            listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI())));
         }
         //calculate new average for every cell used before
         listOfPOIsToUpdate.stream().forEach(Cell::computeAverageCharge);
@@ -871,15 +884,18 @@ public class Matrix{
                     //check if the current angle is inside or outside the angle plus or minus the threshold
                     if (updateRule.doINeedToUpdate()) {
                         //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                        aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge()); //TODO is 0.1 the best value?
+                        aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
                     } else {
                         //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                        aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge()); //TODO is 0.1 the best value?
+                        aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
                     }
                 }));
+                //I am not inside a POI so i do not need to increase the value. I
+                //If i stayed less than n time step inside a POI I reset the value
+                this.checkTimeStepAfterTarget(Boolean.FALSE);
             }else{
                 //If I am inside the POI I All the other cells have to decrease their charge
-                notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI()))); //TODO is 1.0 the best value?
+                notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheChargeInsidePOI())));
             }
             //calculate new average for every cell used before
             notSplittableCell.stream().forEach(Cell::computeAverageCharge);
@@ -894,10 +910,13 @@ public class Matrix{
             amInsidePOI.getPOIs().stream().forEach(aPointOfInterest -> aPointOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheChargeInsidePOI()));
             //remember POI
             amInsidePOI.getPOIs().stream().forEach(totalList::add);
+            //I am inside a POI, I should count how many time step before stop the tracking
+            this.checkTimeStepAfterTarget(Boolean.TRUE);
         }
 
         //save POIs
-        //this.storage.savePOIsCharge(currentPosition,totalList);
+        if(this.conf.getPOIs() == 0) this.storage.savePOIsCharge(currentPosition,totalList);
+        this.performance.addValue(totalList.stream().filter(poi -> poi.getCharge() > 0.0).count());
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
 
@@ -1026,4 +1045,22 @@ public class Matrix{
         }
     }
 
+    //when I reach The first POI I wait other n time step and then I stop the simulation
+    //Input Boolean Inside -> TRUE when I am inside the POI, FALSE I am not and if the counter is grater than 0 i need to decrease to zero
+    private void checkTimeStepAfterTarget(Boolean inside){
+        if(!inside){
+            this.targetCounter = 0;
+        }else{
+            this.targetCounter++;
+            //How many time step do we wait before stopping the tracking?
+            //Hardcoded value -> 20
+            if(this.targetCounter == 20){
+                //Stop the tracking and save all the information
+                this.storage.savePathToFile();
+                if(this.conf.getPerformance() == 0 || this.conf.getPerformance() == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
+                //Should stop the simulation
+                //TODO stop the simulation
+            }
+        }
+    }
 }

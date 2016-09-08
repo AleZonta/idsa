@@ -1,6 +1,9 @@
 package nl.tno.idsa.framework.test.potential_field.heatMap;
 
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ElectricPotential;
+import nl.tno.idsa.framework.force_field.PacmanRule;
+import nl.tno.idsa.framework.force_field.UpdateRules;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
@@ -46,7 +49,9 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
@@ -82,14 +87,16 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
 
         mat.computeActualMatrix(new Point(1000.0,1000.0));
-
-        mat.updatePOIcharge(new Point(0.0,0.0),90.0,45.0);
+        UpdateRules updateRules = new PacmanRule();
+        mat.updatePOIcharge(new Point(0.0,0.0),updateRules);
 
         mat.computeForceInAllOfThePoints(new ElectricPotential());
 
@@ -127,14 +134,17 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
 
         mat.computeActualMatrix(new Point(1000.0,1000.0));
 
-        mat.updatePOIcharge(new Point(0.0,0.0),90.0,45.0);
+        UpdateRules updateRules = new PacmanRule();
+        mat.updatePOIcharge(new Point(0.0,0.0),updateRules);
     }
 
     @Test
@@ -165,22 +175,25 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
 
         mat.initMap();
         mat.initPOI(listOfPOI);
         mat.computeInitialForceInAllOfThePoints(new ElectricPotential());
 
         mat.computeActualMatrix(new Point(1000.0,1000.0));
-        mat.updatePOIcharge(new Point(1000.0,1000.0),90.0,45.0);
+        UpdateRules updateRules = new PacmanRule();
+        mat.updatePOIcharge(new Point(1000.0,1000.0),updateRules);
         mat.computeForceInAllOfThePoints(new ElectricPotential());
 
         mat.computeActualMatrix(new Point(1005.0,1005.0));
-        mat.updatePOIcharge(new Point(1005.0,1005.0),90.0,45.0);
+        mat.updatePOIcharge(new Point(1005.0,1005.0),updateRules);
         mat.computeForceInAllOfThePoints(new ElectricPotential());
 
         mat.computeActualMatrix(new Point(1010.0,1010.0));
-        mat.updatePOIcharge(new Point(1010.0,1010.0),90.0,45.0);
+        mat.updatePOIcharge(new Point(1010.0,1010.0),updateRules);
         mat.computeForceInAllOfThePoints(new ElectricPotential());
     }
 
@@ -212,7 +225,9 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
         mat.initMap();
 
         mat.initPOI(listOfPOI);
@@ -231,7 +246,9 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize, storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
         mat.initMap();
 
         //i don't have method that returns the private fields so I debugged and seems everything fine
@@ -264,7 +281,9 @@ public class MatrixTest {
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
         SaveToFile storage = new SaveToFile();
-        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage);
+        ConfigFile conf = new ConfigFile();
+        conf.loadFile();
+        Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
 
         mat.initMap();
         mat.initPOI(listOfPOI);

@@ -19,5 +19,9 @@
     0,
     0
   ],
-  "MaxNumberOfTrackedPeople": 20
+  "MaxNumberOfTrackedPeople": 20,
+  "Performance": 2,
+  "HeatMap": 1,
+  "POIs": 0,
+  "UpdateRule": 0
 }

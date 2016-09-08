@@ -531,4 +531,9 @@ public class Agent extends Observable implements ISimulatedObject  {
         this.addObserver(track);
         if(mainFrame!=null) this.addObserver(mainFrame);
     }
+
+    //remove observer for this agent
+    public void removeTracked(){
+        this.deleteObservers();
+    }
 }

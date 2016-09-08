@@ -31,7 +31,12 @@ public class ConfigFileTest {
         assertEquals(new Time(12,0,0).getHour(), file.getTime().getHour());
         assertEquals(new Time(12,0,0).getMinute(), file.getTime().getMinute());
         assertEquals(new Time(12,0,0).getSecond(), file.getTime().getSecond());
-        assertEquals(new Integer(999999), file.getMaxNumberOfTrackedPeople());
+        assertEquals(new Integer(20), file.getMaxNumberOfTrackedPeople());
+        assertEquals(new Integer(2), file.getPerformance());
+        assertEquals(new Integer(1), file.getHeatMap());
+        assertEquals(new Integer(0), file.getPOIs());
+        assertEquals(new Integer(0), file.getUpdateRules());
+
 
     }
 

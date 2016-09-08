@@ -1,6 +1,7 @@
 package nl.tno.idsa.framework.potential_field.save_to_file;
 
 import nl.tno.idsa.framework.agents.Agent;
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
 import org.json.simple.JSONArray;
@@ -64,6 +65,10 @@ public class SaveToFile {
     }
 
     //method to save the heat map -> Only for the single level heat map
+    //Input
+    //Double worldWidth -> the width of the world
+    //Double cellSide -> how big is a cell
+    //List<Double> heatMapValue -> list of double with all the potential
     public void saveHeatMap(Double worldWidth, Double cellSide, List<Double> heatMapValue){
         this.fileCount++;
         Double localCount = 0.0;
@@ -86,6 +91,10 @@ public class SaveToFile {
     }
 
     //method to save the heat map into a zip file -> only for the single level heat map
+    //Input
+    //Double worldWidth -> the width of the world
+    //Double cellSide -> how big is a cell
+    //List<Double> heatMapValue -> list of double with all the potential
     public void saveZipHeatMap(Double worldWidth, Double cellSize, List<Double> heatMapValue){
         this.fileCount++;
         Double localCount = 0.0;
@@ -109,12 +118,13 @@ public class SaveToFile {
                     rowContent.clear();
                 }
             }
-            System.out.println("Successfully Saved CSV File number " + this.fileCount.toString() +"...");
+            System.out.println("Successfully Saved ZIP File number " + this.fileCount.toString() +"...");
         }catch (Exception e){}
     }
 
-
     //I think I need to save also the path. So I need to store all the point of the person tracked
+    //Input
+    //Point currentPosition -> position where I am now
     public void addPointToPath(Point currentPosition){
         this.pointsOfThePath.add(currentPosition);
     }
@@ -136,6 +146,9 @@ public class SaveToFile {
     }
 
     //With this method I save all the charge of the POIs with the current position
+    //Input
+    //Point currentPosition -> position where I am now
+    //List<POI> listWithAllThePOIs -> list of all the POIs
     public void savePOIsCharge(Point currentPosition, List<POI> listWithAllThePOIs){
         //I will save a Json File with the info of the agent
         JSONObject obj = new JSONObject();
@@ -159,5 +172,25 @@ public class SaveToFile {
             e.printStackTrace();
         }
     }
+
+    //Save Performance. This method is used for the personal performance and also for the general one
+    //input
+    //list<Long> value -> list with the performance value
+    public void savePerformace(List<Double> value){
+        //I will save a Json File with the info of the agent
+        JSONObject obj = new JSONObject();
+        JSONArray perf = new JSONArray();
+        value.forEach(perf::add);
+        obj.put("Perf",perf);
+
+        try (FileWriter file = new FileWriter(this.currentPath + "/Performance.JSON")) {
+            file.write(obj.toJSONString());
+            System.out.println("Successfully Copied JSON Object to File...");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 }

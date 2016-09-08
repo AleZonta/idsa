@@ -29,6 +29,10 @@ public class ConfigFile {
     private Double timeOfTheYear;
     private Time time;
     private Integer maxNumberOfTrackedPeople;
+    private Integer performance;
+    private Integer heatMap;
+    private Integer POIs;
+    private Integer updateRules;
 
     //constructor
     public ConfigFile(){
@@ -44,7 +48,10 @@ public class ConfigFile {
         this.timeOfTheYear = null;
         this.time = null;
         this.maxNumberOfTrackedPeople = null;
-
+        this.performance = null;
+        this.heatMap =  null;
+        this.POIs = null;
+        this.updateRules = null;
     }
 
     //method that reads the configfile
@@ -73,6 +80,11 @@ public class ConfigFile {
         this.time = new Time(((Long) time.get(0)).intValue(),((Long) time.get(1)).intValue(),((Long) time.get(2)).intValue());
 
         this.maxNumberOfTrackedPeople = ((Long) jsonObject.get("MaxNumberOfTrackedPeople")).intValue();
+
+        this.performance = ((Long) jsonObject.get("Performance")).intValue();//zero is only single performance, one is only total performance, two is both, three is no performance saved
+        this.heatMap = ((Long) jsonObject.get("HeatMap")).intValue(); //zero is csv, one is zip, two is no file saved
+        this.POIs = ((Long) jsonObject.get("POIs")).intValue(); //zero is yes, one is no
+        this.updateRules = ((Long) jsonObject.get("UpdateRule")).intValue(); // zero is Pacman rule
     }
 
     //getter
@@ -117,4 +129,12 @@ public class ConfigFile {
     public Integer getMaxNumberOfTrackedPeople() {
         return this.maxNumberOfTrackedPeople;
     }
+
+    public Integer getPerformance() { return this.performance; }
+
+    public Integer getHeatMap() { return this.heatMap; }
+
+    public Integer getPOIs() { return this.POIs; }
+
+    public Integer getUpdateRules() { return this.updateRules; }
 }
