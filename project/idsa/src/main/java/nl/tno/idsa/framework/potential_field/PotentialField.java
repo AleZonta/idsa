@@ -5,6 +5,8 @@ import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
 import nl.tno.idsa.framework.behavior.activities.possible.PossibleActivity;
 import nl.tno.idsa.framework.force_field.*;
+import nl.tno.idsa.framework.force_field.update_rules.PacmanRule;
+import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
@@ -480,12 +482,15 @@ public class PotentialField extends Observable{
             this.pointsOfInterest.parallelStream().forEach(aPointsOfInterest -> {
                 updateRule.computeUpdateRule(currentPosition, aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                 //check if I need to update
-                if (updateRule.doINeedToUpdate()) {
-                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
-                } else {
-                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                //if it is null no action
+                if(updateRule.doINeedToUpdate() != null) {
+                    if (updateRule.doINeedToUpdate()) {
+                        //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                        aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
+                    } else {
+                        //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                        aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                    }
                 }
             });
             //I am not inside a POI so i do not need to increase the value. I

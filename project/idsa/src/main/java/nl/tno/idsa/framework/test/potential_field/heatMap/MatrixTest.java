@@ -2,8 +2,8 @@ package nl.tno.idsa.framework.test.potential_field.heatMap;
 
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ElectricPotential;
-import nl.tno.idsa.framework.force_field.PacmanRule;
-import nl.tno.idsa.framework.force_field.UpdateRules;
+import nl.tno.idsa.framework.force_field.update_rules.PacmanRule;
+import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
@@ -13,8 +13,6 @@ import nl.tno.idsa.framework.world.Polygon;
 import org.junit.Test;
 
 import java.util.*;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by alessandrozonta on 01/08/16.

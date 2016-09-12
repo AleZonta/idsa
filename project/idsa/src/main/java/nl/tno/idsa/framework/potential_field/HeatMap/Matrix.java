@@ -2,7 +2,7 @@ package nl.tno.idsa.framework.potential_field.heatMap;
 
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ForceField;
-import nl.tno.idsa.framework.force_field.UpdateRules;
+import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
@@ -839,12 +839,14 @@ public class Matrix{
             listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
                 updateRule.computeUpdateRule(currentPosition,aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                 //check if the current angle is inside or outside the angle plus or minus the threshold
-                if (updateRule.doINeedToUpdate()) {
-                    //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                    aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
-                } else {
-                    //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                    aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                if(updateRule.doINeedToUpdate() != null) {
+                    if (updateRule.doINeedToUpdate()) {
+                        //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                        aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
+                    } else {
+                        //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                        aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                    }
                 }
             }));
             //I am not inside a POI so i do not need to increase the value. I
@@ -882,12 +884,14 @@ public class Matrix{
                 notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
                     updateRule.computeUpdateRule(currentPosition,aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                     //check if the current angle is inside or outside the angle plus or minus the threshold
-                    if (updateRule.doINeedToUpdate()) {
-                        //in this case the path is inside our interest area so we should increase the attractiveness of this poi
-                        aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
-                    } else {
-                        //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
-                        aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                    if(updateRule.doINeedToUpdate() != null) {
+                        if (updateRule.doINeedToUpdate()) {
+                            //in this case the path is inside our interest area so we should increase the attractiveness of this poi
+                            aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
+                        } else {
+                            //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
+                            aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                        }
                     }
                 }));
                 //I am not inside a POI so i do not need to increase the value. I

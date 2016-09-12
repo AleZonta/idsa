@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.force_field;
+package nl.tno.idsa.framework.force_field.update_rules;
 
 import nl.tno.idsa.framework.world.Point;
 
@@ -10,7 +10,7 @@ public interface UpdateRules {
     //Get the value of how much I need to increase the charge
     Double getHowMuchIncreaseTheCharge();
 
-        //Get the value of how much I need to decrease the charge
+    //Get the value of how much I need to decrease the charge
     Double getHowMuchDecreaseTheCharge();
 
     //Get the value of how much I need to increase the charge if I am currently inside the POI
