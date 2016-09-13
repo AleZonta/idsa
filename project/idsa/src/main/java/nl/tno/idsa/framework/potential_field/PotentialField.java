@@ -5,7 +5,9 @@ import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
 import nl.tno.idsa.framework.behavior.activities.possible.PossibleActivity;
 import nl.tno.idsa.framework.force_field.*;
+import nl.tno.idsa.framework.force_field.update_rules.DoublePacmanRule;
 import nl.tno.idsa.framework.force_field.update_rules.PacmanRule;
+import nl.tno.idsa.framework.force_field.update_rules.PacmanRuleDistance;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
@@ -69,7 +71,7 @@ public class PotentialField extends Observable{
     private ReplacementForMainFrame mainFrameReference; //reference of the class ReplacementForMainFrame
 
     //basic class constructor
-    public PotentialField(World world, ConfigFile conf){
+    public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -109,7 +111,37 @@ public class PotentialField extends Observable{
         Integer value = this.conf.getUpdateRules();
         switch (value){
             case 0:
-                this.updateRule = new PacmanRule(); //select Pacman rule
+                this.updateRule = new PacmanRule(90.0, 0.1 ,-0.0001, Boolean.FALSE); //select Pacman rule fixed value
+                break;
+            case 1:
+                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
+                break;
+            case 2:
+                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE); //select Pacman rule with distance and no path
+                break;
+            case 3:
+                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule without distance but with path
+                break;
+            case 4:
+                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE); //select Pacman rule with distance and path
+                break;
+            case 5:
+                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.FALSE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule without distance and path but with PF
+                break;
+            case 6:
+                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule with distance and no path but yes PF
+                break;
+            case 7:
+                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.TRUE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule without distance but with path and PF
+                break;
+            case 8:
+                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule with distance and path and PF
+                break;
+            case 9:
+                this.updateRule = new DoublePacmanRule(degree, s1 , w1, Boolean.FALSE); //select DoublePacman rule without path
+                break;
+            case 10:
+                this.updateRule = new DoublePacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule wit path
                 break;
         }
 

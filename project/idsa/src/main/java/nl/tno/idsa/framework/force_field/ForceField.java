@@ -14,6 +14,7 @@ public abstract class ForceField {
     protected abstract Point attractiveForce(Point currentPosition, Double potentialAttractionPower, Point attractivePoint); //abstract method that should implement equation for the attractive force
     protected abstract Point repulsiveForce(Point currentPosition, Double potentialRepulsivePower, Point obstacle, Double influenceDistance); //abstract method that should implement equation for the repulsive force
     public abstract List<Double> calculateForceInAllTheWorld(List<Point> centerPoint, List<POI> pointsOfInterest); //abstract method that should implement how retrieve the force in every points of the world
+    public abstract Point calculateForceFromPoint(Point currentPosition, List<POI> pointsOfInterest); //abstract method that compute the attraction force from one point
 
     protected Double maximumValuePermittedForThePotential; //It's easier to store here than inside the code. The potential could go to infinitive, so it needs a upper bound
     protected Double constantNeededForThePotentialCalculation; //constant used in the formula for the computation of the attractiveness or repulsiveness

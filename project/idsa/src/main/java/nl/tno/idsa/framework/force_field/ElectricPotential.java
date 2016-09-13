@@ -77,18 +77,7 @@ public class ElectricPotential extends ForceField {
         //parallel version
         centerPoint.parallelStream().forEach((aCenterPoint) -> {
             //for every point I have to compute the potential for all the attraction/repulsive points and sum the result
-            Point totalForceInThisPoint = new Point(0.0,0.0);
-            for (POI aPointsOfInterest : pointsOfInterest) {
-                //automatically sum every potential from every poi
-                //if the charge is 0 I can not perform next pass (maybe in this way the code is faster)
-                if(aPointsOfInterest.getCharge() != 0.0) {
-                    //this.force return the magnitude and the direction of the field in that position
-                    Point E = this.force(aCenterPoint, aPointsOfInterest);
-                    //I need to compute the vector component of the result -> Vx = v*sin(alpha) ; Vy = v*sin(alpha)
-                    Point vectorComponent = new Point(E.getX() * Math.cos(E.getY()), E.getX() * Math.sin(E.getY()));
-                    totalForceInThisPoint = totalForceInThisPoint.plus(vectorComponent);
-                }
-            }
+            Point totalForceInThisPoint = this.calculateForceFromPoint(aCenterPoint,pointsOfInterest);
             //From the resultant vector get the magnitude
             Double resultantVectorMagnitude = Math.sqrt(Math.pow(totalForceInThisPoint.getX(), 2.0) + Math.pow(totalForceInThisPoint.getY(), 2.0));
             //If I am very close to the center of attraction the potential goes to a very very very high number.
@@ -105,5 +94,25 @@ public class ElectricPotential extends ForceField {
 
         //return the ordered list
         return orderedMagnitude;
+    }
+
+    //implementation of the abstract method that compute the attraction force from one point
+    //Point currentPosition -> position where I am now
+    //List<POI> pointsOfInterest -> list of all the point of interest present in the map
+    //return the resultant vector
+    public Point calculateForceFromPoint(Point currentPosition, List<POI> pointsOfInterest) {
+        Point totalForceInThisPoint = new Point(0.0,0.0);
+        for (POI aPointsOfInterest : pointsOfInterest) {
+            //automatically sum every potential from every poi
+            //if the charge is 0 I can not perform next pass (maybe in this way the code is faster)
+            if(aPointsOfInterest.getCharge() != 0.0) {
+                //this.force return the magnitude and the direction of the field in that position
+                Point E = this.force(currentPosition, aPointsOfInterest);
+                //I need to compute the vector component of the result -> Vx = v*sin(alpha) ; Vy = v*sin(alpha)
+                Point vectorComponent = new Point(E.getX() * Math.cos(E.getY()), E.getX() * Math.sin(E.getY()));
+                totalForceInThisPoint = totalForceInThisPoint.plus(vectorComponent);
+            }
+        }
+        return totalForceInThisPoint;
     }
 }

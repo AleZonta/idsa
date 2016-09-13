@@ -76,4 +76,12 @@ public class ArambulaPadillaFormulation extends ForceField {
         }
         return magnitude;
     }
+
+    //implementation of the abstract method that compute the attraction force from one point
+    //Point currentPosition -> position where I am now
+    //List<POI> pointsOfInterest -> list of all the point of interest present in the map
+    //return the resultant vector
+    public Point calculateForceFromPoint(Point currentPosition, List<POI> pointsOfInterest) {
+        return null;
+    }
 }

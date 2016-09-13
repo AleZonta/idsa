@@ -22,6 +22,7 @@ import nl.tno.idsa.viewer.dialogs.DataSourceSelectionDialog;
 import nl.tno.idsa.viewer.dialogs.MultiplierSettingDialog;
 
 import javax.swing.*;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,9 +34,29 @@ public class GUI {
         // load config file
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
+
+        //load the GUI
+        GUI simulator = new GUI();
+        //If it is ) it is the fixed update rules so I don't need to try all the different variable
+        if(conf.getUpdateRules() == 0){
+            simulator.loadAndStartSimulation(conf,null,null,null,null,null);
+        }else{
+            //List of different angle -> launched in parallel
+            List<Double> angles = Arrays.asList(20.0,40.0,60.0,80.0,100.0,120.0,140.0,160.0,180.0);
+            angles.parallelStream().forEach(angle ->{
+                //List of different value for w1
+                List<Double> wOnes = Arrays.asList(-0.001,-0.005,-0.01,-0.015,-0.02);
+                wOnes.stream().forEach(w -> simulator.loadAndStartSimulation(conf,angle,1.0,null,w,null));
+            });
+        }
+
+
+    }
+
+    //Load and start the simulation
+    private void loadAndStartSimulation(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2){
         //check if I am showing the GUI
         Boolean GUI = conf.getGUI();
-
         //If I am using the GUI I will show it otherwise no
         DataSourceFinder.DataSource dataSource = null;
         ProgressDialog progressDialog = null;
@@ -142,7 +163,7 @@ public class GUI {
         //The problem here is if I want to track only one person or more. I need a potential field per person
         //From the config I need to check this and modify everything to support more than one potential field
         //But here I don't know how many pot I would need. I can create only one and then copy for the number of time that i need
-        PotentialField pot = new PotentialField(world, conf);
+        PotentialField pot = new PotentialField(world, conf, degree , s1, s2, w1 , w2);
 
         if(GUI) {
             ProgressNotifier.notifyProgress(100);
@@ -173,9 +194,6 @@ public class GUI {
         System.out.println("Starting simulator...");
         sim.setMaxXRealTime(30);
         sim.start();
-
-
-
     }
 }
 
