@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,8 @@ public class NameGenerator {
 
     private NameGenerator(String language_id) throws IOException {
 
-        String firstNames = readFile("../../data/nl/names/firstnames_" + language_id + ".csv");
+        String firstNames = readFile(Paths.get(".").toAbsolutePath().normalize().toString() + "/data/nl/names/firstnames_" + language_id + ".csv");
+        //String firstNames = readFile("../../data/nl/names/firstnames_" + language_id + ".csv");
         String[] firstNameLines = firstNames.split("\n");
         for (String line : firstNameLines) {
             try {
@@ -45,9 +47,7 @@ public class NameGenerator {
                 int mfreqi = Integer.parseInt(mfreq);
                 String myear = data[3];
                 int myeari = Integer.parseInt(myear);
-                if (maleFirstNames.get(myeari) == null) {
-                    maleFirstNames.put(myeari, new ArrayList<NameData>());
-                }
+                maleFirstNames.putIfAbsent(myeari, new ArrayList<NameData>());
                 maleFirstNames.get(myeari).add(new NameData(mfreqi, mname));
 
                 String fname = data[5];
@@ -55,15 +55,14 @@ public class NameGenerator {
                 int ffreqi = Integer.parseInt(ffreq);
                 String fyear = data[7];
                 int fyeari = Integer.parseInt(fyear);
-                if (femaleFirstNames.get(fyeari) == null) {
-                    femaleFirstNames.put(fyeari, new ArrayList<NameData>());
-                }
+                femaleFirstNames.putIfAbsent(fyeari, new ArrayList<NameData>());
                 femaleFirstNames.get(fyeari).add(new NameData(ffreqi, fname));
             } catch (Exception e) {
             }
         }
 
-        String lastNames = readFile("../../data/nl/names/lastnames_" + language_id + ".csv");
+        String lastNames = readFile(Paths.get(".").toAbsolutePath().normalize().toString() + "/data/nl/names/lastnames_" + language_id + ".csv");
+        //String lastNames = readFile("../../data/nl/names/lastnames_" + language_id + ".csv");
         String[] lastNameLines = lastNames.split("\n");
         for (String line : lastNameLines) {
             try {
@@ -73,9 +72,7 @@ public class NameGenerator {
                 int freqi = Integer.parseInt(freq);
                 String year = data[3];
                 int yeari = Integer.parseInt(year);
-                if (this.lastNames.get(yeari) == null) {
-                    this.lastNames.put(yeari, new ArrayList<NameData>());
-                }
+                this.lastNames.putIfAbsent(yeari, new ArrayList<NameData>());
                 this.lastNames.get(yeari).add(new NameData(freqi, name));
             } catch (Exception e) {
             }

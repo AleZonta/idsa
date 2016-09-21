@@ -21,7 +21,7 @@
   ],
   "MaxNumberOfTrackedPeople": 20,
   "Performance": 2,
-  "HeatMap": 1,
-  "POIs": 0,
+  "HeatMap": 2,
+  "POIs": 1,
   "UpdateRule": 0
 }

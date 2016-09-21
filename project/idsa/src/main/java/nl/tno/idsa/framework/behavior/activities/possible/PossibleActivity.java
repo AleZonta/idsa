@@ -276,6 +276,7 @@ public abstract class PossibleActivity implements Comparable<PossibleActivity> {
                 Time laterStartTime = suitableActivity.getStartTime().incrementByMinutes(0); // Clone.
                 laterStartTime.increment(timeFromPreviousInNs);
 
+
                 DebugPrinter.println("    Start of activity moved from " + suitableActivity.getStartTime() + " to " + laterStartTime);
                 DebugPrinter.println("    Plan move from " + suitableLocationData.getPreviousLocation().getPoint() + " to " + suitableLocationData.getLocation().getPoint());
 
@@ -289,6 +290,8 @@ public abstract class PossibleActivity implements Comparable<PossibleActivity> {
 
                 activities.put(Index.MOVE_TO, moveTowardsActivity);
                 suitableActivity.getStartTime().increment(timeFromPreviousInNs);
+
+
             }
 
             // Same for the travel time from the actual activity to the next.

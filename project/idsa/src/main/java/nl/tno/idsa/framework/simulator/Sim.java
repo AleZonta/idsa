@@ -1,9 +1,9 @@
 package nl.tno.idsa.framework.simulator;
 
-import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.potential_field.PotentialField;
 import nl.tno.idsa.framework.world.Environment;
 import nl.tno.idsa.framework.world.Time;
+import nl.tno.idsa.viewer.ReplacementForMainFrame;
 
 import java.util.List;
 
@@ -28,10 +28,13 @@ public class Sim {
     private boolean requestPause;
     private boolean isPaused;
     private boolean isRunning;
+    private boolean needToStop;
     private PotentialField pot; //Instance of the potential field class. Only one. All the other will derive from this one
+    private ReplacementForMainFrame main; //Instance of the replacement main frame. I am checking if something is wrong with the tracked people
 
     public PotentialField getPot() { return this.pot; } //getter
     public void setPot(PotentialField pot) { this.pot = pot; } //setter
+    public void setMain(ReplacementForMainFrame main) { this.main = main; }//setter
 
     public static Sim getInstance() {
         if (instance == null) {
@@ -45,6 +48,7 @@ public class Sim {
         this.done = false;
         this.isRunning = false;
         this.requestPause = false;
+        this.needToStop = false;
         this.pot = null;
 
         // Sim time is incremental time since environment starting time
@@ -90,6 +94,7 @@ public class Sim {
                 step(TIME_BETWEEN_UPDATES);
                 simTime += TIME_BETWEEN_UPDATES;
                 env.getTime().increment(TIME_BETWEEN_UPDATES);
+                main.checkNumberOfTrackedPeople();
                 prev += frame;
                 now = System.nanoTime();
                 // Check if we need to notify about the passed time
@@ -100,6 +105,7 @@ public class Sim {
                     env.notifyTimeUpdated();
                 }
             }
+            if(this.needToStop) this.requestPause = Boolean.FALSE; //consume the pause
             // Wait for next update time
             while ((isPaused = requestPause) || (now = System.nanoTime()) - prev < frame) {
                 Thread.yield();
@@ -123,6 +129,13 @@ public class Sim {
 
     public void setPause(boolean requestPause) {
         this.requestPause = requestPause;
+    }
+
+    public void stopEverything() {
+        isPaused = Boolean.TRUE;
+        this.done = Boolean.TRUE;
+        this.requestPause = Boolean.TRUE;
+        this.needToStop = Boolean.TRUE;
     }
 
     public void togglePause() {

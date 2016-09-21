@@ -46,7 +46,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
@@ -84,7 +84,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
@@ -131,7 +131,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
@@ -172,7 +172,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
@@ -222,7 +222,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
@@ -243,7 +243,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);
@@ -278,7 +278,7 @@ public class MatrixTest {
         differentCellSize.put(2.0,100.0);
         differentCellSize.put(3.0,500.0);
         differentCellSize.put(4.0,1000.0);
-        SaveToFile storage = new SaveToFile();
+        SaveToFile storage = new SaveToFile("test","test");
         ConfigFile conf = new ConfigFile();
         conf.loadFile();
         Matrix mat = new Matrix(4000.0,4000.0,differentCellSize,storage, conf);

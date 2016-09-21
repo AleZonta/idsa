@@ -18,17 +18,13 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.Vector;
 
 /**
  * Dialog allowing to set multipliers for agendas.
  */
 // TODO This dialog should ask for all the multipliers plus the day. Currently the multipliers are hardcoded.
-public class MultiplierSettingDialog extends JDialog {
-
-    private static final String CAPTION = "Set multipliers";
+public class MultiplierSettingDialog extends JDialog implements MultiplierSettingInterface {
 
     private DayOfWeek selectedDayOfWeek;
     private ISeason selectedSeason;
@@ -54,32 +50,6 @@ public class MultiplierSettingDialog extends JDialog {
         createDialog(environment);
     }
 
-    //Constructor for the without GUI version
-    public MultiplierSettingDialog(ConfigFile conf){
-        cancelled = false;
-
-        //select the day
-        Vector<DayOfWeek> days = new Vector<>(RuntimeEnum.getInstance(DayOfWeek.class).listOptions());
-        //zero is sunday, one is monday, two is friday and three is saturday
-        selectedDayOfWeek = days.get(conf.getDayOfWeek());
-
-        //select the season
-        Vector<ISeason> seasons = new Vector<>(RuntimeEnum.getInstance(ISeason.class).listOptions());
-        UnspecifiedSeason unspecifiedSeason = new UnspecifiedSeason();
-        seasons.insertElementAt(unspecifiedSeason, 0);
-        //zero is unspecified, one is winter and two is summer
-        selectedSeason = seasons.get(conf.getSeason());
-
-        //select Time of the year
-        Vector<ITimeOfYear> timesOfYear = new Vector<>(RuntimeEnum.getInstance(ITimeOfYear.class).listOptions());
-        UnspecifiedTimeOfYear unspecifiedTimeOfTheYear = new UnspecifiedTimeOfYear();
-        timesOfYear.insertElementAt(unspecifiedTimeOfTheYear, 0);
-        //zero is unspecified and one is pre christmas
-        selectedTimeOfYear = timesOfYear.elementAt(conf.getTimeOfTheYear());
-
-
-        selectedTime = conf.getTime();
-    }
 
     private void createDialog(final Environment environment) {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -224,35 +194,11 @@ public class MultiplierSettingDialog extends JDialog {
         return new Environment(world, selectedSeason, selectedTimeOfYear, selectedDayOfWeek.getPrototypeDay(), selectedTime);
     }
 
-    public void applySettingsTo(Environment environment) {
+    private void applySettingsTo(Environment environment) {
         if (environment == null) {
             return;
         }
         Day selectedDay = (selectedDayOfWeek != null) ? selectedDayOfWeek.getPrototypeDay() : environment.getDay();
         environment.initializePopulation(selectedSeason, selectedTimeOfYear, selectedDay, selectedTime, true);
-    }
-
-    private class UnspecifiedSeason implements ISeason {
-        @Override
-        public void applyMultipliers(Agent agent, ActivityLikelihoodMap agentPossibilities) {
-
-        }
-
-        @Override
-        public int getIndex() {
-            return -1;
-        }
-    }
-
-    private class UnspecifiedTimeOfYear implements ITimeOfYear {
-        @Override
-        public void applyMultipliers(Agent agent, ActivityLikelihoodMap agentPossibilities) {
-
-        }
-
-        @Override
-        public int getIndex() {
-            return -1;
-        }
     }
 }

@@ -43,6 +43,7 @@ public class Time implements Comparable, Serializable {
     public Time getCopyWithDifference(int hours, int minutes, int seconds) {
         Time laterTime = new Time(nanosSince5Am);
         laterTime.increment(NANO_SECOND * (3600 * hours + 60 * minutes + seconds));
+
         return laterTime;
     }
 
@@ -70,7 +71,7 @@ public class Time implements Comparable, Serializable {
         return Math.abs(60 * (other.getHour() - getHour()) + other.getMinute() - getMinute());
     }
 
-    public void increment(long nanos) {
+    public void increment(long nanos){
         nanosSince5Am += nanos;
         if (3600 * 24 < nanosSince5Am / NANO_SECOND) {
             throw new Error("Time of day advanced after 5am. We don't have support for multiple days yet."); // TODO More graceful.

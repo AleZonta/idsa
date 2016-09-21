@@ -488,6 +488,7 @@ public class AgendaPlanner {
                 long newDurationInNs = (long) ((newPathLengthInM / a1pathLengthInM) * a1durationInNs);
                 Time newEndTime = activity1.getStartTime().incrementByMinutes(0);
                 newEndTime.increment(newDurationInNs);
+
                 // Create a new movement activity, delete the two old ones.
                 agenda.set(firstIndex, new BasicMovementActivity(activity1.getPossibleActivity(), environment, activity1.getStartLocation(), activity1.getStartTime(), activity2.getEndLocation(), newEndTime, activity1.getParticipants(), false));
                 agenda.set(firstIndex + 1, null);

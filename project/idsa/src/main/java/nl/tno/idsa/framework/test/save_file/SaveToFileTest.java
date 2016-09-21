@@ -24,7 +24,7 @@ public class SaveToFileTest {
     @Test
     //Test id save correctly the info into a zip file
     public void saveZipHeatMap() throws Exception {
-        SaveToFile savingApp = new SaveToFile();
+        SaveToFile savingApp = new SaveToFile("test","test");
         Agent fakeAgent = new Agent(24.0, Gender.FEMALE, HouseholdTypes.PAIR, HouseholdRoles.FATHER, 1990);
         savingApp.setTrackedAgent(fakeAgent);
 
@@ -60,14 +60,14 @@ public class SaveToFileTest {
         listOfPOI.add(poi);
         listOfPOI.add(poi2);
 
-        SaveToFile savingApp = new SaveToFile();
+        SaveToFile savingApp = new SaveToFile("test","test");
         savingApp.savePOIsCharge(new Point(0.0,0.0),listOfPOI);
     }
 
     @Test
     //test if it adds correctly the agent and if it creates the right folder
     public void setTrackedAgent() throws Exception {
-        SaveToFile savingApp = new SaveToFile();
+        SaveToFile savingApp = new SaveToFile("test","test");
         Agent fakeAgent = new Agent(24.0, Gender.FEMALE, HouseholdTypes.PAIR, HouseholdRoles.FATHER, 1990);
         savingApp.setTrackedAgent(fakeAgent);
 
@@ -77,13 +77,13 @@ public class SaveToFileTest {
     @Test
     //test if it saves all the agent info
     public void saveAgentInfo() throws Exception {
-        SaveToFile savingApp = new SaveToFile();
+        SaveToFile savingApp = new SaveToFile("test","test");
         Agent fakeAgent = new Agent(24.0, Gender.FEMALE, HouseholdTypes.PAIR, HouseholdRoles.FATHER, 1990);
         savingApp.setTrackedAgent(fakeAgent);
         savingApp.saveAgentInfo();
 
         //check what happen with two person with the same name
-        SaveToFile savingApp2 = new SaveToFile();
+        SaveToFile savingApp2 = new SaveToFile("test","test");
         savingApp2.setTrackedAgent(fakeAgent);
         savingApp2.saveAgentInfo();
         //checked in debug, it works
@@ -92,7 +92,7 @@ public class SaveToFileTest {
     @Test
     //test if it saves all the heat map
     public void saveHeatMap() throws Exception {
-        SaveToFile savingApp = new SaveToFile();
+        SaveToFile savingApp = new SaveToFile("test","test");
         Agent fakeAgent = new Agent(24.0, Gender.FEMALE, HouseholdTypes.PAIR, HouseholdRoles.FATHER, 1990);
         savingApp.setTrackedAgent(fakeAgent);
 
@@ -122,7 +122,7 @@ public class SaveToFileTest {
         Point po4 = new Point(40,40);
         Point po5 = new Point(50,50);
         Point po6 = new Point(60,60);
-        SaveToFile savingApp = new SaveToFile();
+        SaveToFile savingApp = new SaveToFile("test","test");
         savingApp.addPointToPath(po);
         savingApp.addPointToPath(po1);
         savingApp.addPointToPath(po2);

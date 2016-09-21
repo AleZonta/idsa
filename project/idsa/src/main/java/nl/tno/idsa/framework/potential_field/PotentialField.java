@@ -19,6 +19,8 @@ import nl.tno.idsa.framework.world.World;
 import nl.tno.idsa.library.activities.possible.*;
 import nl.tno.idsa.viewer.ReplacementForMainFrame;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -50,9 +52,10 @@ public class PotentialField extends Observable{
     private final Double confCommonInitialCharge; //common initial charge. Is easier store it here than inside the code
     private final Double confThresholdPotential; //Threshold used for computing the potential value
     private final Double confConfConstantPotential; //Constant use in the formula for computing the potential
-    private final Integer confPerformance; //keep track of what i want to save (for deepcopy)
-    private final Integer confHeatMap; //keep track of what i want to save (for deepcopy)
-    private final Integer confPOIs; //keep track of what i want to save (for deepcopy)
+    private final Integer confPerformance; //keep track of what i want to save (for deep copy)
+    private final Integer confHeatMap; //keep track of what i want to save (for deep copy)
+    private final Integer confPOIs; //keep track of what i want to save (for deep copy)
+    private final Boolean confGUI; //If it is true I am using the GUI otherWise not (for deep copy)
 
 
     private final ConfigFile conf; //config file with the field loaded from json
@@ -69,9 +72,11 @@ public class PotentialField extends Observable{
     private Integer targetCounter; //Count time step after reached the target
 
     private ReplacementForMainFrame mainFrameReference; //reference of the class ReplacementForMainFrame
+    private final String name; //remember the name of the experiment
+    private final String experiment; //remember the number of the exp
 
     //basic class constructor
-    public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2){
+    public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double w1, Double s2, Double w2, String name, String experiment){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -87,8 +92,9 @@ public class PotentialField extends Observable{
         this.confHeatMap = this.conf.getHeatMap();
         this.confPerformance = this.conf.getPerformance();
         this.confPOIs = this.conf.getPOIs();
+        this.confGUI = this.conf.getGUI();
 
-        this.storage = new SaveToFile();
+        this.storage = new SaveToFile(name, experiment);
 
         if(this.confTypologyOfMatrix){
             this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize(),this.storage, this.conf);
@@ -146,10 +152,12 @@ public class PotentialField extends Observable{
         }
 
         this.targetCounter = 0;
+        this.name = name;
+        this.experiment = experiment;
     }
 
     //constructor used for the deep copy
-    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential, UpdateRules updateRule, Integer confHeatMap, Integer confPerformance, Integer confPOIs){
+    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential, UpdateRules updateRule, Integer confHeatMap, Integer confPerformance, Integer confPOIs, Boolean GUI, String name, String experiment){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -165,8 +173,9 @@ public class PotentialField extends Observable{
         this.confHeatMap = confHeatMap;
         this.confPerformance = confPerformance;
         this.confPOIs = confPOIs;
+        this.confGUI = GUI;
 
-        this.storage = new SaveToFile();
+        this.storage = new SaveToFile(name, experiment);
 
         if(this.confTypologyOfMatrix){
             this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize, this.storage, null); //TODO think about this null. For now I will never use the tile on multiple simulation, maybe in future
@@ -189,6 +198,8 @@ public class PotentialField extends Observable{
         this.updateRule = updateRule; //select Pacman rule
 
         this.targetCounter = 0;
+        this.name = name;
+        this.experiment = experiment;
     }
 
     //getter for the matrix dynamic map level
@@ -422,7 +433,10 @@ public class PotentialField extends Observable{
     //function called after having select the person to track.
     //position is the real-time position
     public void trackAndUpdate(Point currentPosition){
-        System.out.println("Updating "+ this.trackedAgent.getFirstName() +"'s position and potential field...");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Calendar cal = Calendar.getInstance();
+
+        System.out.println(dateFormat.format(cal.getTime()) + " Updating "+ this.trackedAgent.getFirstName() +"'s position and potential field...");
         //compute the actual map that I will use only If this.confTypologyOfMatrix is true I am using the tile optimisation
         if(this.confTypologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
 
@@ -439,12 +453,14 @@ public class PotentialField extends Observable{
             this.updatePOIcharge(currentPosition,this.updateRule);
         }
 
-
-        //after having modified all the poi we need to calculate again the POI
-        try {
-            this.calculatePotentialFieldInAllTheWorld();
-        }catch (ParameterNotDefinedException e){
-            //I'm fixing the parameter to 2 so I am not dealing with this exception
+        //I need to calculate the potential every time only if I am using the GUI
+        if(this.confGUI) {
+            //after having modified all the poi we need to calculate again the POI
+            try {
+                this.calculatePotentialFieldInAllTheWorld();
+            } catch (ParameterNotDefinedException e) {
+                //I'm fixing the parameter to 2 so I am not dealing with this exception
+            }
         }
 
     }
@@ -544,7 +560,7 @@ public class PotentialField extends Observable{
 
     //Deep copy of all the fields of this object
     public PotentialField deepCopy(){
-        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.confThresholdPotential, this.confConfConstantPotential, this.updateRule, this.confHeatMap, this.confPerformance, this.confPOIs);
+        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.confThresholdPotential, this.confConfConstantPotential, this.updateRule, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name, this.experiment);
     }
 
     //Am I at the target?
@@ -575,7 +591,11 @@ public class PotentialField extends Observable{
                 this.storage.savePathToFile();
                 if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //remove from main list of tracked people on replacementformainframe. Last thing to do, I need to save the info before eventually stop the simulation
-                this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
+                if(!this.confGUI) {
+                    this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
+                }else{
+                    //TODO what to do in this case?
+                }
             }
         }
     }

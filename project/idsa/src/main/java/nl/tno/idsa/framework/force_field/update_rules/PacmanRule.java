@@ -51,8 +51,8 @@ public class PacmanRule implements UpdateRules {
         this.threshold = angle / 2; //angle is the total angle. Threshold is only half if it because is the value that can subtract or added to my direction
         this.increaseValue = null;
         this.decreaseValue = null;
-        this.increaseInsidePOIValue = null;
-        this.decreaseInsidePOIValue = null;
+        this.increaseInsidePOIValue = (constantS * Math.exp(0 * constantWOne))*10;
+        this.decreaseInsidePOIValue = (constantS * Math.exp(0 * constantWOne))*10;
         this.doINeedToUpdateTheCharge = null;
         this.previousPoint = null;
         this.constantWOne = constantWOne;
@@ -67,8 +67,8 @@ public class PacmanRule implements UpdateRules {
         this.threshold = angle / 2; //angle is the total angle. Threshold is only half if it because is the value that can subtract or added to my direction
         this.increaseValue = null;
         this.decreaseValue = null;
-        this.increaseInsidePOIValue = null;
-        this.decreaseInsidePOIValue = null;
+        this.increaseInsidePOIValue = constantS * Math.exp(0 * constantWOne);
+        this.decreaseInsidePOIValue = constantS * Math.exp(0 * constantWOne);
         this.doINeedToUpdateTheCharge = null;
         this.previousPoint = null;
         this.constantWOne = constantWOne;
@@ -171,8 +171,6 @@ public class PacmanRule implements UpdateRules {
                 this.doINeedToUpdateTheCharge = Boolean.FALSE;
                 this.decreaseValue = this.constantS * Math.exp(-alpha * this.constantWOne);
             }
-            this.increaseInsidePOIValue = this.constantS * Math.exp(0 * this.constantWOne);
-            this.decreaseInsidePOIValue = this.constantS * Math.exp(0 * this.constantWOne);
         }
     }
 
