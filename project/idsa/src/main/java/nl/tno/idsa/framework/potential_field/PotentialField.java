@@ -108,7 +108,9 @@ public class PotentialField extends Observable{
 
 
         this.initialiseHeatMap(); //initialise heat map
-        this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
+        this.artificialPotentialField = new ElectricPotential(); //initialise it later because now I don't know which type we need
+        //set the variable
+        this.artificialPotentialField.setConstant(this.confThresholdPotential,this.confConfConstantPotential);
 
         this.previousPoint = null;
         this.areaInTheWorld = world.getAreas();
@@ -132,16 +134,16 @@ public class PotentialField extends Observable{
                 this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE); //select Pacman rule with distance and path
                 break;
             case 5:
-                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.FALSE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule without distance and path but with PF
+                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule without distance and path but with PF
                 break;
             case 6:
-                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule with distance and no path but yes PF
+                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule with distance and no path but yes PF
                 break;
             case 7:
-                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.TRUE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule without distance but with path and PF
+                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule without distance but with path and PF
                 break;
             case 8:
-                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE, this.artificialPotentialField, this.pointsOfInterest); //select Pacman rule with distance and path and PF
+                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule with distance and path and PF
                 break;
             case 9:
                 this.updateRule = new DoublePacmanRule(degree, s1 , w1, Boolean.FALSE); //select DoublePacman rule without path
@@ -150,7 +152,7 @@ public class PotentialField extends Observable{
                 this.updateRule = new DoublePacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule wit path
                 break;
         }
-
+        this.updateRule.setWorld(world);
         this.targetCounter = 0;
         this.name = name;
         this.experiment = experiment;
@@ -189,7 +191,9 @@ public class PotentialField extends Observable{
 
 
         this.initialiseHeatMap(); //initialise heat map
-        this.artificialPotentialField = null; //initialise it later because now I don't know which type we need
+        this.artificialPotentialField = new ElectricPotential(); //initialise it later because now I don't know which type we need
+        //set the variable
+        this.artificialPotentialField.setConstant(this.confThresholdPotential,this.confConfConstantPotential);
 
         this.previousPoint = null;
         this.areaInTheWorld = areaInTheWorld;
@@ -248,6 +252,10 @@ public class PotentialField extends Observable{
         //save this agent info to file and crate the folder with the person name
         this.storage.setTrackedAgent(trackedAgent);
         this.storage.saveAgentInfo();
+
+        //set POIs to the update rules
+        this.updateRule.setPOIs(this.pointsOfInterest);
+
     }
 
     //getter for cellSide
@@ -343,7 +351,7 @@ public class PotentialField extends Observable{
 */
         //for now is better assign to every point the same charge
         this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.confCommonInitialCharge));
-        this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        if(this.performance != null) this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
     }
 
     //From a list of possible Area we build our list of POIs
@@ -393,7 +401,7 @@ public class PotentialField extends Observable{
     //Boolean disclaimer = True if is the first calculation of the bottom level, FALSE if is all the other computation
     private void calculatePotentialFieldInAllTheWorld(Integer typology, Boolean disclaimer) throws ParameterNotDefinedException {
         //declare the typology of potential field we are gonna use
-        switch (typology){
+        /*switch (typology){
             case 0:
                 this.artificialPotentialField = new ArambulaPadillaFormulation();
                 break;
@@ -405,9 +413,7 @@ public class PotentialField extends Observable{
                 break;
             default:
                 throw new ParameterNotDefinedException("Typology of Potential Field not declared"); //Parameter is not correct
-        }
-        //set the variable
-        this.artificialPotentialField.setConstant(this.confThresholdPotential,this.confConfConstantPotential);
+        }*/
         //calculate the value of the potential field
         //calling the method of the  heat map system
         if(this.confTypologyOfMatrix){ //If it is true I am using the tile optimisation
@@ -527,7 +533,8 @@ public class PotentialField extends Observable{
         POI amInsidePOI = this.arrivedIntoPOI(currentPosition);
         if(amInsidePOI == null) {
             //parallel version of the loop to check and update every point of interest
-            this.pointsOfInterest.parallelStream().forEach(aPointsOfInterest -> {
+            this.pointsOfInterest.stream().forEach(aPointsOfInterest -> {
+                updateRule.PFPathPlanning(currentPosition); //compute the potential field
                 updateRule.computeUpdateRule(currentPosition, aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                 //check if I need to update
                 //if it is null no action
@@ -601,5 +608,37 @@ public class PotentialField extends Observable{
     }
 
 
+    //check if the agent is outside a POI
+    //this method is called at the start using the god instance of this class
+    //input
+    //Agent agent - > agent that we have to check
+    //output
+    //Boolean -> TRUE if it is outside, FALSE if it is inside a place
+    public Boolean isOutside(Agent agent) {
+        this.trackedAgent = agent;
+        //check if point of interest is empty (). This is needed if after one person I will select another one
+        try {
+            this.popolatePOIsfromAgent();
+            //now I have calculate his POI. Is he inside the POI?
+            POI amInsidePOI = this.arrivedIntoPOI(agent.getLocation());
+            if(amInsidePOI==null){
+                //not inside one of his POIs so return true
+                this.trackedAgent = null;
+                this.pointsOfInterest = new ArrayList<>();
+                return Boolean.TRUE;
+            }else{
+                //Inside the POI so return False
+                this.trackedAgent = null;
+                this.pointsOfInterest = new ArrayList<>();
+                return Boolean.FALSE;
+            }
+        } catch (EmptyActivityException | ActivityNotImplementedException e) {
+            //no activity -> return false -> do not track him
+            //before return I clear the two fields
+            this.trackedAgent = null;
+            this.pointsOfInterest = new ArrayList<>();
+            return Boolean.FALSE;
+        }
+    }
 
 }

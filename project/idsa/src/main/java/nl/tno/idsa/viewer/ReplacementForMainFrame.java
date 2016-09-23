@@ -46,8 +46,9 @@ public class ReplacementForMainFrame {
     public void trackEveryone(){
         Environment env = this.sim.getEnvironment();
         List<Agent> agent = env.getAgents();
+
         //I am tracking all the agents that are not inside at the starting point of the simulation
-        agent.stream().filter(ag -> !ag.isInside()).limit(this.maxNumberOfElementTrackable).forEach(a -> {
+        agent.stream().filter(this.pot::isOutside).limit(this.maxNumberOfElementTrackable).forEach(a -> {
             try {
                 //new agent tracked new potential field for him
                 PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();

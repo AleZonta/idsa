@@ -25,7 +25,7 @@ public class PacmanRule implements UpdateRules {
     protected World world; //I need the world to compute the real distance and the path
     private final Boolean usingPath; //I am using the path or not?
     private final ForceField  pot; //need the potential field to compute the path planning
-    private final List<POI> POIs; //we need the list of all the poi to discover where the attraction comes from
+    private List<POI> POIs; //we need the list of all the poi to discover where the attraction comes from
     private Double angle; //angle of the attraction of the potential field
     private final Boolean PF; //Am i using the Potential Field Path Planning
 
@@ -63,7 +63,7 @@ public class PacmanRule implements UpdateRules {
         this.PF = Boolean.FALSE;
     }
 
-    public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath, ForceField pot, List<POI> POIs){
+    public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath, ForceField pot){
         this.threshold = angle / 2; //angle is the total angle. Threshold is only half if it because is the value that can subtract or added to my direction
         this.increaseValue = null;
         this.decreaseValue = null;
@@ -75,7 +75,7 @@ public class PacmanRule implements UpdateRules {
         this.constantS = constantS;
         this.usingPath = usingPath;
         this.pot = pot;
-        this.POIs = POIs;
+        this.POIs = null;
         this.PF = Boolean.TRUE;
     }
 
@@ -116,6 +116,8 @@ public class PacmanRule implements UpdateRules {
     protected Boolean getPF() { return this.PF; }
 
     protected Double getAngle() { return this.angle; }
+
+    public void setPOIs(List<POI> POIs) { this.POIs = POIs; }
 
     //Compute If i have to increase or decrease the charge of the POI and how much will be the amount
     //Input
@@ -175,9 +177,14 @@ public class PacmanRule implements UpdateRules {
     }
 
     //compute the angle of the attraction of the Potential Field
+    //Input
+    //Point currentPosition = current position where I am
     public void PFPathPlanning(Point currentPosition){
-        Point vectorConponent = this.pot.calculateForceFromPoint(currentPosition, this.POIs);
-        this.angle = Math.atan2(vectorConponent.getY(),vectorConponent.getX());
+        //I am computing it only if I am using the potential field
+        if(this.PF) {
+            Point vectorComponent = this.pot.calculateForceFromPoint(currentPosition, this.POIs);
+            this.angle = Math.atan2(vectorComponent.getY(), vectorComponent.getX());
+        }
     }
 
 }

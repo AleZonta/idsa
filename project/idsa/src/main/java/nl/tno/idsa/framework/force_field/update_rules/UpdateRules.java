@@ -1,6 +1,10 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
+import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
+import nl.tno.idsa.framework.world.World;
+
+import java.util.List;
 
 /**
  * Created by alessandrozonta on 07/09/16.
@@ -31,4 +35,12 @@ public interface UpdateRules {
     //return true if following the rule I need to update the value
     Boolean doINeedToUpdate();
 
+    //compute the angle of the attraction of the Potential Field
+    void PFPathPlanning(Point currentPosition);
+
+    //setThePOI
+    void setPOIs(List<POI> POIs);
+
+    //set the word
+    void setWorld(World world);
 }

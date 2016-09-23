@@ -21,8 +21,8 @@ public class PacmanRuleDistance extends PacmanRule {
 
     }
 
-    public PacmanRuleDistance(Double angle, Double constantS, Double constantWOne, Double constantSDistance, Double constantWTwo, Boolean usingPath, ForceField pot, List<POI> POIs){
-        super(angle, constantS, constantWOne, usingPath, pot, POIs);
+    public PacmanRuleDistance(Double angle, Double constantS, Double constantWOne, Double constantSDistance, Double constantWTwo, Boolean usingPath, ForceField pot){
+        super(angle, constantS, constantWOne, usingPath, pot);
         this.constantSDistance = constantSDistance;
         this.constantWTwo = constantWTwo;
 

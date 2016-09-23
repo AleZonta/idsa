@@ -837,6 +837,7 @@ public class Matrix{
         //If I am not inside the POI I act normally
         if(amInsidePOI == null) {
             listOfPOIsToUpdate.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
+                updateRule.PFPathPlanning(currentPosition); //compute the potential field
                 updateRule.computeUpdateRule(currentPosition,aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                 //check if the current angle is inside or outside the angle plus or minus the threshold
                 if(updateRule.doINeedToUpdate() != null) {
@@ -882,6 +883,7 @@ public class Matrix{
             if(amInsidePOI == null) {
                 //listOfPOIsToUpdate = this.getPOIsInSelectedLevel(subSplittableCells);
                 notSplittableCell.stream().forEach(cell -> cell.getPOIs().stream().forEach(aPointsOfInterest -> {
+                    updateRule.PFPathPlanning(currentPosition); //compute the potential field
                     updateRule.computeUpdateRule(currentPosition,aPointsOfInterest.getArea().getPolygon().getCenterPoint());
                     //check if the current angle is inside or outside the angle plus or minus the threshold
                     if(updateRule.doINeedToUpdate() != null) {
