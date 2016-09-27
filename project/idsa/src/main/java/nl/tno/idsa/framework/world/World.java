@@ -356,6 +356,9 @@ public class World {
     }
 
     public Collection<Area> getAreas() {
+        if (areas.isEmpty()){
+            return null;
+        }
         return areas.values();
     }
 

@@ -1,5 +1,6 @@
 package nl.tno.idsa.viewer;
 
+import lgds.simulator.SimulatorInterface;
 import nl.tno.idsa.Constants;
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
@@ -46,6 +47,8 @@ public class GUI {
 
         //load the GUI
         GUI simulator = new GUI();
+
+
 
         //loading parameter from inline conf
         //if arg is empty load normal rules otherwise load the file with than name

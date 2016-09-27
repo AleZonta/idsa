@@ -114,7 +114,7 @@ public class PotentialField extends Observable{
 
         this.previousPoint = null;
         this.areaInTheWorld = world.getAreas();
-        this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
+        if(this.areaInTheWorld != null) this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
         Integer value = this.conf.getUpdateRules();
         switch (value){
@@ -197,7 +197,7 @@ public class PotentialField extends Observable{
 
         this.previousPoint = null;
         this.areaInTheWorld = areaInTheWorld;
-        this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
+        if(this.areaInTheWorld != null) this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
         this.updateRule = updateRule; //select Pacman rule
 
@@ -386,13 +386,13 @@ public class PotentialField extends Observable{
     }
 
     //Calculate potential in all the map for the GUI, initial configuration
-    public  void calculateInitialPotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
+    public void calculateInitialPotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
         this.calculatePotentialFieldInAllTheWorld(2, Boolean.TRUE);
     }
 
     //Calculate potential in all the map for the GUI
     //without parameter, force to use 2
-    public  void calculatePotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
+    public void calculatePotentialFieldInAllTheWorld() throws ParameterNotDefinedException {
         this.calculatePotentialFieldInAllTheWorld(2,Boolean.FALSE);
     }
 
@@ -423,7 +423,7 @@ public class PotentialField extends Observable{
                 this.heatMapTilesOptimisation.computeForceInAllOfThePoints(this.artificialPotentialField);
             }
             //calculate all the charges
-            this.heatMapValues = getAllTheCharges(disclaimer);
+            this.heatMapValues = this.getAllTheCharges(disclaimer);
             //notify that I have updated the charge
             setChanged();
             notifyObservers(this.heatMapValues);

@@ -27,8 +27,8 @@ public class SaveToFile {
 
     //constructor
     public SaveToFile(String name, String experiment){
-        //this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/Output" + name;
-        this.currentPath = "/var/scratch/ama228/Output" + name;
+        this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/Output" + name;
+        //this.currentPath = "/var/scratch/ama228/Output" + name;
         new File(this.currentPath).mkdirs();
         this.currentPath += "/" + experiment;
         new File(this.currentPath).mkdirs();
