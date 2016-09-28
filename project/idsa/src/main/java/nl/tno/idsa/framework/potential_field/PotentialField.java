@@ -13,6 +13,7 @@ import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationFunction;
+import nl.tno.idsa.framework.simulator.TrajectorySim;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
@@ -71,6 +72,7 @@ public class PotentialField extends Observable{
     private Collection<Area> areaInTheWorld; //Save all the areas in the world (Need this to save memory)
     private Integer targetCounter; //Count time step after reached the target
 
+    private TrajectorySim trajectorySimReference; //reference of the simulator if I simulating real GPS trajectories
     private ReplacementForMainFrame mainFrameReference; //reference of the class ReplacementForMainFrame
     private final String name; //remember the name of the experiment
     private final String experiment; //remember the number of the exp
@@ -221,6 +223,9 @@ public class PotentialField extends Observable{
     //setter for mainframereference
     public void setMainFrameReference(ReplacementForMainFrame mainFrameReference) { this.mainFrameReference = mainFrameReference; }
 
+    //setter for trajectorySim
+    public void setTrajectorySimReference(TrajectorySim trajectorySimReference) { this.trajectorySimReference = trajectorySimReference; }
+
     //setter for the performance
     public void setPerformance(PersonalPerformance performance) { this.performance = performance; }
 
@@ -233,6 +238,9 @@ public class PotentialField extends Observable{
     //getter for pointsOfInterest
     public List<POI> getPointsOfInterest() { return this.pointsOfInterest; }
 
+    //setter for pointsOfInterest
+    public void setPointsOfInterest(List<POI> pointsOfInterest) { this.pointsOfInterest = pointsOfInterest; }
+
     //getter for differentAreaType
     public HashMap<String, List<Area>> getDifferentAreaType(){ return this.differentAreaType; }
 
@@ -242,7 +250,8 @@ public class PotentialField extends Observable{
         this.trackedAgent = trackedAgent;
         //check if point of interest is empty (). This is needed if after one person I will select another one
         this.pointsOfInterest.clear();
-        this.popolatePOIsfromAgent();
+        //If I am loading the trajectories from file I know the POIs and I do not need to find them in the simulator
+        if(this.trajectorySimReference == null && this.mainFrameReference != null) this.popolatePOIsfromAgent();
         //set the starting point of the agent
         this.previousPoint = trackedAgent.getLocation();
 
@@ -599,7 +608,8 @@ public class PotentialField extends Observable{
                 if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //remove from main list of tracked people on replacementformainframe. Last thing to do, I need to save the info before eventually stop the simulation
                 if(!this.confGUI) {
-                    this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
+                    if(this.mainFrameReference != null) this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
+                    if(this.trajectorySimReference != null) this.trajectorySimReference.removeFromTheLists(this.trackedAgent.getId());
                 }else{
                     //TODO what to do in this case?
                 }

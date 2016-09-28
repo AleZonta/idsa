@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.simulator;
 
+import lgds.POI.*;
 import lgds.load_track.LoadTrack;
 import lgds.simulator.SimulatorInterface;
 import lgds.trajectories.Trajectories;
@@ -9,10 +10,15 @@ import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.population.Gender;
 import nl.tno.idsa.framework.population.HouseholdRoles;
 import nl.tno.idsa.framework.population.HouseholdTypes;
-import nl.tno.idsa.framework.potential_field.PotentialField;
+import nl.tno.idsa.framework.potential_field.*;
+import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.performance_checker.PerformanceChecker;
+import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
+import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -26,6 +32,9 @@ public class TrajectorySim implements SimulatorInterface {
     private List<TrajectoryAgent> participant; //list of all the agents participating into the simulation
     private Trajectories tra; //keep track of all the trajectories
     private PotentialField pot; //This is the base instance of the pot
+    private final PerformanceChecker performance; //keep track of the performance of the simulator
+    private HashMap<Long,PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
+    private HashMap<Long,TrackingSystem> listTrack; //Every tracked agent need its own tracking system. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
 
     /**
      * default constructor
@@ -34,6 +43,11 @@ public class TrajectorySim implements SimulatorInterface {
         this.storage = new LoadTrack();
         this.participant = new ArrayList<>();
         this.pot = null;
+        this.performance = new PerformanceChecker();
+        this.listPot = new HashMap<>();
+        this.listTrack = new HashMap<>();
+        //retrieve all the tracks from file
+        this.tra = this.storage.loadTrajectories();
     }
 
     /**
@@ -61,8 +75,6 @@ public class TrajectorySim implements SimulatorInterface {
      */
     @Override
     public void init(Integer number){
-        //retrieve all the tracks from file
-        this.tra = this.storage.loadTrajectories();
         //shuffle it
         this.tra.shuffle();
         //now I am choosing only the first $number trajectories
@@ -71,17 +83,43 @@ public class TrajectorySim implements SimulatorInterface {
         List<Integer> id = new ArrayList<>();
         for(int i = 0; i < number; i++) id.add(i);
         //create the agents
-        HouseholdTypes hhType = HouseholdTypes.SINGLE;
-        Gender gender = Gender.FEMALE;
-        double age = ThreadLocalRandom.current().nextDouble(0, 100);
-        id.stream().forEach(integer -> this.participant.add(new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016)));
+        id.stream().forEach(integer -> {
+            HouseholdTypes hhType = HouseholdTypes.SINGLE;
+            Gender gender = Gender.FEMALE;
+            double age = ThreadLocalRandom.current().nextDouble(0, 100);
+            this.participant.add(new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016));
+        });
         //what about poi? I should generate POI for them. Now I should generate some randomly than I should
         //find a way to find them from the poi
         this.tra.computePOIs(number);
 
+        System.out.println("Connecting the potential field to the people tracked...");
         //now i should load all what I need for the potential field
         this.participant.stream().forEach(trajectoryAgent -> {
+            try {
+                //new agent tracked new potential field for him
+                PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
+                TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
 
+                PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
+                fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
+                this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
+
+                fieldForTheTrackedAgent.setTrajectorySimReference(this);
+                fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
+                fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                trajectoryAgent.deleteObservers(); //delete old observers
+                trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
+
+                //Add potential field and tracking system to their list
+                this.listPot.put(trajectoryAgent.getId(),fieldForTheTrackedAgent);
+                this.listTrack.put(trajectoryAgent.getId(),trackingForTheTrackedAgent);
+                System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
+
+            } catch (EmptyActivityException | ActivityNotImplementedException e) {
+                //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
+                e.printStackTrace();
+            }
         });
     }
 
@@ -91,7 +129,11 @@ public class TrajectorySim implements SimulatorInterface {
      */
     @Override
     public void run(){
-
+        //run the simulator
+        while (this.participant.stream().filter(agent -> !agent.getDead()).toArray().length != 0) {
+            this.participant.stream().filter(agent -> !agent.getDead()).forEach(TrajectoryAgent::doStep);
+        }
+        System.out.println("End simulating procedure...");
 
     }
 
@@ -110,7 +152,45 @@ public class TrajectorySim implements SimulatorInterface {
         //set in word the dimension of the word and the area of the word set to null
         World world = new World();
         world.applyGeoRoot(this.tra.getUtmRoot().getLatitude(),this.tra.getUtmRoot().getLongitude(),this.tra.getWhWorld().getLatitude(),this.tra.getWhWorld().getLongitude());
+        //I do not think I need something else inside the world for running the potential field
         this.pot = new PotentialField(world, conf, degree , s1, s2, w1 , w2, name, experiment);
+    }
+
+
+    /**
+     * remove the person selected from the list of tracked people and saving its performance
+     * If the list is empty stop the simulation and compute the final performance
+     * @param agentId Id of the person to remove
+     */
+    public void removeFromTheLists(Long agentId){
+        this.listPot.remove(agentId);
+        this.listTrack.remove(agentId);
+        System.out.println("Removing tracked agent from the list. Remaining agents -> " + this.listPot.size() + "...");
+        //once I removed the agent i should check how many of them are still alive
+        //If no one is alive stop the simulation
+        if(this.listPot.isEmpty()){
+            //now I should also save all the performance of all the person
+            //I have to compute the total performance before saving it
+            Integer value = this.pot.getConfig().getPerformance();
+            if(value == 1 || value == 2) {
+                this.performance.computeGraph();
+                System.out.println("Saving performance...");
+                //I am using the base instance of pot because it has still the correct path to save this fill
+                this.performance.saveTotalPerformance(this.pot.getStorage());
+            }
+            System.out.println("End tracking procedure...");
+        }
+    }
+
+    /**
+     * Convert the POI from the lgds library to the POI used in the simulator
+     * @param oldList List of POI in lgds version
+     * @return List of POI in idsa version
+     */
+    private List<POI> translatePOI(List<lgds.POI.POI> oldList){
+        List<POI> realList = new ArrayList<>();
+        oldList.stream().forEach(poi -> realList.add(new POI(new Point(poi.getLocation().getLatitude(),poi.getLocation().getLongitude()))));
+        return realList;
     }
 
 }

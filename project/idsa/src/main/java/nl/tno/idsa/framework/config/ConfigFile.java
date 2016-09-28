@@ -33,6 +33,7 @@ public class ConfigFile {
     private Integer heatMap;
     private Integer POIs;
     private Integer updateRules;
+    private Boolean gdsi; //I am loading trajectories from file?
 
     //constructor
     public ConfigFile(){
@@ -52,6 +53,7 @@ public class ConfigFile {
         this.heatMap =  null;
         this.POIs = null;
         this.updateRules = null;
+        this.gdsi = null;
     }
 
     //method that reads the configfile
@@ -85,6 +87,8 @@ public class ConfigFile {
         this.heatMap = ((Long) jsonObject.get("HeatMap")).intValue(); //zero is csv, one is zip, two is no file saved
         this.POIs = ((Long) jsonObject.get("POIs")).intValue(); //zero is yes, one is no
         this.updateRules = ((Long) jsonObject.get("UpdateRule")).intValue(); // zero is Pacman rule
+
+        this.gdsi = (Boolean) jsonObject.get("GDSI"); //True I am using GDSI for the tracking / False I am using IDSA for the tracking
     }
 
     //getter
@@ -137,4 +141,7 @@ public class ConfigFile {
     public Integer getPOIs() { return this.POIs; }
 
     public Integer getUpdateRules() { return this.updateRules; }
+
+    public Boolean getGdsi() { return this.gdsi; }
+
 }

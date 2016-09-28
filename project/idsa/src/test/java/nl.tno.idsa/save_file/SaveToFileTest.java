@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.save_file;
+package nl.tno.idsa.save_file;
 
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.population.Gender;

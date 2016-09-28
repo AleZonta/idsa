@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.force_field;
+package nl.tno.idsa.force_field;
 
 import nl.tno.idsa.framework.force_field.update_rules.PacmanRuleDistance;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;

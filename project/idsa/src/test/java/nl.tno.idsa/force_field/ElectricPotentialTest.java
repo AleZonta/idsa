@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.force_field;
+package nl.tno.idsa.force_field;
 
 import nl.tno.idsa.framework.force_field.ElectricPotential;
 import nl.tno.idsa.framework.potential_field.POI;

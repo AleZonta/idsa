@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.potential_field.heatMap;
+package nl.tno.idsa.potential_field.heatMap;
 
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ElectricPotential;

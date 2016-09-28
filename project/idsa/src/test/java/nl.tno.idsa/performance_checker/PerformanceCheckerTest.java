@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.performance_checker;
+package nl.tno.idsa.performance_checker;
 
 import nl.tno.idsa.framework.potential_field.performance_checker.PerformanceChecker;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;

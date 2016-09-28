@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.kalman_filter;
+package nl.tno.idsa.kalman_filter;
 
 import nl.tno.idsa.framework.kalman_filter.Measurement;
 import nl.tno.idsa.framework.kalman_filter.MeasurementFunction;

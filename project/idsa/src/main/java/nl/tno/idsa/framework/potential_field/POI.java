@@ -56,6 +56,21 @@ public class POI {
         this.isReal = Boolean.FALSE;
     }
 
+    //constructor with only central point
+    //It builds the area
+    public POI(Point centralPoint){
+        Point[] points = {new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() - 0.00001 ),
+                new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() + 0.00001 ),
+                new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() - 0.00001 ),
+                new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() + 0.00001 )};
+        this.area = new Area(9999, new Polygon(points),"Destination");
+        this.charge = 1.0;
+        this.initial_charge = null;
+        this.meaning = Boolean.TRUE;
+        this.influenceDistance = null;
+        this.isReal = Boolean.TRUE;
+    }
+
     //getter for coordinate variable
     public Area getArea() { return this.area; }
 

@@ -1,15 +1,15 @@
 package nl.tno.idsa.viewer;
 
-import lgds.simulator.SimulatorInterface;
 import nl.tno.idsa.Constants;
-import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
 import nl.tno.idsa.framework.population.PopulationGenerator;
 import nl.tno.idsa.framework.potential_field.PotentialField;
 import nl.tno.idsa.framework.potential_field.save_to_file.LoadParameters;
 import nl.tno.idsa.framework.simulator.Sim;
+import nl.tno.idsa.framework.simulator.TrajectorySim;
 import nl.tno.idsa.framework.utils.DataSourceFinder;
 import nl.tno.idsa.framework.utils.RandomNumber;
 import nl.tno.idsa.framework.world.Environment;
@@ -21,12 +21,8 @@ import nl.tno.idsa.viewer.components.ProgressDialog;
 import nl.tno.idsa.viewer.dialogs.*;
 
 import javax.swing.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -48,15 +44,24 @@ public class GUI {
         //load the GUI
         GUI simulator = new GUI();
 
-
+        //Check if I am using GDSI loading or IDSA loading
+        Boolean gdsi = conf.getGdsi();
 
         //loading parameter from inline conf
         //if arg is empty load normal rules otherwise load the file with than name
         if(args.length == 0){
-            simulator.loadAndStartSimulation(conf,null,null,null,null,null,"Normal","Normal");
+            if(gdsi){
+                simulator.loadAndStartSimLGDS(conf,null,null,null,null,null,"Normal","Normal");
+            }else{
+                simulator.loadAndStartSimIDSA(conf,null,null,null,null,null,"Normal","Normal");
+            }
         }else{
             LoadParameters par = new LoadParameters(args[0]);
-            simulator.loadAndStartSimulation(conf,par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment());
+            if(gdsi){
+                simulator.loadAndStartSimLGDS(conf,par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment());
+            }else{
+                simulator.loadAndStartSimIDSA(conf,par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment());
+            }
         }
 
         //if I am here the sim is ended
@@ -64,8 +69,8 @@ public class GUI {
         System.exit(0);
     }
 
-    //Load and start the simulation
-    private void loadAndStartSimulation(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment){
+    //Load and start the simulation using IDSA system
+    private void loadAndStartSimIDSA(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment){
         //check if I am showing the GUI
         Boolean GUI = conf.getGUI();
         //If I am using the GUI I will show it otherwise no
@@ -91,7 +96,7 @@ public class GUI {
             }
             dataSource = dataSourceSelectionDialog.getSelectedDataSource();
         }else{
-            //initialise the data source with the hardcoded verion
+            //initialise the data source with the hardcoded version
             DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
             dataSource = dataSourceSelectionDialog.getSelectedDataSource();
             System.out.println("Data source selected is" + dataSource.getPath() + "...");
@@ -207,6 +212,18 @@ public class GUI {
         sim.setMaxXRealTime(30);
         sim.start();
     }
+
+    //load and start the simulation using LGDS system
+    private void loadAndStartSimLGDS(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment){
+        TrajectorySim sim = new TrajectorySim();
+        System.out.println("Loading potential field...");
+        sim.initPotentialField(conf,degree,s1,s2,w1,w2,name,experiment);
+        sim.init(conf.getMaxNumberOfTrackedPeople());
+        //start the simulation
+        System.out.println("Starting simulator...");
+        sim.run();
+    }
+
 }
 
 

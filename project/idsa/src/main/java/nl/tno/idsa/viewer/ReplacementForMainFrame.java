@@ -28,7 +28,7 @@ public class ReplacementForMainFrame {
     private final PerformanceChecker performance; //keep track of the performance of the simulator
     private Integer checker; //if the number of element inside the list of updating is not changing for checker time step so I kill that person
     private Integer previousNumber; //previous number of tracked people
-    private Integer waitingForTimestep;
+
 
     public ReplacementForMainFrame(Sim sim, Integer number){
         this.sim = sim;
