@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
+import lgds.routing.Routing;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
@@ -43,4 +44,7 @@ public interface UpdateRules {
 
     //set the word
     void setWorld(World world);
+
+    //set the pathfinder
+    void setPathFinder(Routing pathFinder);
 }

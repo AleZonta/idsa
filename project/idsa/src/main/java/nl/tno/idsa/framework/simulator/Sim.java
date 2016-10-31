@@ -94,7 +94,7 @@ public class Sim {
                 step(TIME_BETWEEN_UPDATES);
                 simTime += TIME_BETWEEN_UPDATES;
                 env.getTime().increment(TIME_BETWEEN_UPDATES);
-                main.checkNumberOfTrackedPeople();
+                if( main!= null) main.checkNumberOfTrackedPeople();
                 prev += frame;
                 now = System.nanoTime();
                 // Check if we need to notify about the passed time

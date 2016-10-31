@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by alessandrozonta on 30/08/16.
@@ -28,9 +29,10 @@ public class ReplacementForMainFrame {
     private final PerformanceChecker performance; //keep track of the performance of the simulator
     private Integer checker; //if the number of element inside the list of updating is not changing for checker time step so I kill that person
     private Integer previousNumber; //previous number of tracked people
+    private Integer selectedPerson; //Person selected to be tracked
 
 
-    public ReplacementForMainFrame(Sim sim, Integer number){
+    public ReplacementForMainFrame(Sim sim, Integer number, Integer selectedPerson){
         this.sim = sim;
         this.pot = sim.getPot();
         this.maxNumberOfElementTrackable = number;
@@ -39,6 +41,7 @@ public class ReplacementForMainFrame {
         this.performance = new PerformanceChecker();
         this.checker = 0;
         this.previousNumber = 0;
+        this.selectedPerson = selectedPerson;
     }
 
     //Method that is finding all the people outside a building and checking if the number found is under the limit set by config file
@@ -48,34 +51,58 @@ public class ReplacementForMainFrame {
         List<Agent> agent = env.getAgents();
 
         //I am tracking all the agents that are not inside at the starting point of the simulation
-        agent.stream().filter(this.pot::isOutside).limit(this.maxNumberOfElementTrackable).forEach(a -> {
-            try {
-                //new agent tracked new potential field for him
-                PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
-                TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+        //If I am tracking everyone
+        if(this.selectedPerson == null) {
+            agent.stream().filter(this.pot::isOutside).limit(this.maxNumberOfElementTrackable).forEach(this::prepareAgent);
+        }else {
+            //If I am selecting the person from file
+            //Agent a = agent.stream().filter(this.pot::isOutside).limit(this.maxNumberOfElementTrackable).collect(Collectors.toList()).get(this.selectedPerson);
 
-                PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
-                fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
-                this.performance.addPersonalPerformance(a.getId(),personalPerformance); //connect performance with id person and put them together in a list
-
-                fieldForTheTrackedAgent.setMainFrameReference(this);
-                fieldForTheTrackedAgent.setTrackedAgent(a);
-                a.deleteObservers(); //delete old observers
-                a.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
-
-                //Add potential field and tracking system to their list
-                this.listPot.put(a.getId(),fieldForTheTrackedAgent);
-                this.listTrack.put(a.getId(),trackingForTheTrackedAgent);
-                System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
-
-
-            } catch (EmptyActivityException | ActivityNotImplementedException e) {
-                //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
-                e.printStackTrace();
+            //normal way is faster than java8 collect implementation
+            Integer count = 0;
+            Integer realCount = -1;
+            while(count < this.selectedPerson){
+                realCount++;
+                if(this.pot.isOutside(agent.get(realCount))){
+                    count++;
+                }
             }
-        });
+
+            Agent a = agent.get(realCount);
+
+            this.prepareAgent(a);
+        }
+
         //set the initial number
         this.previousNumber = this.listPot.size();
+    }
+
+    //Prepare the agent to be tracked
+    private void prepareAgent(Agent a){
+        try {
+            //new agent tracked new potential field for him
+            PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
+            TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+
+            PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
+            fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
+            this.performance.addPersonalPerformance(a.getId(),personalPerformance); //connect performance with id person and put them together in a list
+
+            fieldForTheTrackedAgent.setMainFrameReference(this);
+            fieldForTheTrackedAgent.setTrackedAgent(a);
+            a.deleteObservers(); //delete old observers
+            a.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
+
+            //Add potential field and tracking system to their list
+            this.listPot.put(a.getId(),fieldForTheTrackedAgent);
+            this.listTrack.put(a.getId(),trackingForTheTrackedAgent);
+            System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
+
+
+        } catch (EmptyActivityException | ActivityNotImplementedException e) {
+            //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
+            e.printStackTrace();
+        }
     }
 
 

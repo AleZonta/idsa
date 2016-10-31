@@ -51,16 +51,25 @@ public class GUI {
         //if arg is empty load normal rules otherwise load the file with than name
         if(args.length == 0){
             if(gdsi){
-                simulator.loadAndStartSimLGDS(conf,null,null,null,null,null,"Normal","Normal");
+                simulator.loadAndStartSimLGDS(conf,null,null,null,null,null,"Normal","Normal", null);
             }else{
-                simulator.loadAndStartSimIDSA(conf,null,null,null,null,null,"Normal","Normal");
+                simulator.loadAndStartSimIDSA(conf,null,null,null,null,null,"Normal","Normal", null);
             }
         }else{
-            LoadParameters par = new LoadParameters(args[0]);
-            if(gdsi){
-                simulator.loadAndStartSimLGDS(conf,par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment());
+            LoadParameters par;
+            if (args.length == 1) {
+                //If I am loading the Json File
+                 par = new LoadParameters(args[0], conf.getSelectPerson(), conf.getSelectUR());
             }else{
-                simulator.loadAndStartSimIDSA(conf,par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment());
+                //I am passing the parameters directly
+                par = new LoadParameters(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8]);
+            }
+            //set update rule read by parameter files
+            conf.setUpdateRules(par.getUpdateRule());
+            if (gdsi) {
+                simulator.loadAndStartSimLGDS(conf, par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment(), par.getNumber());
+            } else {
+                simulator.loadAndStartSimIDSA(conf, par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment(), par.getNumber());
             }
         }
 
@@ -70,7 +79,7 @@ public class GUI {
     }
 
     //Load and start the simulation using IDSA system
-    private void loadAndStartSimIDSA(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment){
+    private void loadAndStartSimIDSA(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, Integer number){
         //check if I am showing the GUI
         Boolean GUI = conf.getGUI();
         //If I am using the GUI I will show it otherwise no
@@ -201,7 +210,7 @@ public class GUI {
             mf.show();
         }else{//If I am not using the GUI i should select all the point that I need to track
             System.out.println("Connecting the potential field to the people tracked...");
-            ReplacementForMainFrame mf = new ReplacementForMainFrame(sim,conf.getMaxNumberOfTrackedPeople());
+            ReplacementForMainFrame mf = new ReplacementForMainFrame(sim, conf.getMaxNumberOfTrackedPeople(), number);
             sim.setMain(mf);
             //track all the people outside a building
             mf.trackEveryone();
@@ -214,7 +223,7 @@ public class GUI {
     }
 
     //load and start the simulation using LGDS system
-    private void loadAndStartSimLGDS(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment){
+    private void loadAndStartSimLGDS(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, Integer number){
         TrajectorySim sim = new TrajectorySim();
         System.out.println("Loading potential field...");
         sim.initPotentialField(conf,degree,s1,s2,w1,w2,name,experiment);

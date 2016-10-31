@@ -34,6 +34,8 @@ public class ConfigFile {
     private Integer POIs;
     private Integer updateRules;
     private Boolean gdsi; //I am loading trajectories from file?
+    private Boolean selectPerson; //Am i selecting person from parameter files?
+    private Boolean selectUR; //Am I selecting the update rules from file?
 
     //constructor
     public ConfigFile(){
@@ -54,6 +56,8 @@ public class ConfigFile {
         this.POIs = null;
         this.updateRules = null;
         this.gdsi = null;
+        this.selectPerson = null;
+        this.selectUR = null;
     }
 
     //method that reads the configfile
@@ -89,6 +93,8 @@ public class ConfigFile {
         this.updateRules = ((Long) jsonObject.get("UpdateRule")).intValue(); // zero is Pacman rule
 
         this.gdsi = (Boolean) jsonObject.get("GDSI"); //True I am using GDSI for the tracking / False I am using IDSA for the tracking
+        this.selectPerson = (Boolean) jsonObject.get("SelectPerson"); //True I read from parameter file the person to track / False I simulate all the n person
+        this.selectUR = (Boolean) jsonObject.get("SelectUR"); //True I read from parameter file the UR / False I use the config files
     }
 
     //getter
@@ -144,4 +150,13 @@ public class ConfigFile {
 
     public Boolean getGdsi() { return this.gdsi; }
 
+    public Boolean getSelectPerson() { return this.selectPerson; }
+
+    public void setUpdateRules(Integer updateRules) {
+        this.updateRules = updateRules;
+    }
+
+    public Boolean getSelectUR() {
+        return this.selectUR;
+    }
 }

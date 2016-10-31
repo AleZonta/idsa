@@ -2,6 +2,7 @@ package nl.tno.idsa.framework.simulator;
 
 import lgds.POI.*;
 import lgds.load_track.LoadTrack;
+import lgds.people.Agent;
 import lgds.simulator.SimulatorInterface;
 import lgds.trajectories.Trajectories;
 import lgds.trajectories.Trajectory;
@@ -54,7 +55,15 @@ public class TrajectorySim implements SimulatorInterface {
      * getter for the agent participating at the simulation
      * @return list of agent that I am going to simulate
      */
-    public List<TrajectoryAgent> getParticipant() {
+    public List<Agent> getParticipant() {
+        return null;
+    }
+
+    /**
+     * getter for the agent participating at the simulation
+     * @return list of agent that I am going to simulate
+     */
+    public List<TrajectoryAgent> getLocalParticipant(){
         return participant;
     }
 
@@ -62,7 +71,6 @@ public class TrajectorySim implements SimulatorInterface {
      * getter for all the trajectories
      * @return all the trajectories
      */
-    @Override
     public Trajectories getTra() {
         return tra;
     }
@@ -91,7 +99,8 @@ public class TrajectorySim implements SimulatorInterface {
         });
         //what about poi? I should generate POI for them. Now I should generate some randomly than I should
         //find a way to find them from the poi
-        this.tra.computePOIs(number);
+        //I can select how many POI use here. Lets add more
+        this.tra.computePOIs(number * 3);
 
         System.out.println("Connecting the potential field to the people tracked...");
         //now i should load all what I need for the potential field
@@ -131,7 +140,7 @@ public class TrajectorySim implements SimulatorInterface {
     public void run(){
         //run the simulator
         while (this.participant.stream().filter(agent -> !agent.getDead()).toArray().length != 0) {
-            this.participant.stream().filter(agent -> !agent.getDead()).forEach(TrajectoryAgent::doStep);
+            this.participant.parallelStream().filter(agent -> !agent.getDead()).forEach(TrajectoryAgent::doStep);
         }
         System.out.println("End simulating procedure...");
 

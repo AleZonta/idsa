@@ -1,5 +1,7 @@
 package nl.tno.idsa.framework.potential_field;
 
+import lgds.routing.PathFinderGraphHopper;
+import lgds.routing.Routing;
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
@@ -57,6 +59,8 @@ public class PotentialField extends Observable{
     private final Integer confHeatMap; //keep track of what i want to save (for deep copy)
     private final Integer confPOIs; //keep track of what i want to save (for deep copy)
     private final Boolean confGUI; //If it is true I am using the GUI otherWise not (for deep copy)
+    private final Boolean gdsi; //true if i am loading track from file
+    private List<Double> parameter; //it stores the parameter for the update rules
 
 
     private final ConfigFile conf; //config file with the field loaded from json
@@ -77,6 +81,8 @@ public class PotentialField extends Observable{
     private final String name; //remember the name of the experiment
     private final String experiment; //remember the number of the exp
 
+    private final Routing pathFinder; //object path finder for path planning when not using the simualtor
+
     //basic class constructor
     public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double w1, Double s2, Double w2, String name, String experiment){
         this.pointsOfInterest = new ArrayList<>();
@@ -95,6 +101,7 @@ public class PotentialField extends Observable{
         this.confPerformance = this.conf.getPerformance();
         this.confPOIs = this.conf.getPOIs();
         this.confGUI = this.conf.getGUI();
+        this.gdsi = this.conf.getGdsi();
 
         this.storage = new SaveToFile(name, experiment);
 
@@ -119,49 +126,24 @@ public class PotentialField extends Observable{
         if(this.areaInTheWorld != null) this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
         Integer value = this.conf.getUpdateRules();
-        switch (value){
-            case 0:
-                this.updateRule = new PacmanRule(90.0, 0.1 ,-0.0001, Boolean.FALSE); //select Pacman rule fixed value
-                break;
-            case 1:
-                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
-                break;
-            case 2:
-                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE); //select Pacman rule with distance and no path
-                break;
-            case 3:
-                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule without distance but with path
-                break;
-            case 4:
-                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE); //select Pacman rule with distance and path
-                break;
-            case 5:
-                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule without distance and path but with PF
-                break;
-            case 6:
-                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule with distance and no path but yes PF
-                break;
-            case 7:
-                this.updateRule = new PacmanRule(degree, s1 , w1, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule without distance but with path and PF
-                break;
-            case 8:
-                this.updateRule = new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule with distance and path and PF
-                break;
-            case 9:
-                this.updateRule = new DoublePacmanRule(degree, s1 , w1, Boolean.FALSE); //select DoublePacman rule without path
-                break;
-            case 10:
-                this.updateRule = new DoublePacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule wit path
-                break;
-        }
+        this.updateRule = this.returnUpdateRule(value, degree, s1 , w1, s2, w2);
+        this.parameter = new ArrayList<>();
+        this.parameter.add(new Double(value));
+        this.parameter.add(degree);
+        this.parameter.add(s1);
+        this.parameter.add(w1);
+        this.parameter.add(s2);
+        this.parameter.add(w2);
         this.updateRule.setWorld(world);
         this.targetCounter = 0;
         this.name = name;
         this.experiment = experiment;
+
+        this.pathFinder = null;
     }
 
     //constructor used for the deep copy
-    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential, UpdateRules updateRule, Integer confHeatMap, Integer confPerformance, Integer confPOIs, Boolean GUI, String name, String experiment){
+    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential, Integer updateRule, Integer confHeatMap, Integer confPerformance, Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -178,6 +160,7 @@ public class PotentialField extends Observable{
         this.confPerformance = confPerformance;
         this.confPOIs = confPOIs;
         this.confGUI = GUI;
+        this.gdsi = gdsi;
 
         this.storage = new SaveToFile(name, experiment);
 
@@ -201,11 +184,18 @@ public class PotentialField extends Observable{
         this.areaInTheWorld = areaInTheWorld;
         if(this.areaInTheWorld != null) this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
-        this.updateRule = updateRule; //select Pacman rule
+        this.updateRule = this.returnUpdateRule(parameter.get(0).intValue(), parameter.get(1), parameter.get(2) , parameter.get(3), parameter.get(4), parameter.get(5));
 
         this.targetCounter = 0;
         this.name = name;
         this.experiment = experiment;
+
+        if (this.gdsi){
+            this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
+            this.updateRule.setPathFinder(this.pathFinder);
+        }else{
+            this.pathFinder = null;
+        }
     }
 
     //getter for the matrix dynamic map level
@@ -251,7 +241,7 @@ public class PotentialField extends Observable{
         //check if point of interest is empty (). This is needed if after one person I will select another one
         this.pointsOfInterest.clear();
         //If I am loading the trajectories from file I know the POIs and I do not need to find them in the simulator
-        if(this.trajectorySimReference == null && this.mainFrameReference != null) this.popolatePOIsfromAgent();
+        if((this.trajectorySimReference == null && this.mainFrameReference != null) || this.confGUI) this.popolatePOIsfromAgent();
         //set the starting point of the agent
         this.previousPoint = trackedAgent.getLocation();
 
@@ -478,6 +468,8 @@ public class PotentialField extends Observable{
             }
         }
 
+        //update the previous point
+        this.previousPoint = currentPosition;
     }
 
     //get the charge of all the levels in one list
@@ -566,17 +558,21 @@ public class PotentialField extends Observable{
             amInsidePOI.increaseCharge(updateRule.getHowMuchIncreaseTheChargeInsidePOI());
             //I am inside a POI, I should count how many time step before stop the tracking
             this.checkTimeStepAfterTarget(Boolean.TRUE);
-        }
 
-        //save all the POIs and their charge
-        if(this.confPOIs == 0) this.storage.savePOIsCharge(currentPosition,this.pointsOfInterest);
-        //save performance
+            //set the target to the performance
+            this.performance.setTarget(amInsidePOI.getArea().getPolygon().getCenterPoint());
+        }
+        //update performance
         this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        //update all the POI and the charge
+        Map<Point,Double> positionAndChargePOIs = new HashMap<>();
+        this.pointsOfInterest.stream().forEach(poi -> positionAndChargePOIs.put(poi.getArea().getPolygon().getCenterPoint(),poi.getCharge()));
+        this.performance.addValue(positionAndChargePOIs);
     }
 
     //Deep copy of all the fields of this object
     public PotentialField deepCopy(){
-        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.confThresholdPotential, this.confConfConstantPotential, this.updateRule, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name, this.experiment);
+        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.confThresholdPotential, this.confConfConstantPotential, this.conf.getUpdateRules(), this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name, this.experiment, this.gdsi, this.parameter);
     }
 
     //Am I at the target?
@@ -605,6 +601,7 @@ public class PotentialField extends Observable{
                 this.trackedAgent.deleteObservers();
                 //save track
                 this.storage.savePathToFile();
+                if(this.confPOIs == 0) this.performance.savePOIsInfo(this.storage); //save POIs info
                 if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //remove from main list of tracked people on replacementformainframe. Last thing to do, I need to save the info before eventually stop the simulation
                 if(!this.confGUI) {
@@ -649,6 +646,36 @@ public class PotentialField extends Observable{
             this.pointsOfInterest = new ArrayList<>();
             return Boolean.FALSE;
         }
+    }
+
+    //given the value it returns the selected update rule
+    //Here we can add how many update rules we want
+    public UpdateRules returnUpdateRule(Integer value, Double degree, Double s1, Double w1, Double s2, Double w2){
+        switch (value){
+            case 0:
+                return new PacmanRule(90.0, 0.1 ,-0.0001, Boolean.FALSE); //select Pacman rule fixed value
+            case 1:
+                return new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
+            case 2:
+                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE); //select Pacman rule with distance and no path
+            case 3:
+                return new PacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule without distance but with path
+            case 4:
+                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE); //select Pacman rule with distance and path
+            case 5:
+                return new PacmanRule(degree, s1 , w1, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule without distance and path but with PF
+            case 6:
+                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule with distance and no path but yes PF
+            case 7:
+                return new PacmanRule(degree, s1 , w1, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule without distance but with path and PF
+            case 8:
+                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule with distance and path and PF
+            case 9:
+                return new DoublePacmanRule(degree, s1 , w1, Boolean.FALSE); //select DoublePacman rule without path
+            case 10:
+                return new DoublePacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule wit path
+        }
+        return null;
     }
 
 }

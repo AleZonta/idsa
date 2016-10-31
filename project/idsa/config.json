@@ -19,10 +19,12 @@
     0,
     0
   ],
-  "MaxNumberOfTrackedPeople": 20,
-  "Performance": 2,
+  "MaxNumberOfTrackedPeople": 5,
+  "Performance": 0,
   "HeatMap": 2,
   "POIs": 0,
   "UpdateRule": 0,
-  "GDSI": true
+  "GDSI": false,
+  "SelectPerson": false,
+  "SelectUR": false
 }

@@ -65,7 +65,7 @@ public class POI {
                 new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() + 0.00001 )};
         this.area = new Area(9999, new Polygon(points),"Destination");
         this.charge = 1.0;
-        this.initial_charge = null;
+        this.initial_charge = this.charge;
         this.meaning = Boolean.TRUE;
         this.influenceDistance = null;
         this.isReal = Boolean.TRUE;
@@ -101,14 +101,14 @@ public class POI {
 
     //increase the charge of this POI. Increase by one
     public void increaseCharge(Double value){
-        this.charge+=value;
+        this.charge += value;
     }
 
     //decrease the charge of this POI. Minimum value is 0 for now. Under the 0 the charge cannot decrease
     public void decreaseCharge(Double value){
-        if(this.charge > 0 && this.charge > value) {
-            this.charge-=value;
-        }else{
+        if (this.charge > 0 && this.charge > value) {
+            this.charge -= value;
+        } else {
             this.charge = 0.0;
         }
     }

@@ -11,9 +11,7 @@ import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.Polygon;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -44,7 +42,7 @@ public class SaveToFileTest {
     //test if save correctly the POIs info
     public void savePOIsCharge() throws Exception {
         //generate random charge for a random number of POI
-        List<POI> listOfPOI = new ArrayList<>();
+        List<Map<Point,Double>> listOfPOI = new ArrayList<>();
         Random randomGenerator = new Random();
 
         List<Double> values = new ArrayList<>();
@@ -57,10 +55,13 @@ public class SaveToFileTest {
         Point[] array2 = {new Point(50.0,50.0), new Point(80.0,60.0), new Point(140.0,30.0), new Point(90.0,30.0)};
         POI poi2 = new POI(new Area(2, new Polygon(array2), null), values.get(1), null);
 
-        listOfPOI.add(poi);
-        listOfPOI.add(poi2);
+        Map<Point,Double> map = new HashMap<>();
+        map.put(poi.getArea().getPolygon().getCenterPoint(),poi.getCharge());
+        map.put(poi2.getArea().getPolygon().getCenterPoint(),poi2.getCharge());
+        listOfPOI.add(map);
 
         SaveToFile savingApp = new SaveToFile("test","test");
+
         savingApp.savePOIsCharge(new Point(0.0,0.0),listOfPOI);
     }
 

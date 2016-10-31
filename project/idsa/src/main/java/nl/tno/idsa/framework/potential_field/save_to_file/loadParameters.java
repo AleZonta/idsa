@@ -20,18 +20,39 @@ public class LoadParameters {
     private Double w2;  // constant for the distance formula
     private String name; // experiment name
     private String experiment; //experiment number
+    private Integer number; //number of the person tracked
+    private Integer updateRule; //number of update rule
 
     //constructor
-    public LoadParameters(String name){
+    public LoadParameters(String name, Boolean selectedPerson, Boolean selectRules){
         this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + name;
+        this.number = null;
+        this.updateRule = null;
         try {
-            this.readFile();
+            this.readFile(selectedPerson, selectRules);
         } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
     }
 
-    private void readFile() throws IOException, ParseException {
+    //constructor with all the parameters
+    public LoadParameters(String alpha, String s1, String w1, String s2, String w2, String name, String experiment, String number, String updateRule){
+        this.alpha = Double.parseDouble(alpha);
+        this.s1 = Double.parseDouble(s1);
+        this.w1 = Double.parseDouble(w1);
+        this.s2 = Double.parseDouble(s2);
+        this.w2 = Double.parseDouble(w2);
+        this.name = name;
+        this.experiment = experiment;
+        try {
+            this.number = Integer.parseInt(number);
+        }catch (Exception ignored){
+            this.number = null;
+        }
+        this.updateRule = Integer.parseInt(updateRule);
+    }
+
+    private void readFile(Boolean selectedPerson, Boolean selectRules) throws IOException, ParseException {
         FileReader reader = new FileReader(this.currentPath);
         JSONParser parser = new JSONParser();
         JSONObject jsonObject = (JSONObject) parser.parse(reader);
@@ -43,6 +64,8 @@ public class LoadParameters {
         this.w2 = (Double) jsonObject.get("w2");
         this.name = (String) jsonObject.get("Name");
         this.experiment = ((Long) jsonObject.get("Exp")).toString();
+        if(selectedPerson) this.number = ((Long) jsonObject.get("Number")).intValue();
+        if(selectRules) this.updateRule = ((Long) jsonObject.get("UR")).intValue();
     }
 
 
@@ -60,4 +83,9 @@ public class LoadParameters {
 
     public String getExperiment() { return this.experiment; }
 
+    public Integer getNumber() { return this.number; }
+
+    public Integer getUpdateRule() {
+        return updateRule;
+    }
 }

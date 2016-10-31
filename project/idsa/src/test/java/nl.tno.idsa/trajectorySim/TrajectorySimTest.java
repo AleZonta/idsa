@@ -45,9 +45,9 @@ public class TrajectorySimTest {
         ConfigFile file = new ConfigFile();
         file.loadFile();
         sim.initPotentialField(file,90.0, 0.1 ,-0.0001, null, null, "test", "test");
-        sim.init(40);
-        assertEquals(40, sim.getParticipant().size());
-        assertEquals(40, sim.getTra().getListOfPOIs().size());
+        sim.init(5);
+        assertEquals(5, sim.getLocalParticipant().size());
+        assertEquals(5, sim.getTra().getListOfPOIs().size());
     }
 
 

@@ -54,6 +54,7 @@ public class ElectricPotentialTest {
             pointsOfInterest.stream().forEach(p -> p.setCharge(1.0));
 
             ElectricPotential pot = new ElectricPotential();
+            pot.setConstant(400.0,10000.0);
 
             //test the potential formula
             List<Double> magnitude = new ArrayList<>();

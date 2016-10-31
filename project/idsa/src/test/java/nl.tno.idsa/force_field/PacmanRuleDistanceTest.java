@@ -18,23 +18,27 @@ public class PacmanRuleDistanceTest {
         test.setPreviousPoint(new Point(0.0,0.0));
         test.computeUpdateRule(new Point(5.0,5.0),new Point(6.0,6.0));
         assertEquals(new Double(7.035914377897558), test.getHowMuchIncreaseTheCharge());
+        assertNull(test.getHowMuchDecreaseTheCharge());
 
         //test 1
         test.computeUpdateRule(new Point(5.0,5.0),new Point(5.0,6.0));
-        assertEquals(new Double(7.171432494463733), test.getHowMuchIncreaseTheCharge());
+        assertEquals(new Double(7.4755337966399855), test.getHowMuchDecreaseTheCharge());
+        assertNull(test.getHowMuchIncreaseTheCharge());
 
         //test 2
         test.computeUpdateRule(new Point(5.0,5.0),new Point(5.0,100.0));
-        assertEquals(new Double(2.81795577911206), test.getHowMuchDecreaseTheCharge());
+        assertEquals(new Double(2.9096910586606346), test.getHowMuchDecreaseTheCharge());
+        assertNull(test.getHowMuchIncreaseTheCharge());
 
         //test 3
         test.computeUpdateRule(new Point(5.0,5.0),new Point(-5.0,5.0));
-        assertEquals(new Double(10.24018986106451), test.getHowMuchDecreaseTheCharge());
+        assertEquals(new Double(16.159172349034556), test.getHowMuchDecreaseTheCharge());
+        assertNull(test.getHowMuchIncreaseTheCharge());
 
         //test 4 opposite direction
         test.computeUpdateRule(new Point(5.0,5.0),new Point(-5.0,-5.0));
         assertEquals(new Double(30.717520091329185), test.getHowMuchDecreaseTheCharge());
-
+        assertNull(test.getHowMuchIncreaseTheCharge());
 
 
     }

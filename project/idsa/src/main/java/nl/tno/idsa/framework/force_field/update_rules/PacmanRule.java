@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
+import lgds.routing.Routing;
 import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Path;
@@ -28,6 +29,7 @@ public class PacmanRule implements UpdateRules {
     private List<POI> POIs; //we need the list of all the poi to discover where the attraction comes from
     private Double angle; //angle of the attraction of the potential field
     private final Boolean PF; //Am i using the Potential Field Path Planning
+    private Routing pathFinder; //set the object path finder to compute the path if loading the trajectories from file
 
     //normal constructor
     public PacmanRule(){
@@ -38,12 +40,13 @@ public class PacmanRule implements UpdateRules {
         this.decreaseInsidePOIValue = 1.0;
         this.doINeedToUpdateTheCharge = null;
         this.previousPoint = null;
-        this.constantS = null;
-        this.constantWOne = null;
-        this.usingPath = null;
+        this.constantS = 0.1;
+        this.constantWOne = 0.005;
+        this.usingPath = Boolean.FALSE;
         this.pot = null;
         this.POIs = null;
         this.PF = Boolean.FALSE;
+        this.pathFinder = null;
     }
 
     //constructor with angle parameter
@@ -61,6 +64,7 @@ public class PacmanRule implements UpdateRules {
         this.pot = null;
         this.POIs = null;
         this.PF = Boolean.FALSE;
+        this.pathFinder = null;
     }
 
     public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath, ForceField pot){
@@ -77,6 +81,7 @@ public class PacmanRule implements UpdateRules {
         this.pot = pot;
         this.POIs = null;
         this.PF = Boolean.TRUE;
+        this.pathFinder = null;
     }
 
     public Double getHowMuchIncreaseTheCharge(){ return this.increaseValue; }
@@ -103,6 +108,10 @@ public class PacmanRule implements UpdateRules {
 
     public void setWorld(World world) { this.world = world; }
 
+    public void setPathFinder(Routing pathFinder) {
+        this.pathFinder = pathFinder;
+    }
+
     protected Boolean getUsingPath() { return this.usingPath; }
 
     protected Double getThreshold() { return this.threshold; }
@@ -128,23 +137,36 @@ public class PacmanRule implements UpdateRules {
         //this is the angle that the tracked person is using to move respect the x axis
         Double angle = Math.toDegrees(Math.atan2(currentPosition.getY() - this.previousPoint.getY(), currentPosition.getX() - this.previousPoint.getX()));
 
+        this.increaseValue = null;
+        this.decreaseValue = null;
+
         if(this.PF && this.angle.equals(angle)){
             //If I am using the PF and the angle where I am going is the same that the angle of attraction
             //then do nothing
             this.doINeedToUpdateTheCharge = null;
-            this.increaseValue = null;
-            this.decreaseValue = null;
         }else {
             //work normally
             //this is the angle between the POI and me
             Double currentAngle;
             if (!this.usingPath) {
                 //I am not using the path
-                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - this.previousPoint.getY(), poi.getX() - this.previousPoint.getX()));
+                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - currentPosition.getY(), poi.getX() - currentPosition.getX()));
             } else {
                 //I am using the Path
-                Path fromMeToPOI = this.world.getPath(this.previousPoint, poi);
-                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - fromMeToPOI.get(fromMeToPOI.size() / 2).getY(), poi.getX() - fromMeToPOI.get(fromMeToPOI.size() / 2).getX()));
+                Point middlePath = null;
+                if(this.pathFinder != null){
+                    //Need to use lgds point to call the method that will find the path between them
+                    lgds.trajectories.Point source = new lgds.trajectories.Point(currentPosition.getX(), currentPosition.getY());
+                    lgds.trajectories.Point destination = new lgds.trajectories.Point(poi.getX(), poi.getY());
+                    this.pathFinder.getDirection(source, destination);
+                    lgds.trajectories.Point result = this.pathFinder.getCenterPointOfTrajectory();
+                    middlePath = new Point(result.getLatitude(), result.getLongitude());
+                }else {
+                    Path fromMeToPOI = this.world.getPath(currentPosition, poi);
+                    middlePath = fromMeToPOI.get(fromMeToPOI.size() / 2);
+                }
+
+                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - middlePath.getY(), poi.getX() - middlePath.getX()));
             }
 
             //calculate how much increase/decrease the charge

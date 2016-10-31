@@ -920,9 +920,13 @@ public class Matrix{
             this.checkTimeStepAfterTarget(Boolean.TRUE);
         }
 
-        //save POIs
-        if(this.conf.getPOIs() == 0) this.storage.savePOIsCharge(currentPosition,totalList);
+
         this.performance.addValue(totalList.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        //update all the POI and the charge
+        Map<Point,Double> positionAndChargePOIs = new HashMap<>();
+        totalList.stream().forEach(poi -> positionAndChargePOIs.put(poi.getArea().getPolygon().getCenterPoint(),poi.getCharge()));
+        this.performance.addValue(positionAndChargePOIs);
+
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
 
@@ -1063,6 +1067,7 @@ public class Matrix{
             if(this.targetCounter == 20){
                 //Stop the tracking and save all the information
                 this.storage.savePathToFile();
+                if(this.conf.getPOIs() == 0) this.performance.savePOIsInfo(this.storage); //save POIs info
                 if(this.conf.getPerformance() == 0 || this.conf.getPerformance() == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //Should stop the simulation
                 //TODO stop the simulation

@@ -2,7 +2,9 @@ package nl.tno.idsa.potential_field.heatMap;
 
 import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.potential_field.heatMap.Cell;
+import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
+import nl.tno.idsa.framework.world.Polygon;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -56,7 +58,12 @@ public class CellTest {
             if (expectedValue.isNaN()) expectedValue = 0.0;
 
             for (int j = 0; j < values.size(); j++) {
-                POI poi = new POI(null, values.get(j), null);
+                Point centralPoint = new Point(0.0,0.0);
+                Point[] points = {new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() - 0.00001 ),
+                        new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() + 0.00001 ),
+                        new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() - 0.00001 ),
+                        new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() + 0.00001 )};
+                POI poi = new POI(new Area(9999, new Polygon(points),"Destination"), values.get(j), null);
                 cell.addPOIs(poi);
             }
 
@@ -121,7 +128,12 @@ public class CellTest {
                 }
 
                 for (int j = 0; j < values.size(); j++) {
-                    POI poi = new POI(null, values.get(j), null);
+                    Point centralPoint = new Point(0.0,0.0);
+                    Point[] points = {new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() - 0.00001 ),
+                            new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() + 0.00001 ),
+                            new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() - 0.00001 ),
+                            new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() + 0.00001 )};
+                    POI poi = new POI(new Area(9999, new Polygon(points),"Destination"), values.get(j), null);
                     cell.addPOIs(poi);
                 }
                 numberOfSubPoi += values.size();

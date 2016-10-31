@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -58,12 +59,23 @@ public class SaveToFile {
 
         obj.put("StartPosition",this.trackedAgent.getLocation());
 
-        try (FileWriter file = new FileWriter(this.currentPath + "/trackedAgent.JSON")) {
-            file.write(obj.toJSONString());
-            System.out.println("Successfully Copied JSON Object to File...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try (FileWriter file = new FileWriter(this.currentPath + "/trackedAgent.JSON")) {
+//            file.write(obj.toJSONString());
+//            System.out.println("Successfully Copied JSON Object to File...");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/trackedAgent.zip"));
+             ZipOutputStream zos = new ZipOutputStream(zipFile);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+        ){
+
+            ZipEntry csvFile = new ZipEntry("/trackedAgent.JSON");
+            zos.putNextEntry(csvFile);
+            writer.append(obj.toJSONString());
+            System.out.println("Successfully Saved trackedAgent.zip file...");
+        }catch (Exception e){}
     }
 
     //method to save the heat map -> Only for the single level heat map
@@ -139,40 +151,71 @@ public class SaveToFile {
         this.pointsOfThePath.forEach(path::add);
         obj.put("Path",path);
 
-        try (FileWriter file = new FileWriter(this.currentPath + "/path.JSON")) {
-            file.write(obj.toJSONString());
-            System.out.println("Successfully Copied JSON Object to File...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try (FileWriter file = new FileWriter(this.currentPath + "/path.JSON")) {
+//            file.write(obj.toJSONString());
+//            System.out.println("Successfully Copied JSON Object to File...");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
+        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/path.zip"));
+             ZipOutputStream zos = new ZipOutputStream(zipFile);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+        ){
+
+            ZipEntry csvFile = new ZipEntry("/path.JSON");
+            zos.putNextEntry(csvFile);
+            writer.append(obj.toJSONString());
+            System.out.println("Successfully Saved path.zip file...");
+        }catch (Exception e){}
     }
 
     //With this method I save all the charge of the POIs with the current position
     //Input
-    //Point currentPosition -> position where I am now
+    //Point target -> target position
     //List<POI> listWithAllThePOIs -> list of all the POIs
-    public void savePOIsCharge(Point currentPosition, List<POI> listWithAllThePOIs){
+    public void savePOIsCharge(Point target, List<Map<Point,Double>> listWithAllThePOIs){
         //I will save a Json File with the info of the agent
         JSONObject obj = new JSONObject();
-        obj.put("Position",currentPosition);
+        obj.put("target", target);
 
-        JSONArray POIs = new JSONArray();
-        JSONObject subObj = new JSONObject();
-        for(POI poi:listWithAllThePOIs)
-        {
-            subObj.put("Loc",poi.getArea().getPolygon().getCenterPoint());
-            subObj.put("Charge",poi.getCharge());
-            POIs.add(subObj);
+        JSONArray totalPOIs = new JSONArray();
+
+        for(Map<Point,Double> map:listWithAllThePOIs){
+            JSONArray POIs = new JSONArray();
+            map.forEach((point,charge) ->{
+                JSONObject subObj = new JSONObject();
+                subObj.put("Loc", point);
+                subObj.put("Charge",charge);
+                POIs.add(subObj);
+            });
+            totalPOIs.add(POIs);
         }
-        obj.put("POIs",POIs);
+        obj.put("POIs",totalPOIs);
 
+//        try (FileWriter file = new FileWriter(this.currentPath + "/POIs.txt")) {
+//            for(Map<Point,Double> map:listWithAllThePOIs){
+//                List<Double> charges = new ArrayList<>();
+//                map.forEach((point,charge) -> charges.add(charge));
+//                file.write(charges.toString());
+//                file.write("\n");
+//            }
+//            System.out.println("Successfully Copied JSON Object to File...");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
-        try (FileWriter file = new FileWriter(this.currentPath + "/POIs.JSON")) {
-            file.write(obj.toJSONString());
-            System.out.println("Successfully Copied JSON Object to File...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/POIs.zip"));
+                                   ZipOutputStream zos = new ZipOutputStream(zipFile);
+                                   BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+        ){
+
+            ZipEntry csvFile = new ZipEntry("/POIs.JSON");
+            zos.putNextEntry(csvFile);
+            writer.append(obj.toJSONString());
+            System.out.println("Successfully Saved POIs.zip file...");
+        }catch (Exception e){}
+
     }
 
     //Save Performance. This method is used for the personal performance and also for the general one
@@ -180,19 +223,28 @@ public class SaveToFile {
     //list<Long> value -> list with the performance value
     public void savePerformace(List<Double> value){
         //I will save a Json File with the info of the agent
-        JSONObject obj = new JSONObject();
-        JSONArray perf = new JSONArray();
-        value.forEach(perf::add);
-        obj.put("Perf",perf);
+//        JSONObject obj = new JSONObject();
+//        JSONArray perf = new JSONArray();
+//        value.forEach(perf::add);
+//        obj.put("Perf",perf);
+//
+//        try (FileWriter file = new FileWriter(this.currentPath + "/Performance.JSON")) {
+//            file.write(obj.toJSONString());
+//            System.out.println("Successfully Copied JSON Object to File...");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
-        try (FileWriter file = new FileWriter(this.currentPath + "/Performance.JSON")) {
-            file.write(obj.toJSONString());
-            System.out.println("Successfully Copied JSON Object to File...");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/Performance.zip"));
+             ZipOutputStream zos = new ZipOutputStream(zipFile);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+        ){
+
+            ZipEntry csvFile = new ZipEntry("/Performance.JSON");
+            zos.putNextEntry(csvFile);
+            writer.append(value.toString());
+            System.out.println("Successfully Saved Performance.zip file...");
+        }catch (Exception e){}
     }
-
-
 
 }
