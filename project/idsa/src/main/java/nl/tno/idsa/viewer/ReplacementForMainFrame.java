@@ -13,8 +13,6 @@ import nl.tno.idsa.framework.world.Environment;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Created by alessandrozonta on 30/08/16.

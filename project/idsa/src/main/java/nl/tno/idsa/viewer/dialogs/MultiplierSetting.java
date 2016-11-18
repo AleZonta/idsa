@@ -1,7 +1,5 @@
 package nl.tno.idsa.viewer.dialogs;
 
-import nl.tno.idsa.framework.agents.Agent;
-import nl.tno.idsa.framework.behavior.likelihoods.ActivityLikelihoodMap;
 import nl.tno.idsa.framework.behavior.likelihoods.DayOfWeek;
 import nl.tno.idsa.framework.behavior.multipliers.ISeason;
 import nl.tno.idsa.framework.behavior.multipliers.ITimeOfYear;

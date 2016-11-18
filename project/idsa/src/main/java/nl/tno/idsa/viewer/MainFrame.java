@@ -10,7 +10,6 @@ import nl.tno.idsa.framework.behavior.triggers.StaticAreaTrigger;
 import nl.tno.idsa.framework.messaging.Messenger;
 import nl.tno.idsa.framework.messaging.ProgressNotifier;
 import nl.tno.idsa.framework.potential_field.*;
-import nl.tno.idsa.framework.potential_field.heatMap.Cell;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.semantics_impl.actions.Action;
 import nl.tno.idsa.framework.semantics_impl.groups.Group;

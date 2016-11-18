@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import java.text.DecimalFormat;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by alessandrozonta on 19/07/16.

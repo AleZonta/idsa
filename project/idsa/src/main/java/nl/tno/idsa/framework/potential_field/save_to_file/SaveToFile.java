@@ -1,8 +1,6 @@
 package nl.tno.idsa.framework.potential_field.save_to_file;
 
 import nl.tno.idsa.framework.agents.Agent;
-import nl.tno.idsa.framework.config.ConfigFile;
-import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -29,7 +27,15 @@ public class SaveToFile {
     //constructor
     public SaveToFile(String name, String experiment){
         this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/Output" + name;
-        //this.currentPath = "/var/scratch/ama228/Output" + name;
+        new File(this.currentPath).mkdirs();
+        this.currentPath += "/" + experiment;
+        new File(this.currentPath).mkdirs();
+        this.fileCount = -1;
+        this.pointsOfThePath = new ArrayList<>();
+    }
+
+    public SaveToFile(String name, String experiment, String path){
+        this.currentPath = path + "/Output" + name;
         new File(this.currentPath).mkdirs();
         this.currentPath += "/" + experiment;
         new File(this.currentPath).mkdirs();

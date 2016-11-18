@@ -9,8 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by alessandrozonta on 08/09/16.
  */

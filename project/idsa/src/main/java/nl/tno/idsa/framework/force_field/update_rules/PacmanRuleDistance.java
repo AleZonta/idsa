@@ -1,10 +1,7 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
 import nl.tno.idsa.framework.force_field.ForceField;
-import nl.tno.idsa.framework.potential_field.POI;
 import nl.tno.idsa.framework.world.Point;
-
-import java.util.List;
 
 /**
  * Created by alessandrozonta on 12/09/16.
@@ -34,7 +31,7 @@ public class PacmanRuleDistance extends PacmanRule {
     public void computeUpdateRule(Point currentPosition, Point poi){
         super.computeUpdateRule(currentPosition,poi); //calculate value using only the angle
         if (super.doINeedToUpdate() != null) {
-            //If is differnet than null I do have to update, otherwise not
+            //If is different than null I do have to update, otherwise not
             //now I should add the distance at that value
             //for now I use simple euclidean distance between two points
             //The function is 1 / ( s * distance ^ w)
@@ -44,7 +41,11 @@ public class PacmanRuleDistance extends PacmanRule {
                 distance = poi.euclideanDistanceTo(super.getPreviousPoint());
             } else {
                 //I am using the Path
-                distance = this.world.getPathLengthInM(super.getPreviousPoint(), poi);
+                if (super.getPathFinder() == null) {
+                    distance = this.world.getPathLengthInM(super.getPreviousPoint(), poi);
+                }else{
+                    distance = super.getPathFinder().retTotalDistance();
+                }
             }
             Double valueToAdd = 1 / (this.constantSDistance * Math.pow(distance, this.constantWTwo));
             if (super.doINeedToUpdate()) {

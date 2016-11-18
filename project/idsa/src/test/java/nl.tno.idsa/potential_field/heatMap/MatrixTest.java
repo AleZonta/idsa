@@ -12,7 +12,10 @@ import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.Polygon;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.TreeMap;
 
 /**
  * Created by alessandrozonta on 01/08/16.

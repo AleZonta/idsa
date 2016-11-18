@@ -1,8 +1,8 @@
 package nl.tno.idsa.framework.agents;
 
 import lgds.load_track.LoadTrack;
+import lgds.load_track.Traces;
 import lgds.people.AgentInterface;
-
 import lgds.trajectories.Point;
 import lgds.trajectories.Trajectory;
 import nl.tno.idsa.framework.population.Gender;
@@ -14,7 +14,7 @@ import nl.tno.idsa.framework.population.HouseholdTypes;
  */
 public class TrajectoryAgent extends Agent implements AgentInterface {
     private final Trajectory trajectory; //Trajectory of the agent that has to follow
-    private LoadTrack storage; //agent needs this to load his next position
+    private Traces storage; //agent needs this to load his next position
     private Boolean dead; //true if it ends to move on the trajectory
     private Point previousPoint; //remember the previousPoint
     private Integer targetCounter; //Count time step after reached the target -> potential field count 20 time in the target before stopping tracking. I need to keep the track alive antil that point
@@ -24,13 +24,12 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
      * @param trajectory agent's trajectory that it will follow
      * @param storage class used to load the next position
      */
-    public TrajectoryAgent(Trajectory trajectory, LoadTrack storage, double age, Gender gender, HouseholdTypes householdType, HouseholdRoles householdRole, int year){
+    public TrajectoryAgent(Trajectory trajectory, Traces storage, double age, Gender gender, HouseholdTypes householdType, HouseholdRoles householdRole, int year){
         super(age,gender,householdType,householdRole,year);
         this.trajectory = trajectory;
         this.storage = storage;
         this.dead = Boolean.FALSE;
         this.previousPoint = null;
-
         this.targetCounter = 0;
     }
 

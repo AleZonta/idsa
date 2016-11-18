@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.population;
 
+import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.utils.RandomNumber;
 
 import java.io.BufferedReader;
@@ -35,9 +36,13 @@ public class NameGenerator {
     private HashMap<Integer, List<NameData>> lastNames = new HashMap<>();
 
     private NameGenerator(String language_id) throws IOException {
-
-        String firstNames = readFile(Paths.get(".").toAbsolutePath().normalize().toString() + "/data/nl/names/firstnames_" + language_id + ".csv");
-//        String firstNames = readFile("../../data/nl/names/firstnames_" + language_id + ".csv");
+        String path;
+        if(ConfigFile.realSourceData == null){
+            path = Paths.get(".").toAbsolutePath().normalize().toString();
+        }else{
+            path = ConfigFile.realSourceData;
+        }
+        String firstNames = readFile(path + "/data/nl/names/firstnames_" + language_id + ".csv");
         String[] firstNameLines = firstNames.split("\n");
         for (String line : firstNameLines) {
             try {
@@ -61,8 +66,7 @@ public class NameGenerator {
             }
         }
 
-        String lastNames = readFile(Paths.get(".").toAbsolutePath().normalize().toString() + "/data/nl/names/lastnames_" + language_id + ".csv");
-//        String lastNames = readFile("../../data/nl/names/lastnames_" + language_id + ".csv");
+        String lastNames = readFile(path + "/data/nl/names/lastnames_" + language_id + ".csv");
         String[] lastNameLines = lastNames.split("\n");
         for (String line : lastNameLines) {
             try {

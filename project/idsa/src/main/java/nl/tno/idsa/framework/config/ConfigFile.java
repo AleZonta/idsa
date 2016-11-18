@@ -7,7 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -36,10 +35,15 @@ public class ConfigFile {
     private Boolean gdsi; //I am loading trajectories from file?
     private Boolean selectPerson; //Am i selecting person from parameter files?
     private Boolean selectUR; //Am I selecting the update rules from file?
+    private Boolean fileFromThisLocation; //Am I loading and saving file in this location?
+    private String sourceData; //If file are not loaded from the location they will be loaded from here
+    private String destinationData; //If not saved in the same location they will be saved here
+
+    public static String realSourceData = null;
 
     //constructor
     public ConfigFile(){
-        this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/config.json";
+        this.currentPath = Paths.get(".").toAbsolutePath().normalize().toString() + "/idsa_config.json";
         this.differentCellSize = new TreeMap<>();
         this.constantPotential = null;
         this.thresholdPotential = null;
@@ -58,6 +62,9 @@ public class ConfigFile {
         this.gdsi = null;
         this.selectPerson = null;
         this.selectUR = null;
+        this.fileFromThisLocation = null;
+        this.sourceData = null;
+        this.destinationData = null;
     }
 
     //method that reads the configfile
@@ -95,6 +102,14 @@ public class ConfigFile {
         this.gdsi = (Boolean) jsonObject.get("GDSI"); //True I am using GDSI for the tracking / False I am using IDSA for the tracking
         this.selectPerson = (Boolean) jsonObject.get("SelectPerson"); //True I read from parameter file the person to track / False I simulate all the n person
         this.selectUR = (Boolean) jsonObject.get("SelectUR"); //True I read from parameter file the UR / False I use the config files
+
+        this.fileFromThisLocation = (Boolean) jsonObject.get("FileFromThisLocation"); //True I am loading and saving from the location of the jar. False I am using the other two locaiton
+        this.sourceData = (String) jsonObject.get("SourceData");
+        this.destinationData = (String) jsonObject.get("DestinationData");
+
+        if (!this.fileFromThisLocation){
+            realSourceData = this.sourceData;
+        }
     }
 
     //getter
@@ -159,4 +174,12 @@ public class ConfigFile {
     public Boolean getSelectUR() {
         return this.selectUR;
     }
+
+    public Boolean getFileFromThisLocation() { return this.fileFromThisLocation; }
+
+    public String getSourceData() {
+        return this.sourceData;
+    }
+
+    public String getDestinationData() { return this.destinationData; }
 }

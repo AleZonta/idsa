@@ -112,6 +112,8 @@ public class PacmanRule implements UpdateRules {
         this.pathFinder = pathFinder;
     }
 
+    protected Routing getPathFinder() { return this.pathFinder; }
+
     protected Boolean getUsingPath() { return this.usingPath; }
 
     protected Double getThreshold() { return this.threshold; }
@@ -153,20 +155,22 @@ public class PacmanRule implements UpdateRules {
                 currentAngle = Math.toDegrees(Math.atan2(poi.getY() - currentPosition.getY(), poi.getX() - currentPosition.getX()));
             } else {
                 //I am using the Path
-                Point middlePath = null;
+                //I used the middlePath. No very correct.
+                //First way point
+                Point wayPoint = null;
                 if(this.pathFinder != null){
                     //Need to use lgds point to call the method that will find the path between them
                     lgds.trajectories.Point source = new lgds.trajectories.Point(currentPosition.getX(), currentPosition.getY());
                     lgds.trajectories.Point destination = new lgds.trajectories.Point(poi.getX(), poi.getY());
                     this.pathFinder.getDirection(source, destination);
-                    lgds.trajectories.Point result = this.pathFinder.getCenterPointOfTrajectory();
-                    middlePath = new Point(result.getLatitude(), result.getLongitude());
+                    lgds.trajectories.Point result = this.pathFinder.getFirstWayPointOfTrajectory();
+                    wayPoint = new Point(result.getLatitude(), result.getLongitude());
                 }else {
                     Path fromMeToPOI = this.world.getPath(currentPosition, poi);
-                    middlePath = fromMeToPOI.get(fromMeToPOI.size() / 2);
+                    wayPoint = fromMeToPOI.get(1);
                 }
 
-                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - middlePath.getY(), poi.getX() - middlePath.getX()));
+                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - wayPoint.getY(), poi.getX() - wayPoint.getX()));
             }
 
             //calculate how much increase/decrease the charge

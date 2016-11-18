@@ -5,7 +5,8 @@ import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.world.Point;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Created by alessandrozonta on 12/09/16.

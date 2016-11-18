@@ -1,6 +1,7 @@
 package nl.tno.idsa.framework.simulator;
 
 import lgds.POI.*;
+import lgds.load_track.LoadIDSATrack;
 import lgds.load_track.LoadTrack;
 import lgds.people.Agent;
 import lgds.simulator.SimulatorInterface;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
  * Trajectory Simulator that implements lgds simulator interface
  */
 public class TrajectorySim implements SimulatorInterface {
-    private LoadTrack storage; //class that loads the track from file
+    private LoadIDSATrack storage; //class that loads the track from file
     private List<TrajectoryAgent> participant; //list of all the agents participating into the simulation
     private Trajectories tra; //keep track of all the trajectories
     private PotentialField pot; //This is the base instance of the pot
@@ -41,7 +42,7 @@ public class TrajectorySim implements SimulatorInterface {
      * default constructor
      */
     public TrajectorySim(){
-        this.storage = new LoadTrack();
+        this.storage = new LoadIDSATrack();
         this.participant = new ArrayList<>();
         this.pot = null;
         this.performance = new PerformanceChecker();
@@ -86,10 +87,12 @@ public class TrajectorySim implements SimulatorInterface {
         //shuffle it
         this.tra.shuffle();
         //now I am choosing only the first $number trajectories
+        System.out.println("Selecting trajectories...");
         List<Trajectory> actualTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
         //prepare the id of the agent
         List<Integer> id = new ArrayList<>();
         for(int i = 0; i < number; i++) id.add(i);
+        System.out.println("Creating agents...");
         //create the agents
         id.stream().forEach(integer -> {
             HouseholdTypes hhType = HouseholdTypes.SINGLE;
@@ -100,6 +103,7 @@ public class TrajectorySim implements SimulatorInterface {
         //what about poi? I should generate POI for them. Now I should generate some randomly than I should
         //find a way to find them from the poi
         //I can select how many POI use here. Lets add more
+        System.out.println("Computing POIs...");
         this.tra.computePOIs(number * 3);
 
         System.out.println("Connecting the potential field to the people tracked...");
@@ -197,8 +201,15 @@ public class TrajectorySim implements SimulatorInterface {
      * @return List of POI in idsa version
      */
     private List<POI> translatePOI(List<lgds.POI.POI> oldList){
+        List<lgds.POI.POI> appoList = new ArrayList<>();
+        //Check if the POIs are inside the boundaries
+        oldList.stream().forEach(poi -> {
+            if(this.pot.getPathFinder().isContained(poi.getLocation())){
+                appoList.add(poi);
+            }
+        });
         List<POI> realList = new ArrayList<>();
-        oldList.stream().forEach(poi -> realList.add(new POI(new Point(poi.getLocation().getLatitude(),poi.getLocation().getLongitude()))));
+        appoList.stream().forEach(poi -> realList.add(new POI(new Point(poi.getLocation().getLatitude(),poi.getLocation().getLongitude()))));
         return realList;
     }
 

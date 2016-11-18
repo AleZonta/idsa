@@ -1,11 +1,5 @@
 package nl.tno.idsa.framework.kalman_filter;
 
-import nl.tno.idsa.framework.force_field.ForceField;
-import nl.tno.idsa.framework.potential_field.ParameterNotDefinedException;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by alessandrozonta on 14/07/16.
  */

@@ -4,7 +4,7 @@ import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.world.Time;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by alessandrozonta on 24/08/16.
@@ -39,6 +39,9 @@ public class ConfigFileTest {
         assertEquals(Boolean.FALSE, file.getGdsi());
         assertEquals(Boolean.FALSE, file.getSelectPerson());
         assertEquals(Boolean.FALSE, file.getSelectUR());
+        assertEquals(Boolean.FALSE, file.getFileFromThisLocation());
+        assertEquals("../..", file.getSourceData());
+//        assertEquals("/var/scratch/ama228", file.getDestinationData());
 
     }
 

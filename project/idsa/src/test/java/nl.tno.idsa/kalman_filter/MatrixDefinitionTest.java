@@ -1,13 +1,10 @@
 package nl.tno.idsa.kalman_filter;
 
-import nl.tno.idsa.framework.kalman_filter.*;
+import nl.tno.idsa.framework.kalman_filter.DifferentMatrixException;
+import nl.tno.idsa.framework.kalman_filter.MatrixDefinition;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by alessandrozonta on 18/07/16.

@@ -1,7 +1,6 @@
 package nl.tno.idsa.framework.kalman_filter;
 
 import nl.tno.idsa.framework.world.Point;
-import nl.tno.idsa.library.locations.Public;
 
 /**
  * Created by alessandrozonta on 01/07/16.

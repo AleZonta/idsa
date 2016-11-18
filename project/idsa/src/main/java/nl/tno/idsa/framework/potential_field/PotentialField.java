@@ -2,11 +2,12 @@ package nl.tno.idsa.framework.potential_field;
 
 import lgds.routing.PathFinderGraphHopper;
 import lgds.routing.Routing;
-import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
 import nl.tno.idsa.framework.behavior.activities.possible.PossibleActivity;
-import nl.tno.idsa.framework.force_field.*;
+import nl.tno.idsa.framework.config.ConfigFile;
+import nl.tno.idsa.framework.force_field.ElectricPotential;
+import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.force_field.update_rules.DoublePacmanRule;
 import nl.tno.idsa.framework.force_field.update_rules.PacmanRule;
 import nl.tno.idsa.framework.force_field.update_rules.PacmanRuleDistance;
@@ -81,7 +82,7 @@ public class PotentialField extends Observable{
     private final String name; //remember the name of the experiment
     private final String experiment; //remember the number of the exp
 
-    private final Routing pathFinder; //object path finder for path planning when not using the simualtor
+    private Routing pathFinder; //object path finder for path planning when not using the simulator
 
     //basic class constructor
     public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double w1, Double s2, Double w2, String name, String experiment){
@@ -103,7 +104,11 @@ public class PotentialField extends Observable{
         this.confGUI = this.conf.getGUI();
         this.gdsi = this.conf.getGdsi();
 
-        this.storage = new SaveToFile(name, experiment);
+        if(this.conf.getFileFromThisLocation()) {
+            this.storage = new SaveToFile(name, experiment);
+        }else{
+            this.storage = new SaveToFile(name, experiment, this.conf.getDestinationData());
+        }
 
         if(this.confTypologyOfMatrix){
             this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, this.conf.getDifferentCellSize(),this.storage, this.conf);
@@ -139,11 +144,22 @@ public class PotentialField extends Observable{
         this.name = name;
         this.experiment = experiment;
 
-        this.pathFinder = null;
+        if (this.gdsi){
+            this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
+            //load it
+            this.pathFinder.load();
+            this.updateRule.setPathFinder(this.pathFinder);
+        }else{
+            this.pathFinder = null;
+        }
     }
 
     //constructor used for the deep copy
-    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge, TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential, Double constantPotential, Integer updateRule, Integer confHeatMap, Integer confPerformance, Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter){
+    private PotentialField(Double worldHeight, Double worldWidth, Boolean typologyOfMatrix, Double commonInitialCharge,
+                           TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential,
+                           Double constantPotential, Routing pathFinder, Integer confHeatMap, Integer confPerformance,
+                           Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter,
+                            Boolean location, String destination){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -162,7 +178,11 @@ public class PotentialField extends Observable{
         this.confGUI = GUI;
         this.gdsi = gdsi;
 
-        this.storage = new SaveToFile(name, experiment);
+        if(location) {
+            this.storage = new SaveToFile(name, experiment);
+        }else{
+            this.storage = new SaveToFile(name, experiment, destination);
+        }
 
         if(this.confTypologyOfMatrix){
             this.heatMapTilesOptimisation = new Matrix(this.worldHeight, this.worldWidth, differentCellSize, this.storage, null); //TODO think about this null. For now I will never use the tile on multiple simulation, maybe in future
@@ -191,7 +211,7 @@ public class PotentialField extends Observable{
         this.experiment = experiment;
 
         if (this.gdsi){
-            this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
+            this.pathFinder = pathFinder; //using graphHopper for path finding -> Need to load the .pbf file
             this.updateRule.setPathFinder(this.pathFinder);
         }else{
             this.pathFinder = null;
@@ -233,6 +253,11 @@ public class PotentialField extends Observable{
 
     //getter for differentAreaType
     public HashMap<String, List<Area>> getDifferentAreaType(){ return this.differentAreaType; }
+
+    //getter for GraphHopper
+    public Routing getPathFinder() {
+        return this.pathFinder;
+    }
 
     //setter for the track agent. This method throws two exceptions. If the agent has no activity we can not use it for our prediction. If the agent has unrecognized activity we raise another exception
     //trackedAgent is the agent that we have just selected how person to track
@@ -572,7 +597,10 @@ public class PotentialField extends Observable{
 
     //Deep copy of all the fields of this object
     public PotentialField deepCopy(){
-        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,this.conf.getDifferentCellSize(),this.areaInTheWorld,this.confThresholdPotential, this.confConfConstantPotential, this.conf.getUpdateRules(), this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name, this.experiment, this.gdsi, this.parameter);
+        return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,
+                this.conf.getDifferentCellSize(),this.areaInTheWorld, this.confThresholdPotential, this.confConfConstantPotential,
+                this.pathFinder, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name,
+                this.experiment, this.gdsi, this.parameter, this.conf.getFileFromThisLocation(), this.conf.getDestinationData());
     }
 
     //Am I at the target?

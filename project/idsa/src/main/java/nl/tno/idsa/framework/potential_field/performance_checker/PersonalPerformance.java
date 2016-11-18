@@ -4,7 +4,6 @@ import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Point;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 

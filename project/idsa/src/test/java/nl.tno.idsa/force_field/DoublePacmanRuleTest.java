@@ -1,12 +1,11 @@
 package nl.tno.idsa.force_field;
 
 import nl.tno.idsa.framework.force_field.update_rules.DoublePacmanRule;
-import nl.tno.idsa.framework.force_field.update_rules.PacmanRuleDistance;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.world.Point;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by alessandrozonta on 12/09/16.

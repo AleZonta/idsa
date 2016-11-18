@@ -115,8 +115,6 @@
             <groupId>lgds</groupId>
             <artifactId>lgds</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>/Users/alessandrozonta/Documents/lgds/target/lgds-1.0-SNAPSHOT.jar</systemPath>
         </dependency>
     </dependencies>
     <repositories>
