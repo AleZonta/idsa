@@ -228,10 +228,12 @@ public class GUI {
         TrajectorySim sim = new TrajectorySim();
         System.out.println("Loading potential field...");
         sim.initPotentialField(conf,degree,s1,s2,w1,w2,name,experiment);
-        sim.init(conf.getMaxNumberOfTrackedPeople());
+//        sim.init(conf.getMaxNumberOfTrackedPeople());
         //start the simulation
         System.out.println("Starting simulator...");
-        sim.run();
+//        sim.run();
+
+        sim.init_and_run(100, conf.getMaxNumberOfTrackedPeople());
     }
 
 }

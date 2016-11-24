@@ -10,7 +10,7 @@ import java.util.List;
  * Created by alessandrozonta on 07/09/16.
  */
 public class PerformanceChecker {
-    private HashMap<Long,PersonalPerformance> performance; //list with all the tracked person and their performance
+    private HashMap<Long, PersonalPerformance> performance; //list with all the tracked person and their performance
     private List<Double> totalPerformanceNormalised; //List with all the value normalised at the end of the experiment
 
     public PerformanceChecker(){

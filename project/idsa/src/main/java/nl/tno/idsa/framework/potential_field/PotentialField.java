@@ -33,7 +33,7 @@ import java.util.*;
 public class PotentialField extends Observable{
 
     private List<POI> pointsOfInterest; //list with all the POIs regarding the current tracked person
-    private final HashMap<String, List<Area>> differentAreaType; //list with all the different areas preload at the start of the program
+    private HashMap<String, List<Area>> differentAreaType; //list with all the different areas preload at the start of the program
     //private Integer initialPositiveCharge; //positive charge that would assign to the POIs
     //private Integer initialNegativeCharge; //negative charge that would assign to the POIs (for future implementations)
     private Agent trackedAgent; //agent that we are going to track
@@ -56,6 +56,7 @@ public class PotentialField extends Observable{
     private final Double confCommonInitialCharge; //common initial charge. Is easier store it here than inside the code
     private final Double confThresholdPotential; //Threshold used for computing the potential value
     private final Double confConfConstantPotential; //Constant use in the formula for computing the potential
+    private final Integer confPath; //Do i want to save the path at the end?
     private final Integer confPerformance; //keep track of what i want to save (for deep copy)
     private final Integer confHeatMap; //keep track of what i want to save (for deep copy)
     private final Integer confPOIs; //keep track of what i want to save (for deep copy)
@@ -99,6 +100,7 @@ public class PotentialField extends Observable{
         this.confThresholdPotential = this.conf.getThresholdPotential();
         this.confConfConstantPotential = this.conf.getConstantPotential();
         this.confHeatMap = this.conf.getHeatMap();
+        this.confPath = this.conf.getPath();
         this.confPerformance = this.conf.getPerformance();
         this.confPOIs = this.conf.getPOIs();
         this.confGUI = this.conf.getGUI();
@@ -159,7 +161,7 @@ public class PotentialField extends Observable{
                            TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential,
                            Double constantPotential, Routing pathFinder, Integer confHeatMap, Integer confPerformance,
                            Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter,
-                            Boolean location, String destination){
+                            Boolean location, String destination, Integer confPath){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -173,6 +175,7 @@ public class PotentialField extends Observable{
         this.confConfConstantPotential = constantPotential;
         this.confThresholdPotential = thresholdPotential;
         this.confHeatMap = confHeatMap;
+        this.confPath = confPath;
         this.confPerformance = confPerformance;
         this.confPOIs = confPOIs;
         this.confGUI = GUI;
@@ -237,7 +240,10 @@ public class PotentialField extends Observable{
     public void setTrajectorySimReference(TrajectorySim trajectorySimReference) { this.trajectorySimReference = trajectorySimReference; }
 
     //setter for the performance
-    public void setPerformance(PersonalPerformance performance) { this.performance = performance; }
+    public void setPerformance(PersonalPerformance performance) {
+        this.performance = performance;
+
+    }
 
     //getter for the typology of the matrix
     public Boolean getTypologyOfMatrix() { return this.confTypologyOfMatrix; }
@@ -249,7 +255,12 @@ public class PotentialField extends Observable{
     public List<POI> getPointsOfInterest() { return this.pointsOfInterest; }
 
     //setter for pointsOfInterest
-    public void setPointsOfInterest(List<POI> pointsOfInterest) { this.pointsOfInterest = pointsOfInterest; }
+    public void setPointsOfInterest(List<POI> pointsOfInterest) {
+        this.pointsOfInterest = pointsOfInterest;
+        List<Point> positions = new ArrayList<>();
+        this.pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
+        this.performance.addLocations(positions);
+    }
 
     //getter for differentAreaType
     public HashMap<String, List<Area>> getDifferentAreaType(){ return this.differentAreaType; }
@@ -375,7 +386,13 @@ public class PotentialField extends Observable{
 */
         //for now is better assign to every point the same charge
         this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.confCommonInitialCharge));
-        if(this.performance != null) this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        if(this.performance != null) {
+            this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+            List<Point> positions = new ArrayList<>();
+            this.pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
+            this.performance.addLocations(positions);
+        }
+
     }
 
     //From a list of possible Area we build our list of POIs
@@ -590,9 +607,9 @@ public class PotentialField extends Observable{
         //update performance
         this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
         //update all the POI and the charge
-        Map<Point,Double> positionAndChargePOIs = new HashMap<>();
-        this.pointsOfInterest.stream().forEach(poi -> positionAndChargePOIs.put(poi.getArea().getPolygon().getCenterPoint(),poi.getCharge()));
-        this.performance.addValue(positionAndChargePOIs);
+        List<Double> charges = new ArrayList<>();
+        this.pointsOfInterest.stream().forEach(poi -> charges.add(poi.getCharge()));
+        this.performance.addCharges(charges);
     }
 
     //Deep copy of all the fields of this object
@@ -600,7 +617,8 @@ public class PotentialField extends Observable{
         return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,
                 this.conf.getDifferentCellSize(),this.areaInTheWorld, this.confThresholdPotential, this.confConfConstantPotential,
                 this.pathFinder, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name,
-                this.experiment, this.gdsi, this.parameter, this.conf.getFileFromThisLocation(), this.conf.getDestinationData());
+                this.experiment, this.gdsi, this.parameter, this.conf.getFileFromThisLocation(), this.conf.getDestinationData(),
+                this.confPath);
     }
 
     //Am I at the target?
@@ -628,13 +646,21 @@ public class PotentialField extends Observable{
                 //remove observer from agent
                 this.trackedAgent.deleteObservers();
                 //save track
-                this.storage.savePathToFile();
+                if(this.confPath == 0) this.storage.savePathToFile();
                 if(this.confPOIs == 0) this.performance.savePOIsInfo(this.storage); //save POIs info
                 if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //remove from main list of tracked people on replacementformainframe. Last thing to do, I need to save the info before eventually stop the simulation
                 if(!this.confGUI) {
                     if(this.mainFrameReference != null) this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
                     if(this.trajectorySimReference != null) this.trajectorySimReference.removeFromTheLists(this.trackedAgent.getId());
+                    //erasing some objects
+                    this.trackedAgent = null;
+                    this.artificialPotentialField = null;
+                    this.updateRule = null;
+                    this.heatMapValues = null;
+                    this.heatMapValuesSingleLevel = null;
+                    this.centerPoint = null;
+                    this.differentAreaType = null;
                 }else{
                     //TODO what to do in this case?
                 }

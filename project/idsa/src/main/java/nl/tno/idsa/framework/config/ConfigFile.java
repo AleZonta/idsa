@@ -28,6 +28,7 @@ public class ConfigFile {
     private Double timeOfTheYear;
     private Time time;
     private Integer maxNumberOfTrackedPeople;
+    private Integer path;
     private Integer performance;
     private Integer heatMap;
     private Integer POIs;
@@ -55,6 +56,7 @@ public class ConfigFile {
         this.timeOfTheYear = null;
         this.time = null;
         this.maxNumberOfTrackedPeople = null;
+        this.path = null;
         this.performance = null;
         this.heatMap =  null;
         this.POIs = null;
@@ -94,6 +96,7 @@ public class ConfigFile {
 
         this.maxNumberOfTrackedPeople = ((Long) jsonObject.get("MaxNumberOfTrackedPeople")).intValue();
 
+        this.path = ((Long) jsonObject.get("Path")).intValue();//zero is yes, one is no
         this.performance = ((Long) jsonObject.get("Performance")).intValue();//zero is only single performance, one is only total performance, two is both, three is no performance saved
         this.heatMap = ((Long) jsonObject.get("HeatMap")).intValue(); //zero is csv, one is zip, two is no file saved
         this.POIs = ((Long) jsonObject.get("POIs")).intValue(); //zero is yes, one is no
@@ -154,6 +157,8 @@ public class ConfigFile {
     public Integer getMaxNumberOfTrackedPeople() {
         return this.maxNumberOfTrackedPeople;
     }
+
+    public Integer getPath() { return this.path; }
 
     public Integer getPerformance() { return this.performance; }
 

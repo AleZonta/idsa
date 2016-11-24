@@ -60,7 +60,7 @@ public class SaveToFileTest {
 
         SaveToFile savingApp = new SaveToFile("test","test");
 
-        savingApp.savePOIsCharge(new Point(0.0,0.0),listOfPOI);
+        //savingApp.savePOIsCharge(new Point(0.0,0.0),listOfPOI);
     }
 
     @Test

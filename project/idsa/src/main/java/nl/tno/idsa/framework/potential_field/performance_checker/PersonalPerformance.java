@@ -12,12 +12,14 @@ import java.util.Map;
  */
 public class PersonalPerformance {
     private List<Double> numberOfPositivePOIs; //number of positive charged POIs
-    private List<Map<Point, Double>> POIsInfo; //For every time step I am saving the position of the POIs and their charge
+    private List<Point> locations; //locations of the POIs
+    private List<List<Double>> charges; //charges of every POIs per timestep
     private Point target; // target central point
 
     public PersonalPerformance(){
         this.numberOfPositivePOIs = new ArrayList<>();
-        this.POIsInfo = new ArrayList<>();
+        this.locations = new ArrayList<>();
+        this.charges = new ArrayList<>();
         this.target = null;
     }
 
@@ -28,8 +30,13 @@ public class PersonalPerformance {
         this.numberOfPositivePOIs.add(value.doubleValue());
     }
 
-    //add all the POI info to the List
-    public void addValue(Map<Point,Double> dic) { this.POIsInfo.add(dic);}
+    //add all the location of the POIs
+    public void addLocations(List<Point> list) { this.locations = list; }
+
+    //add che POIs charge
+    public void addCharges(List<Double> list) {
+        this.charges.add(list);
+    }
 
     //save to file the performance
     //input
@@ -47,6 +54,6 @@ public class PersonalPerformance {
 
     //save the POis info
     public void savePOIsInfo(SaveToFile storage){
-        storage.savePOIsCharge(this.target,this.POIsInfo);
+        storage.savePOIsCharge(this.target, this.locations, this.charges);
     }
 }

@@ -20,8 +20,9 @@ public class TrajectorySimTest {
         ConfigFile file = new ConfigFile();
         file.loadFile();
         sim.initPotentialField(file,90.0, 0.1 ,0.001, 0.5, 0.1, "testGH", "testGH");
-        sim.init(5);
-        sim.run();
+//        sim.init(99999);
+//        sim.run();
+        sim.init_and_run(10, 999999);
     }
 
     @Test

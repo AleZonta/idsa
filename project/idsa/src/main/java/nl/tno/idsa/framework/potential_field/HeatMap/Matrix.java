@@ -105,7 +105,12 @@ public class Matrix{
 
         //initialise also dynamic map level
         this.differentCellSize.forEach((key,size) -> this.dynamicMapLevel.put(key,this.copyEntireList(this.mapLevel.get(key))));
-        this.performance.addValue(pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        if(this.performance != null) {
+            this.performance.addValue(pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+            List<Point> positions = new ArrayList<>();
+            pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
+            this.performance.addLocations(positions);
+        }
     }
 
     //add this cell in the biggest cell
@@ -920,12 +925,12 @@ public class Matrix{
             this.checkTimeStepAfterTarget(Boolean.TRUE);
         }
 
-
+        //update performance
         this.performance.addValue(totalList.stream().filter(poi -> poi.getCharge() > 0.0).count());
         //update all the POI and the charge
-        Map<Point,Double> positionAndChargePOIs = new HashMap<>();
-        totalList.stream().forEach(poi -> positionAndChargePOIs.put(poi.getArea().getPolygon().getCenterPoint(),poi.getCharge()));
-        this.performance.addValue(positionAndChargePOIs);
+        List<Double> charges = new ArrayList<>();
+        totalList.stream().forEach(poi -> charges.add(poi.getCharge()));
+        this.performance.addCharges(charges);
 
 
         /*List<Double> numberOfLevels = Arrays.asList(5.0,4.0,3.0,2.0,1.0);
@@ -1066,7 +1071,7 @@ public class Matrix{
             //Hardcoded value -> 20
             if(this.targetCounter == 20){
                 //Stop the tracking and save all the information
-                this.storage.savePathToFile();
+                if(this.conf.getPath() == 0) this.storage.savePathToFile();
                 if(this.conf.getPOIs() == 0) this.performance.savePOIsInfo(this.storage); //save POIs info
                 if(this.conf.getPerformance() == 0 || this.conf.getPerformance() == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //Should stop the simulation

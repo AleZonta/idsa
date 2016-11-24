@@ -180,25 +180,26 @@ public class SaveToFile {
     //Input
     //Point target -> target position
     //List<POI> listWithAllThePOIs -> list of all the POIs
-    public void savePOIsCharge(Point target, List<Map<Point,Double>> listWithAllThePOIs){
+    public void savePOIsCharge(Point target, List<Point> locations, List<List<Double>> charges){
         //I will save a Json File with the info of the agent
         JSONObject obj = new JSONObject();
         obj.put("target", target);
 
-        JSONArray totalPOIs = new JSONArray();
+        JSONArray locationsPOIs = new JSONArray();
+        locations.stream().forEach(location -> {
+            locationsPOIs.add(location);
+        });
+        obj.put("POIsLocation",locationsPOIs);
 
-        for(Map<Point,Double> map:listWithAllThePOIs){
-            JSONArray POIs = new JSONArray();
-            map.forEach((point,charge) ->{
-                JSONObject subObj = new JSONObject();
-                subObj.put("Loc", point);
-                subObj.put("Charge",charge);
-                POIs.add(subObj);
+        JSONArray chargePOIs = new JSONArray();
+        charges.stream().forEach(chargeList -> {
+            JSONArray subObj = new JSONArray();
+            chargeList.stream().forEach(charge -> {
+                subObj.add(charge);
             });
-            totalPOIs.add(POIs);
-        }
-        obj.put("POIs",totalPOIs);
-
+            chargePOIs.add(subObj);
+        });
+        obj.put("POIsCharge",chargePOIs);
 //        try (FileWriter file = new FileWriter(this.currentPath + "/POIs.txt")) {
 //            for(Map<Point,Double> map:listWithAllThePOIs){
 //                List<Double> charges = new ArrayList<>();
@@ -223,6 +224,60 @@ public class SaveToFile {
         }catch (Exception e){}
 
     }
+
+//    public void saveTarget(Point target){
+//        JSONObject obj = new JSONObject();
+//        obj.put("target", target);
+//        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/Target.zip"));
+//             ZipOutputStream zos = new ZipOutputStream(zipFile);
+//             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+//        ){
+//
+//            ZipEntry csvFile = new ZipEntry("/Target.JSON");
+//            zos.putNextEntry(csvFile);
+//            writer.append(obj.toJSONString());
+//            System.out.println("Successfully Saved Target.zip file...");
+//        }catch (Exception e){}
+//    }
+//    public void savePOIs(List<Point> poisPosition){
+//        JSONObject obj = new JSONObject();
+//
+//        JSONArray POIsPos = new JSONArray();
+//        poisPosition.stream().forEach(POIsPos::add);
+//
+//        obj.put("charges",POIsPos);
+//
+//        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/POIsPos.zip"));
+//             ZipOutputStream zos = new ZipOutputStream(zipFile);
+//             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+//        ){
+//
+//            ZipEntry csvFile = new ZipEntry("/POIsPos.JSON");
+//            zos.putNextEntry(csvFile);
+//            writer.append(obj.toJSONString());
+//            System.out.println("Successfully Saved POIsPos.zip file...");
+//        }catch (Exception e){}
+//
+//    }
+//    public void saveLineChargePOI(List<Double> charges){
+//        JSONObject obj = new JSONObject();
+//
+//        JSONArray chargePOIs = new JSONArray();
+//        charges.stream().forEach(chargePOIs::add);
+//
+//        obj.put("charges",chargePOIs);
+//        Writer output;
+//        try {
+//            output = new BufferedWriter(new FileWriter(this.currentPath + "/POIsCharges.json", true));
+//            output.append(obj.toJSONString());
+//            output.append("\n");
+//            output.close();
+////            System.out.println("Successfully added line to POIsCharges...");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
 
     //Save Performance. This method is used for the personal performance and also for the general one
     //input
