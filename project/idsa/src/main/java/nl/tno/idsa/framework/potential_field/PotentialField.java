@@ -61,6 +61,7 @@ public class PotentialField extends Observable{
     private final Integer confHeatMap; //keep track of what i want to save (for deep copy)
     private final Integer confPOIs; //keep track of what i want to save (for deep copy)
     private final Boolean confGUI; //If it is true I am using the GUI otherWise not (for deep copy)
+    private final Integer confWayPoints; //Do i want to save the waypoints at the end?
     private final Boolean gdsi; //true if i am loading track from file
     private List<Double> parameter; //it stores the parameter for the update rules
 
@@ -105,6 +106,7 @@ public class PotentialField extends Observable{
         this.confPOIs = this.conf.getPOIs();
         this.confGUI = this.conf.getGUI();
         this.gdsi = this.conf.getGdsi();
+        this.confWayPoints = this.conf.getWayPoints();
 
         if(this.conf.getFileFromThisLocation()) {
             this.storage = new SaveToFile(name, experiment);
@@ -161,7 +163,7 @@ public class PotentialField extends Observable{
                            TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential,
                            Double constantPotential, Routing pathFinder, Integer confHeatMap, Integer confPerformance,
                            Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter,
-                            Boolean location, String destination, Integer confPath){
+                            Boolean location, String destination, Integer confPath, Integer confWayPoints){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -180,6 +182,7 @@ public class PotentialField extends Observable{
         this.confPOIs = confPOIs;
         this.confGUI = GUI;
         this.gdsi = gdsi;
+        this.confWayPoints = confWayPoints;
 
         if(location) {
             this.storage = new SaveToFile(name, experiment);
@@ -572,6 +575,8 @@ public class PotentialField extends Observable{
     //angle -> this is the angle that the tracked person is using to move respect the x axis
     //threshold angle
     private void updatePOIcharge(Point currentPosition, UpdateRules updateRule){
+        //saving all the waypoints used to update the poi charge
+        List<Point> waypoints = new ArrayList<>();
         //Am i in the target?
         POI amInsidePOI = this.arrivedIntoPOI(currentPosition);
         if(amInsidePOI == null) {
@@ -585,9 +590,15 @@ public class PotentialField extends Observable{
                     if (updateRule.doINeedToUpdate()) {
                         //in this case the path is inside our interest area so we should increase the attractiveness of this poi
                         aPointsOfInterest.increaseCharge(updateRule.getHowMuchIncreaseTheCharge());
+                        //saving waypoint only if I am updating the poi and I am outside the poi
+                        Point waypoint = updateRule.getWaypoint();
+                        if (waypoint!=null){
+                            waypoints.add(waypoint);
+                        }
                     } else {
                         //in this case the path is outside our interest area so we should decrease the attractiveness of this poi
                         aPointsOfInterest.decreaseCharge(updateRule.getHowMuchDecreaseTheCharge());
+                        waypoints.add(null);
                     }
                 }
             });
@@ -603,6 +614,12 @@ public class PotentialField extends Observable{
 
             //set the target to the performance
             this.performance.setTarget(amInsidePOI.getArea().getPolygon().getCenterPoint());
+
+            waypoints.add(null);
+        }
+        //adding the list of waypoints. Check if they are null or not. If they are null I do not need to save them
+        if(!waypoints.isEmpty()){
+            this.performance.addWayPointList(waypoints);
         }
         //update performance
         this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
@@ -618,7 +635,7 @@ public class PotentialField extends Observable{
                 this.conf.getDifferentCellSize(),this.areaInTheWorld, this.confThresholdPotential, this.confConfConstantPotential,
                 this.pathFinder, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name,
                 this.experiment, this.gdsi, this.parameter, this.conf.getFileFromThisLocation(), this.conf.getDestinationData(),
-                this.confPath);
+                this.confPath, this.confWayPoints);
     }
 
     //Am I at the target?
@@ -647,8 +664,12 @@ public class PotentialField extends Observable{
                 this.trackedAgent.deleteObservers();
                 //save track
                 if(this.confPath == 0) this.storage.savePathToFile();
-                if(this.confPOIs == 0) this.performance.savePOIsInfo(this.storage); //save POIs info
-                if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
+                //save POIs info
+                if(this.confPOIs == 0) this.performance.savePOIsInfo(this.storage);
+                //save personal performance
+                if(this.confPerformance == 0 || this.confPerformance == 2) this.performance.saveInfoToFile(this.storage);
+                //save waypoints
+                if(this.confWayPoints == 0) this.performance.saveWayPoints(this.storage);
                 //remove from main list of tracked people on replacementformainframe. Last thing to do, I need to save the info before eventually stop the simulation
                 if(!this.confGUI) {
                     if(this.mainFrameReference != null) this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
@@ -707,7 +728,7 @@ public class PotentialField extends Observable{
     public UpdateRules returnUpdateRule(Integer value, Double degree, Double s1, Double w1, Double s2, Double w2){
         switch (value){
             case 0:
-                return new PacmanRule(90.0, 0.1 ,-0.0001, Boolean.FALSE); //select Pacman rule fixed value
+                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.1, 0.1, Boolean.TRUE); //select Pacman rule fixed value
             case 1:
                 return new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
             case 2:

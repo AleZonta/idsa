@@ -30,6 +30,7 @@ public class PacmanRule implements UpdateRules {
     private Double angle; //angle of the attraction of the potential field
     private final Boolean PF; //Am i using the Potential Field Path Planning
     private Routing pathFinder; //set the object path finder to compute the path if loading the trajectories from file
+    private Point waypoint; //waypoint used on the computation (stored for graph)
 
     //normal constructor
     public PacmanRule(){
@@ -47,6 +48,7 @@ public class PacmanRule implements UpdateRules {
         this.POIs = null;
         this.PF = Boolean.FALSE;
         this.pathFinder = null;
+        this.waypoint = null;
     }
 
     //constructor with angle parameter
@@ -65,6 +67,7 @@ public class PacmanRule implements UpdateRules {
         this.POIs = null;
         this.PF = Boolean.FALSE;
         this.pathFinder = null;
+        this.waypoint = null;
     }
 
     public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath, ForceField pot){
@@ -82,6 +85,7 @@ public class PacmanRule implements UpdateRules {
         this.POIs = null;
         this.PF = Boolean.TRUE;
         this.pathFinder = null;
+        this.waypoint = null;
     }
 
     public Double getHowMuchIncreaseTheCharge(){ return this.increaseValue; }
@@ -111,6 +115,9 @@ public class PacmanRule implements UpdateRules {
     public void setPathFinder(Routing pathFinder) {
         this.pathFinder = pathFinder;
     }
+
+    @Override
+    public Point getWaypoint() { return this.waypoint; }
 
     protected Routing getPathFinder() { return this.pathFinder; }
 
@@ -157,20 +164,18 @@ public class PacmanRule implements UpdateRules {
                 //I am using the Path
                 //I used the middlePath. No very correct.
                 //First way point
-                Point wayPoint = null;
                 if(this.pathFinder != null){
                     //Need to use lgds point to call the method that will find the path between them
                     lgds.trajectories.Point source = new lgds.trajectories.Point(currentPosition.getX(), currentPosition.getY());
                     lgds.trajectories.Point destination = new lgds.trajectories.Point(poi.getX(), poi.getY());
                     this.pathFinder.getDirection(source, destination);
                     lgds.trajectories.Point result = this.pathFinder.getFirstWayPointOfTrajectory();
-                    wayPoint = new Point(result.getLatitude(), result.getLongitude());
+                    this.waypoint = new Point(result.getLatitude(), result.getLongitude());
                 }else {
                     Path fromMeToPOI = this.world.getPath(currentPosition, poi);
-                    wayPoint = fromMeToPOI.get(1);
+                    this.waypoint =  fromMeToPOI.get(1);
                 }
-
-                currentAngle = Math.toDegrees(Math.atan2(poi.getY() - wayPoint.getY(), poi.getX() - wayPoint.getX()));
+                currentAngle = Math.toDegrees(Math.atan2(this.waypoint.getY() - currentPosition.getY(), this.waypoint.getX() - currentPosition.getX()));
             }
 
             //calculate how much increase/decrease the charge

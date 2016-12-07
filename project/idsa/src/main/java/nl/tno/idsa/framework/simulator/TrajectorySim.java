@@ -3,6 +3,7 @@ package nl.tno.idsa.framework.simulator;
 import lgds.POI.*;
 import lgds.load_track.LoadIDSATrack;
 import lgds.load_track.LoadTrack;
+import lgds.load_track.Traces;
 import lgds.people.Agent;
 import lgds.simulator.SimulatorInterface;
 import lgds.trajectories.Trajectories;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
  * Trajectory Simulator that implements lgds simulator interface
  */
 public class TrajectorySim implements SimulatorInterface {
-    private LoadIDSATrack storage; //class that loads the track from file
+    private Traces storage; //class that loads the track from file
     private List<TrajectoryAgent> participant; //list of all the agents participating into the simulation
     private Trajectories tra; //keep track of all the trajectories
     private PotentialField pot; //This is the base instance of the pot
@@ -40,8 +41,12 @@ public class TrajectorySim implements SimulatorInterface {
     /**
      * default constructor
      */
-    public TrajectorySim(){
-        this.storage = new LoadIDSATrack();
+    public TrajectorySim(Integer selector){
+        if (selector == 0){
+            this.storage = new LoadIDSATrack();
+        }else{
+            this.storage = new LoadTrack();
+        }
         this.participant = new ArrayList<>();
         this.pot = null;
         this.performance = new PerformanceChecker();
@@ -180,7 +185,7 @@ public class TrajectorySim implements SimulatorInterface {
                 HouseholdTypes hhType = HouseholdTypes.SINGLE;
                 Gender gender = Gender.FEMALE;
                 double age = ThreadLocalRandom.current().nextDouble(0, 100);
-                this.participant.add(new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016));
+                this.participant.add(new TrajectoryAgent(actualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016));
             });
             //what about poi? I should generate POI for them. Now I should generate some randomly than I should
             //find a way to find them from the poi

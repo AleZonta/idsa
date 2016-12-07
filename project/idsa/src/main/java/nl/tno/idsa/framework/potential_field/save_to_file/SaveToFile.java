@@ -154,7 +154,9 @@ public class SaveToFile {
         //I will save a Json File with the info of the path
         JSONObject obj = new JSONObject();
         JSONArray path = new JSONArray();
-        this.pointsOfThePath.forEach(path::add);
+        this.pointsOfThePath.forEach(poi -> {
+            path.add(Double.toString(poi.getX()) + "," + Double.toString(poi.getY()));
+        });
         obj.put("Path",path);
 
 //        try (FileWriter file = new FileWriter(this.currentPath + "/path.JSON")) {
@@ -183,11 +185,11 @@ public class SaveToFile {
     public void savePOIsCharge(Point target, List<Point> locations, List<List<Double>> charges){
         //I will save a Json File with the info of the agent
         JSONObject obj = new JSONObject();
-        obj.put("target", target);
+        obj.put("target", Double.toString(target.getX()) + "," + Double.toString(target.getY()));
 
         JSONArray locationsPOIs = new JSONArray();
         locations.stream().forEach(location -> {
-            locationsPOIs.add(location);
+            locationsPOIs.add(Double.toString(location.getX()) + "," + Double.toString(location.getY()));
         });
         obj.put("POIsLocation",locationsPOIs);
 
@@ -305,6 +307,40 @@ public class SaveToFile {
             zos.putNextEntry(csvFile);
             writer.append(value.toString());
             System.out.println("Successfully Saved Performance.zip file...");
+        }catch (Exception e){}
+    }
+
+
+
+    //save waypoints
+    //input
+    //List<List<Point>> list - > all the way points used during computation
+    public void saveWayPoints(List<List<Point>> list) {
+        JSONObject obj = new JSONObject();
+        JSONArray waypoints = new JSONArray();
+        list.stream().forEach(poiList -> {
+            JSONArray subObj = new JSONArray();
+            poiList.stream().forEach(poi -> {
+                if (poi != null){
+                    subObj.add(Double.toString(poi.getX()) + "," + Double.toString(poi.getY()));
+                }else {
+                    subObj.add("null");
+                }
+
+            });
+            waypoints.add(subObj);
+        });
+        obj.put("waypoints",waypoints);
+
+        try (FileOutputStream zipFile = new FileOutputStream(new File(this.currentPath + "/waypoint.zip"));
+             ZipOutputStream zos = new ZipOutputStream(zipFile);
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zos, "UTF-8"));
+        ){
+
+            ZipEntry csvFile = new ZipEntry("/waypoint.JSON");
+            zos.putNextEntry(csvFile);
+            writer.append(obj.toJSONString());
+            System.out.println("Successfully Saved waypoint.zip file...");
         }catch (Exception e){}
     }
 

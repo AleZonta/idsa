@@ -47,4 +47,7 @@ public interface UpdateRules {
 
     //set the pathfinder
     void setPathFinder(Routing pathFinder);
+
+    //stgore waypoints
+    Point getWaypoint();
 }

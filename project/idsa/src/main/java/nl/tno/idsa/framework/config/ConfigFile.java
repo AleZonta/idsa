@@ -39,6 +39,8 @@ public class ConfigFile {
     private Boolean fileFromThisLocation; //Am I loading and saving file in this location?
     private String sourceData; //If file are not loaded from the location they will be loaded from here
     private String destinationData; //If not saved in the same location they will be saved here
+    private Integer selectorSourceTracks; //Select the source of the track -> Now or IDSA or chinese trajectories
+    private Integer wayPoints; //
 
     public static String realSourceData = null;
 
@@ -67,6 +69,8 @@ public class ConfigFile {
         this.fileFromThisLocation = null;
         this.sourceData = null;
         this.destinationData = null;
+        this.selectorSourceTracks = null;
+        this.wayPoints = null;
     }
 
     //method that reads the configfile
@@ -113,6 +117,8 @@ public class ConfigFile {
         if (!this.fileFromThisLocation){
             realSourceData = this.sourceData;
         }
+        this.selectorSourceTracks = ((Long) jsonObject.get("SelectorSourceTracks")).intValue(); // zero is IDSA, one is China
+        this.wayPoints = ((Long) jsonObject.get("WayPoints")).intValue(); //zero is yes, one is no
     }
 
     //getter
@@ -187,4 +193,9 @@ public class ConfigFile {
     }
 
     public String getDestinationData() { return this.destinationData; }
+
+    public Integer getSelectorSourceTracks() { return this.selectorSourceTracks; }
+
+    public Integer getWayPoints() { return this.wayPoints; }
+
 }
