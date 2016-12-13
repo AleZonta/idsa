@@ -227,7 +227,13 @@ public class GUI {
         System.out.println("Loading simulator...");
         TrajectorySim sim = new TrajectorySim(conf.getSelectorSourceTracks());
         System.out.println("Loading potential field...");
-        sim.initPotentialField(conf,degree,s1,s2,w1,w2,name,experiment);
+
+        World oldWorld = null;
+        //load old world only if I am loading idsa
+        if (conf.getSelectorSourceTracks() == 0){
+            oldWorld = this.loadWordForPathEngine();
+        }
+        sim.initPotentialField(conf,degree,s1,s2,w1,w2,name,experiment, oldWorld);
 //        sim.init(conf.getMaxNumberOfTrackedPeople());
         //start the simulation
         System.out.println("Starting simulator...");
@@ -236,6 +242,32 @@ public class GUI {
         sim.init_and_run(100, conf.getMaxNumberOfTrackedPeople());
     }
 
+
+
+
+    //load the simulator with the map so I can use his path enginn
+    public World loadWordForPathEngine(){
+        System.out.println("Loading idsa map simulator...");
+        //initialise the data source with the hardcoded version
+        DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
+        DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
+        System.out.println("Data source selected is" + dataSource.getPath() + "...");
+        // Create the world object.
+        String path = dataSource.getPath();
+        World world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
+        path + "/idsa_nav_network_pedestrian.shp",
+        path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
+        path + "/idsa_public_areas_a_utm31n.shp",
+        path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
+        path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
+        //DO i need info - > NO
+        //DO i need environment - > NO
+        //Do i need population in this case? ->  NO
+        //Do i need agenda? ->  NO
+        //Do i need police station? -> NO
+        world.resetAreas();
+        return world;
+    }
 }
 
 

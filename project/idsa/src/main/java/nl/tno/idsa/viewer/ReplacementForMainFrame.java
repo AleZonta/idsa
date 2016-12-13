@@ -82,7 +82,7 @@ public class ReplacementForMainFrame {
             PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
             TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
 
-            PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
+            PersonalPerformance personalPerformance = new PersonalPerformance(0); //prepare class for personal performance
             fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
             this.performance.addPersonalPerformance(a.getId(),personalPerformance); //connect performance with id person and put them together in a list
 

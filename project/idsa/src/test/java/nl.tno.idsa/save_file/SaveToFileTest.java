@@ -121,15 +121,15 @@ public class SaveToFileTest {
         Point po4 = new Point(40,40);
         Point po5 = new Point(50,50);
         Point po6 = new Point(60,60);
-        SaveToFile savingApp = new SaveToFile("test","test");
-        savingApp.addPointToPath(po);
-        savingApp.addPointToPath(po1);
-        savingApp.addPointToPath(po2);
-        savingApp.addPointToPath(po3);
-        savingApp.addPointToPath(po4);
-        savingApp.addPointToPath(po5);
-        savingApp.addPointToPath(po6);
-        savingApp.savePathToFile();
+//        SaveToFile savingApp = new SaveToFile("test","test");
+//        savingApp.addPointToPath(po);
+//        savingApp.addPointToPath(po1);
+//        savingApp.addPointToPath(po2);
+//        savingApp.addPointToPath(po3);
+//        savingApp.addPointToPath(po4);
+//        savingApp.addPointToPath(po5);
+//        savingApp.addPointToPath(po6);
+//        savingApp.savePathToFile();
         //checked in debug, it works
 
 

@@ -50,4 +50,10 @@ public interface UpdateRules {
 
     //stgore waypoints
     Point getWaypoint();
+
+    //set idsa wor
+    void setIdsaWorld(Boolean idsaWorld);
+
+    //reuturn idsaworld
+    World retIdsaWorld();
 }

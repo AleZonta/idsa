@@ -37,7 +37,7 @@ public class TrajectorySim implements SimulatorInterface {
     private PotentialField pot; //This is the base instance of the pot
     private final PerformanceChecker performance; //keep track of the performance of the simulator
     private HashMap<Long,PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
-
+    private Boolean oldWorld; //using this variable only to remmebre if i am loading the simulator world for pathplanning
     /**
      * default constructor
      */
@@ -53,6 +53,7 @@ public class TrajectorySim implements SimulatorInterface {
         this.listPot = new HashMap<>();
         //retrieve all the tracks from file
         this.tra = this.storage.loadTrajectories();
+        this.oldWorld = Boolean.FALSE;
     }
 
     /**
@@ -119,7 +120,7 @@ public class TrajectorySim implements SimulatorInterface {
                 PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
                 TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
 
-                PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
+                PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
                 fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
                 this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
 
@@ -156,7 +157,8 @@ public class TrajectorySim implements SimulatorInterface {
 
     /**
      * Wrap the init and the run to let run a fixed amount of people together
-     * @param max_allowed
+     * @param max_allowed maximun number allowed to run in parallel
+     * @param number total number of people tracked
      */
     public void init_and_run(Integer max_allowed, Integer number){
         //shuffle it
@@ -164,6 +166,116 @@ public class TrajectorySim implements SimulatorInterface {
         //now I am choosing only the first $number trajectories
         System.out.println("Selecting trajectories...");
         List<Trajectory> actualBigTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
+
+        //The number of people running
+        Integer effectiveCounter = max_allowed;
+        //max_allowed will be always present in the pool
+        List<Trajectory> actualTrajectories = actualBigTrajectories.subList(0, max_allowed);
+        //prepare the id of the agent
+        List<Integer> id = new ArrayList<>();
+        for(int i = 0; i < max_allowed; i++) id.add(i);
+        System.out.println("Creating agents...");
+        //delete everything in partecipant
+        this.participant = new ArrayList<>();
+        //create the agents
+        List<Trajectory> finalActualTrajectories = actualTrajectories;
+        id.stream().forEach(integer -> {
+            HouseholdTypes hhType = HouseholdTypes.SINGLE;
+            Gender gender = Gender.FEMALE;
+            double age = ThreadLocalRandom.current().nextDouble(0, 100);
+            this.participant.add(new TrajectoryAgent(finalActualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016));
+        });
+        //what about poi? I should generate POI for them. Now I should generate some randomly than I should
+        //find a way to find them from the poi
+        //I can select how many POI use here. Lets add more
+        System.out.println("Computing POIs...");
+        this.tra.computePOIs(this.tra.getTrajectories());
+
+        System.out.println("Connecting the potential field to the people tracked...");
+        //now i should load all what I need for the potential field
+        this.participant.stream().forEach(trajectoryAgent -> {
+            try {
+                //new agent tracked new potential field for him
+                PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
+                TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+                if (this.oldWorld){
+                    fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
+                }
+
+                PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
+                fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
+                this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
+
+                fieldForTheTrackedAgent.setTrajectorySimReference(this);
+                fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
+                fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                trajectoryAgent.deleteObservers(); //delete old observers
+                trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
+
+                //Add potential field and tracking system to their list
+                this.listPot.put(trajectoryAgent.getId(),fieldForTheTrackedAgent);
+                System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
+
+            } catch (EmptyActivityException | ActivityNotImplementedException e) {
+                //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
+                e.printStackTrace();
+            }
+        });
+        //run the simulator
+        while (this.participant.stream().filter(agent -> !agent.getDead()).toArray().length != 0) {
+            this.participant.parallelStream().filter(agent -> !agent.getDead()).forEach(TrajectoryAgent::doStep);
+
+            //check if the partecipant number is max_allowed or not.. if there are fewer partecipants I will add one
+            if((this.participant.size() < max_allowed) && (effectiveCounter < number)){
+                Integer numberThatINeed = max_allowed - this.participant.size();
+                Integer sumOfTheTwo = effectiveCounter + numberThatINeed;
+                if (sumOfTheTwo > number){
+                    sumOfTheTwo = number;
+                }
+                actualTrajectories = actualBigTrajectories.subList(effectiveCounter, sumOfTheTwo);
+                id = new ArrayList<>();
+                for(int i = effectiveCounter; i < sumOfTheTwo; i++) id.add(i);
+                effectiveCounter = sumOfTheTwo;
+                List<Trajectory> finalActualTrajectories1 = actualTrajectories;
+                id.stream().forEach(integer -> {
+                    HouseholdTypes hhType = HouseholdTypes.SINGLE;
+                    Gender gender = Gender.FEMALE;
+                    double age = ThreadLocalRandom.current().nextDouble(0, 100);
+                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016);
+                    try {
+                        //new agent tracked new potential field for him
+                        PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
+                        TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+                        if (this.oldWorld){
+                            fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
+                        }
+
+                        PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
+                        fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
+                        this.performance.addPersonalPerformance(agent.getId(),personalPerformance); //connect performance with id person and put them together in a list
+
+                        fieldForTheTrackedAgent.setTrajectorySimReference(this);
+                        fieldForTheTrackedAgent.setTrackedAgent(agent);
+                        fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                        agent.deleteObservers(); //delete old observers
+                        agent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
+
+                        //Add potential field and tracking system to their list
+                        this.listPot.put(agent.getId(),fieldForTheTrackedAgent);
+                        System.out.println("Loaded Potential Field...");
+                        this.participant.add(agent);
+
+                    } catch (EmptyActivityException | ActivityNotImplementedException e) {
+                        //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
+                        e.printStackTrace();
+                    }
+
+                });
+            }
+        }
+        System.out.println("End simulating procedure...");
+
+        /*
         //how many division?
         Double division = Math.ceil(actualBigTrajectories.size() / max_allowed.doubleValue());
         for (Integer step = 1; step <= division.intValue(); step++){
@@ -200,8 +312,11 @@ public class TrajectorySim implements SimulatorInterface {
                     //new agent tracked new potential field for him
                     PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
                     TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+                    if (this.oldWorld){
+                        fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
+                    }
 
-                    PersonalPerformance personalPerformance = new PersonalPerformance(); //prepare class for personal performance
+                    PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
                     fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
                     this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
 
@@ -224,7 +339,7 @@ public class TrajectorySim implements SimulatorInterface {
             //run this subset of people
             this.run();
         }
-
+        */
 
     }
 
@@ -239,10 +354,16 @@ public class TrajectorySim implements SimulatorInterface {
      * @param name parameter that the update rule needs -> name of the experiment
      * @param experiment  parameter that the update rule needs -> repetition of the experiment
      */
-    public void initPotentialField(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment){
+    public void initPotentialField(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, World oldWorld){
         //set in word the dimension of the word and the area of the word set to null
-        World world = new World();
-        world.applyGeoRoot(this.tra.getUtmRoot().getLatitude(),this.tra.getUtmRoot().getLongitude(),this.tra.getWhWorld().getLatitude(),this.tra.getWhWorld().getLongitude());
+        World world;
+        if(oldWorld == null){
+            world = new World();
+            world.applyGeoRoot(this.tra.getUtmRoot().getLatitude(),this.tra.getUtmRoot().getLongitude(),this.tra.getWhWorld().getLatitude(),this.tra.getWhWorld().getLongitude());
+        }else{
+            world = oldWorld;
+            this.oldWorld = Boolean.TRUE;
+        }
         //I do not think I need something else inside the world for running the potential field
         this.pot = new PotentialField(world, conf, degree , s1, s2, w1 , w2, name, experiment);
     }
@@ -281,7 +402,11 @@ public class TrajectorySim implements SimulatorInterface {
         List<lgds.POI.POI> appoList = new ArrayList<>();
         //Check if the POIs are inside the boundaries
         oldList.stream().forEach(poi -> {
-            if(this.pot.getPathFinder().isContained(poi.getLocation())){
+            if(this.pot.getPathFinder() != null) {
+                if (this.pot.getPathFinder().isContained(poi.getLocation())) {
+                    appoList.add(poi);
+                }
+            }else{
                 appoList.add(poi);
             }
         });

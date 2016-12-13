@@ -44,7 +44,11 @@ public class PacmanRuleDistance extends PacmanRule {
                 if (super.getPathFinder() == null) {
                     distance = this.world.getPathLengthInM(super.getPreviousPoint(), poi);
                 }else{
-                    distance = super.getPathFinder().retTotalDistance();
+                    if(super.getIdsaWorld()){
+                        distance = this.world.getPathLengthInM(super.getPreviousPoint(), poi);
+                    }else{
+                        distance = super.getPathFinder().retTotalDistance();
+                    }
                 }
             }
             Double valueToAdd = 1 / (this.constantSDistance * Math.pow(distance, this.constantWTwo));

@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
+import jdk.nashorn.internal.runtime.ECMAException;
 import lgds.routing.Routing;
 import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.potential_field.POI;
@@ -31,6 +32,7 @@ public class PacmanRule implements UpdateRules {
     private final Boolean PF; //Am i using the Potential Field Path Planning
     private Routing pathFinder; //set the object path finder to compute the path if loading the trajectories from file
     private Point waypoint; //waypoint used on the computation (stored for graph)
+    private Boolean idsaWorld; //If i am loading idsa
 
     //normal constructor
     public PacmanRule(){
@@ -49,6 +51,7 @@ public class PacmanRule implements UpdateRules {
         this.PF = Boolean.FALSE;
         this.pathFinder = null;
         this.waypoint = null;
+        this.idsaWorld = null;
     }
 
     //constructor with angle parameter
@@ -68,6 +71,7 @@ public class PacmanRule implements UpdateRules {
         this.PF = Boolean.FALSE;
         this.pathFinder = null;
         this.waypoint = null;
+        this.idsaWorld = null;
     }
 
     public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath, ForceField pot){
@@ -86,6 +90,7 @@ public class PacmanRule implements UpdateRules {
         this.PF = Boolean.TRUE;
         this.pathFinder = null;
         this.waypoint = null;
+        this.idsaWorld = null;
     }
 
     public Double getHowMuchIncreaseTheCharge(){ return this.increaseValue; }
@@ -135,7 +140,14 @@ public class PacmanRule implements UpdateRules {
 
     protected Double getAngle() { return this.angle; }
 
+    protected Boolean getIdsaWorld() { return this.idsaWorld; }
+
+    public void setIdsaWorld(Boolean idsaWorld) { this.idsaWorld = idsaWorld; }
+
     public void setPOIs(List<POI> POIs) { this.POIs = POIs; }
+
+    @Override
+    public World retIdsaWorld() { return this.world; }
 
     //Compute If i have to increase or decrease the charge of the POI and how much will be the amount
     //Input
@@ -164,16 +176,37 @@ public class PacmanRule implements UpdateRules {
                 //I am using the Path
                 //I used the middlePath. No very correct.
                 //First way point
-                if(this.pathFinder != null){
-                    //Need to use lgds point to call the method that will find the path between them
-                    lgds.trajectories.Point source = new lgds.trajectories.Point(currentPosition.getX(), currentPosition.getY());
-                    lgds.trajectories.Point destination = new lgds.trajectories.Point(poi.getX(), poi.getY());
-                    this.pathFinder.getDirection(source, destination);
-                    lgds.trajectories.Point result = this.pathFinder.getFirstWayPointOfTrajectory();
-                    this.waypoint = new Point(result.getLatitude(), result.getLongitude());
+                if(this.pathFinder != null) {
+                    if (!this.idsaWorld){
+                        //Need to use lgds point to call the method that will find the path between them
+                        lgds.trajectories.Point source = new lgds.trajectories.Point(currentPosition.getX(), currentPosition.getY());
+                        lgds.trajectories.Point destination = new lgds.trajectories.Point(poi.getX(), poi.getY());
+                        this.pathFinder.getDirection(source, destination);
+                        lgds.trajectories.Point result;
+                        try {
+                            result = this.pathFinder.getFirstWayPointOfTrajectory();
+                        } catch (Exception e) {
+                            //in case of errors better set waypoint as the location of the poi
+                            result = destination;
+                        }
+                        this.waypoint = new Point(result.getLatitude(), result.getLongitude());
+                    }else{
+                        Path fromMeToPOI = null;
+                        fromMeToPOI = this.world.getPath(currentPosition, poi);
+                        try {
+                            this.waypoint =  fromMeToPOI.get(1);
+                        }catch (Exception e){
+                            this.waypoint =  fromMeToPOI.get(0);
+                        }
+                    }
                 }else {
                     Path fromMeToPOI = this.world.getPath(currentPosition, poi);
-                    this.waypoint =  fromMeToPOI.get(1);
+                    //if i do not find the waypoint lets use the poi position
+                    try {
+                        this.waypoint =  fromMeToPOI.get(1);
+                    }catch (Exception e){
+                        this.waypoint =  fromMeToPOI.get(0);
+                    }
                 }
                 currentAngle = Math.toDegrees(Math.atan2(this.waypoint.getY() - currentPosition.getY(), this.waypoint.getX() - currentPosition.getX()));
             }

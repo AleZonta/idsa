@@ -37,7 +37,7 @@ public class Matrix{
         this.storage = storage;
         this.conf = conf;
         this.targetCounter = 0;
-        this.performance = new PersonalPerformance();
+        this.performance = new PersonalPerformance(0);
         //adding level from file
         differentCellSize.forEach(this.differentCellSize::put);
     }
@@ -1071,7 +1071,7 @@ public class Matrix{
             //Hardcoded value -> 20
             if(this.targetCounter == 20){
                 //Stop the tracking and save all the information
-                if(this.conf.getPath() == 0) this.storage.savePathToFile();
+                if(this.conf.getPath() == 0) this.performance.savePath(this.storage);
                 if(this.conf.getPOIs() == 0) this.performance.savePOIsInfo(this.storage); //save POIs info
                 if(this.conf.getPerformance() == 0 || this.conf.getPerformance() == 2) this.performance.saveInfoToFile(this.storage); //save personal performance
                 //Should stop the simulation

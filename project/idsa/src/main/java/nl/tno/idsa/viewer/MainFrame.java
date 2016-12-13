@@ -111,7 +111,7 @@ public class MainFrame implements IEnvironmentObserver, Observer {
 
         this.pot = sim.getPot();
         this.track = new TrackingSystem(this.pot);
-        this.pot.setPerformance(new PersonalPerformance());
+        this.pot.setPerformance(new PersonalPerformance(0));
 
         // Shared agent/incident selection
         this.selectionObserver = new SelectionObserver();

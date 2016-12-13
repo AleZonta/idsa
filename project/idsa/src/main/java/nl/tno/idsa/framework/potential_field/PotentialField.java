@@ -136,6 +136,12 @@ public class PotentialField extends Observable{
 
         Integer value = this.conf.getUpdateRules();
         this.updateRule = this.returnUpdateRule(value, degree, s1 , w1, s2, w2);
+        if(this.conf.getSelectorSourceTracks() == 0){
+            this.updateRule.setIdsaWorld(Boolean.TRUE);
+        }else{
+            this.updateRule.setIdsaWorld(Boolean.FALSE);
+        }
+
         this.parameter = new ArrayList<>();
         this.parameter.add(new Double(value));
         this.parameter.add(degree);
@@ -149,10 +155,12 @@ public class PotentialField extends Observable{
         this.experiment = experiment;
 
         if (this.gdsi){
-            this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
-            //load it
-            this.pathFinder.load();
-            this.updateRule.setPathFinder(this.pathFinder);
+            if(this.conf.getSelectorSourceTracks() != 0) {
+                this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
+                //load it
+                this.pathFinder.load();
+                this.updateRule.setPathFinder(this.pathFinder);
+            }
         }else{
             this.pathFinder = null;
         }
@@ -163,7 +171,7 @@ public class PotentialField extends Observable{
                            TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential,
                            Double constantPotential, Routing pathFinder, Integer confHeatMap, Integer confPerformance,
                            Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter,
-                            Boolean location, String destination, Integer confPath, Integer confWayPoints){
+                            Boolean location, String destination, Integer confPath, Integer confWayPoints, Boolean idsaWorld){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -211,14 +219,18 @@ public class PotentialField extends Observable{
         if(this.areaInTheWorld != null) this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
         this.updateRule = this.returnUpdateRule(parameter.get(0).intValue(), parameter.get(1), parameter.get(2) , parameter.get(3), parameter.get(4), parameter.get(5));
+        this.updateRule.setIdsaWorld(idsaWorld);
+
 
         this.targetCounter = 0;
         this.name = name;
         this.experiment = experiment;
 
         if (this.gdsi){
-            this.pathFinder = pathFinder; //using graphHopper for path finding -> Need to load the .pbf file
-            this.updateRule.setPathFinder(this.pathFinder);
+            if(!idsaWorld) {
+                this.pathFinder = pathFinder; //using graphHopper for path finding -> Need to load the .pbf file
+                this.updateRule.setPathFinder(this.pathFinder);
+            }
         }else{
             this.pathFinder = null;
         }
@@ -229,6 +241,12 @@ public class PotentialField extends Observable{
 
     //getter for the matrix map level
     //public HashMap<Double, List<Cell>> getMapLevel(){ return this.heatMapTilesOptimisation.getMapLevel(); }
+
+    //setter for world if i need the old world
+    public void setWorld(World world){
+        this.updateRule.setWorld(world);
+    }
+    public UpdateRules getUpdateRule() { return this.updateRule; }
 
     //getter for config
     public ConfigFile getConfig() { return this.conf; }
@@ -486,35 +504,64 @@ public class PotentialField extends Observable{
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Calendar cal = Calendar.getInstance();
 
-        System.out.println(dateFormat.format(cal.getTime()) + " Updating "+ this.trackedAgent.getFirstName() +"'s position and potential field...");
-        //compute the actual map that I will use only If this.confTypologyOfMatrix is true I am using the tile optimisation
-        if(this.confTypologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
-
-        //add the current position to the path to save on file
-        this.storage.addPointToPath(currentPosition);
-
-        //set previous point for the update rule computation
-        this.updateRule.setPreviousPoint(this.previousPoint);
-
-        if(this.confTypologyOfMatrix){ //If it is true I am using the tile optimisation
-            //calling the method of the  heat map system
-            this.heatMapTilesOptimisation.updatePOIcharge(currentPosition,this.updateRule);
-        }else{
-            this.updatePOIcharge(currentPosition,this.updateRule);
+        //check if current position is inside the border of the area loaded -> only if loading the trajectory
+        Boolean point_inside = Boolean.TRUE;
+        if (this.pathFinder != null) {
+            lgds.trajectories.Point currentPositionTranslated = new lgds.trajectories.Point(currentPosition.getX(), currentPosition.getY());
+            point_inside = this.pathFinder.isContained(currentPositionTranslated);
         }
 
-        //I need to calculate the potential every time only if I am using the GUI
-        if(this.confGUI) {
-            //after having modified all the poi we need to calculate again the POI
-            try {
-                this.calculatePotentialFieldInAllTheWorld();
-            } catch (ParameterNotDefinedException e) {
-                //I'm fixing the parameter to 2 so I am not dealing with this exception
+        //If it is true do all the stuff otherwise throw away the trajectory
+        if(point_inside) {
+            System.out.println(dateFormat.format(cal.getTime()) + " Updating " + this.trackedAgent.getFirstName() + "'s position and potential field...");
+            //compute the actual map that I will use only If this.confTypologyOfMatrix is true I am using the tile optimisation
+            if (this.confTypologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
+
+            //add the current position to the path to save on file
+            this.performance.addPointToPath(currentPosition);
+
+            //set previous point for the update rule computation
+            this.updateRule.setPreviousPoint(this.previousPoint);
+
+            if (this.confTypologyOfMatrix) { //If it is true I am using the tile optimisation
+                //calling the method of the  heat map system
+                this.heatMapTilesOptimisation.updatePOIcharge(currentPosition, this.updateRule);
+            } else {
+                this.updatePOIcharge(currentPosition, this.updateRule);
+            }
+
+            //I need to calculate the potential every time only if I am using the GUI
+            if (this.confGUI) {
+                //after having modified all the poi we need to calculate again the POI
+                try {
+                    this.calculatePotentialFieldInAllTheWorld();
+                } catch (ParameterNotDefinedException e) {
+                    //I'm fixing the parameter to 2 so I am not dealing with this exception
+                }
+            }
+
+            //update the previous point
+            this.previousPoint = currentPosition;
+        }else{
+            //Stop the tracking and delete everything
+            //remove observer from agent
+            this.trackedAgent.deleteObservers();
+            //remove from main list of tracked people on replacementformainframe.
+            if(!this.confGUI) {
+                if (this.mainFrameReference != null)
+                    this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
+                if (this.trajectorySimReference != null)
+                    this.trajectorySimReference.removeFromTheLists(this.trackedAgent.getId());
+                //erasing some objects
+                this.trackedAgent = null;
+                this.artificialPotentialField = null;
+                this.updateRule = null;
+                this.heatMapValues = null;
+                this.heatMapValuesSingleLevel = null;
+                this.centerPoint = null;
+                this.differentAreaType = null;
             }
         }
-
-        //update the previous point
-        this.previousPoint = currentPosition;
     }
 
     //get the charge of all the levels in one list
@@ -631,11 +678,17 @@ public class PotentialField extends Observable{
 
     //Deep copy of all the fields of this object
     public PotentialField deepCopy(){
+        Boolean idsaWorld;
+        if(this.conf.getSelectorSourceTracks() == 0){
+            idsaWorld = Boolean.TRUE;
+        }else{
+            idsaWorld = Boolean.FALSE;
+        }
         return new PotentialField(this.worldHeight,this.worldWidth,this.confTypologyOfMatrix,this.confCommonInitialCharge,
                 this.conf.getDifferentCellSize(),this.areaInTheWorld, this.confThresholdPotential, this.confConfConstantPotential,
                 this.pathFinder, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name,
                 this.experiment, this.gdsi, this.parameter, this.conf.getFileFromThisLocation(), this.conf.getDestinationData(),
-                this.confPath, this.confWayPoints);
+                this.confPath, this.confWayPoints, idsaWorld);
     }
 
     //Am I at the target?
@@ -663,7 +716,7 @@ public class PotentialField extends Observable{
                 //remove observer from agent
                 this.trackedAgent.deleteObservers();
                 //save track
-                if(this.confPath == 0) this.storage.savePathToFile();
+                if(this.confPath == 0) this.performance.savePath(this.storage);
                 //save POIs info
                 if(this.confPOIs == 0) this.performance.savePOIsInfo(this.storage);
                 //save personal performance
@@ -728,7 +781,7 @@ public class PotentialField extends Observable{
     public UpdateRules returnUpdateRule(Integer value, Double degree, Double s1, Double w1, Double s2, Double w2){
         switch (value){
             case 0:
-                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.1, 0.1, Boolean.TRUE); //select Pacman rule fixed value
+                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.5, 0.5, Boolean.TRUE); //select Pacman rule fixed value
             case 1:
                 return new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
             case 2:

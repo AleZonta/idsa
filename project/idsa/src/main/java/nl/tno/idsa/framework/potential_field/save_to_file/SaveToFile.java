@@ -22,7 +22,7 @@ public class SaveToFile {
     private Agent trackedAgent;
     private String currentPath; //current path of the program
     private Integer fileCount; //Count the number of csv saved (to differentiate them)
-    private List<Point> pointsOfThePath;
+
 
     //constructor
     public SaveToFile(String name, String experiment){
@@ -31,7 +31,6 @@ public class SaveToFile {
         this.currentPath += "/" + experiment;
         new File(this.currentPath).mkdirs();
         this.fileCount = -1;
-        this.pointsOfThePath = new ArrayList<>();
     }
 
     public SaveToFile(String name, String experiment, String path){
@@ -40,7 +39,6 @@ public class SaveToFile {
         this.currentPath += "/" + experiment;
         new File(this.currentPath).mkdirs();
         this.fileCount = -1;
-        this.pointsOfThePath = new ArrayList<>();
     }
 
     //method that set the info for the tracked agent
@@ -48,7 +46,6 @@ public class SaveToFile {
         this.trackedAgent = agent;
         this.currentPath = this.currentPath + "/" + agent.getFirstName() + System.currentTimeMillis();
         new File(this.currentPath).mkdirs();
-        this.pointsOfThePath.add(agent.getLocation());
     }
 
     //method that save the agent info
@@ -142,19 +139,14 @@ public class SaveToFile {
         }catch (Exception e){}
     }
 
-    //I think I need to save also the path. So I need to store all the point of the person tracked
-    //Input
-    //Point currentPosition -> position where I am now
-    public void addPointToPath(Point currentPosition){
-        this.pointsOfThePath.add(currentPosition);
-    }
+
 
     //I need to save all the point of the person tracked
-    public void savePathToFile(){
+    public void savePathToFile(List<Point> pointsOfThePath){
         //I will save a Json File with the info of the path
         JSONObject obj = new JSONObject();
         JSONArray path = new JSONArray();
-        this.pointsOfThePath.forEach(poi -> {
+        pointsOfThePath.forEach(poi -> {
             path.add(Double.toString(poi.getX()) + "," + Double.toString(poi.getY()));
         });
         obj.put("Path",path);

@@ -27,7 +27,7 @@ public class PerformanceCheckerTest {
                 listValue.add(ThreadLocalRandom.current().nextLong(0, 1000));
             }
             listValue.sort((b,a) -> a.compareTo(b));
-            PersonalPerformance pp = new PersonalPerformance();
+            PersonalPerformance pp = new PersonalPerformance(0);
             listValue.stream().forEach(pp::addValue);
             performance.addPersonalPerformance(iD.longValue(),pp);
         });
@@ -39,13 +39,13 @@ public class PerformanceCheckerTest {
         List<Long> two = Arrays.asList(10L,9L,8L,7L,2L,2L,2L,2L,2L,2L,2L);
         List<Long> three = Arrays.asList(15L,7L,3L,1L,1L,1L);
         PerformanceChecker performance1 = new PerformanceChecker();
-        PersonalPerformance pp1 = new PersonalPerformance();
+        PersonalPerformance pp1 = new PersonalPerformance(0);
         one.stream().forEach(pp1::addValue);
         performance1.addPersonalPerformance(1L,pp1);
-        PersonalPerformance pp2 = new PersonalPerformance();
+        PersonalPerformance pp2 = new PersonalPerformance(0);
         two.stream().forEach(pp2::addValue);
         performance1.addPersonalPerformance(2L,pp2);
-        PersonalPerformance pp3 = new PersonalPerformance();
+        PersonalPerformance pp3 = new PersonalPerformance(0);
         three.stream().forEach(pp3::addValue);
         performance1.addPersonalPerformance(3L,pp3);
 

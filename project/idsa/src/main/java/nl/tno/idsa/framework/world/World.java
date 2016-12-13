@@ -105,6 +105,24 @@ public class World {
         this.geoWidth = null; //Width of the world
     }
 
+    //constructor for deepCopy
+    public World(VertexGraph graph, IndexedAStarPathFinder<Vertex> pathFinder, HashMap<Point, Vertex> vertices, HashMap<Long, Area> area, Point utmRoot, Grid grid, Double geoHeight, Double geoWidth){
+        this.graph = graph;
+        this.vertices = vertices;
+        this.areas = area;
+        this.pathFinder = pathFinder;
+        this.euclideanDistance = new EuclideanDistance();
+        this.utmRoot = utmRoot;
+        this.grid = grid;
+        this.geoHeight = geoHeight; //Height of the world
+        this.geoWidth = geoWidth; //Width of the world
+    }
+
+    //remove all the area, need for loading idsa trajectories
+    public void resetAreas() {
+        this.areas.clear();
+    }
+
     public VertexGraph getGraph() {
         return graph;
     }
@@ -470,5 +488,9 @@ public class World {
     @Override
     public String toString() {
         return "World{" + "utmRoot=" + utmRoot + ", grid=" + grid + '}';
+    }
+
+    public World deepCopy(){
+        return new World(this.graph, this.pathFinder, this.vertices, this.areas, this.utmRoot, this.grid,this.geoHeight, this.geoWidth);
     }
 }
