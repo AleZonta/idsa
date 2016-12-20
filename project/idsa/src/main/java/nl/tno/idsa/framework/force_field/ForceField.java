@@ -1,6 +1,6 @@
 package nl.tno.idsa.framework.force_field;
 
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Point;
 
 import java.util.List;

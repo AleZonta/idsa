@@ -59,4 +59,5 @@ public class PacmanRuleDistance extends PacmanRule {
             }
         }
     }
+
 }

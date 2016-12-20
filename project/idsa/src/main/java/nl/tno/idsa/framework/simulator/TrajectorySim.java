@@ -1,6 +1,5 @@
 package nl.tno.idsa.framework.simulator;
 
-import lgds.POI.*;
 import lgds.load_track.LoadIDSATrack;
 import lgds.load_track.LoadTrack;
 import lgds.load_track.Traces;
@@ -14,11 +13,12 @@ import nl.tno.idsa.framework.population.Gender;
 import nl.tno.idsa.framework.population.HouseholdRoles;
 import nl.tno.idsa.framework.population.HouseholdTypes;
 import nl.tno.idsa.framework.potential_field.*;
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.potential_field.performance_checker.PerformanceChecker;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
+import org.apache.commons.math3.ml.clustering.Cluster;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +38,7 @@ public class TrajectorySim implements SimulatorInterface {
     private final PerformanceChecker performance; //keep track of the performance of the simulator
     private HashMap<Long,PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
     private Boolean oldWorld; //using this variable only to remmebre if i am loading the simulator world for pathplanning
+    private Boolean clusteredPOI; //true I ask for clustered POI, False not
     /**
      * default constructor
      */
@@ -54,6 +55,7 @@ public class TrajectorySim implements SimulatorInterface {
         //retrieve all the tracks from file
         this.tra = this.storage.loadTrajectories();
         this.oldWorld = Boolean.FALSE;
+        this.clusteredPOI = null;
     }
 
     /**
@@ -90,6 +92,8 @@ public class TrajectorySim implements SimulatorInterface {
     public void init(Integer number){
         //shuffle it
         this.tra.shuffle();
+        //analysing the trajectories
+        this.tra.analiseAndCheckTrajectory();
         //now I am choosing only the first $number trajectories
         System.out.println("Selecting trajectories...");
         List<Trajectory> actualTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
@@ -126,7 +130,13 @@ public class TrajectorySim implements SimulatorInterface {
 
                 fieldForTheTrackedAgent.setTrajectorySimReference(this);
                 fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
-                fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                //if it is false I am using normal POI
+                if (!this.clusteredPOI) {
+                    fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                }else {
+                    //In this case I am using clustered POI
+                    fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
+                }
                 trajectoryAgent.deleteObservers(); //delete old observers
                 trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
 
@@ -163,6 +173,8 @@ public class TrajectorySim implements SimulatorInterface {
     public void init_and_run(Integer max_allowed, Integer number){
         //shuffle it
         this.tra.shuffle();
+        //analysing the trajectories
+        this.tra.analiseAndCheckTrajectory();
         //now I am choosing only the first $number trajectories
         System.out.println("Selecting trajectories...");
         List<Trajectory> actualBigTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
@@ -208,7 +220,13 @@ public class TrajectorySim implements SimulatorInterface {
 
                 fieldForTheTrackedAgent.setTrajectorySimReference(this);
                 fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
-                fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                //if it is false I am using normal POI
+                if (!this.clusteredPOI) {
+                    fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                }else {
+                    //In this case I am using clustered POI
+                    fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
+                }
                 trajectoryAgent.deleteObservers(); //delete old observers
                 trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
 
@@ -256,7 +274,13 @@ public class TrajectorySim implements SimulatorInterface {
 
                         fieldForTheTrackedAgent.setTrajectorySimReference(this);
                         fieldForTheTrackedAgent.setTrackedAgent(agent);
-                        fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                        //if it is false I am using normal POI
+                        if (!this.clusteredPOI) {
+                            fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+                        }else {
+                            //In this case I am using clustered POI
+                            fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
+                        }
                         agent.deleteObservers(); //delete old observers
                         agent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
 
@@ -366,6 +390,9 @@ public class TrajectorySim implements SimulatorInterface {
         }
         //I do not think I need something else inside the world for running the potential field
         this.pot = new PotentialField(world, conf, degree , s1, s2, w1 , w2, name, experiment);
+
+        //set cluster
+        this.clusteredPOI = conf.getPOIsAreClustered();
     }
 
 
@@ -410,8 +437,33 @@ public class TrajectorySim implements SimulatorInterface {
                 appoList.add(poi);
             }
         });
+        //deepcopy element
         List<POI> realList = new ArrayList<>();
         appoList.stream().forEach(poi -> realList.add(new POI(new Point(poi.getLocation().getLatitude(),poi.getLocation().getLongitude()))));
+        return realList;
+    }
+
+    /**
+     * Convert the clustered POI from the lgds library to the POI used in the simulator
+     * @param list List of cluster
+     * @return List of POI in idsa version
+     */
+    private List<POI> translateClusterPOI(List<? extends Cluster<lgds.POI.POI>> list){
+        List<POI> oldList = new ArrayList<>();
+        list.stream().forEach(cluster -> {
+            oldList.add(new POI(cluster.getPoints()));
+        });
+        List<POI> realList = new ArrayList<>();
+        //Check if the POIs are inside the boundaries
+        oldList.stream().forEach(poi -> {
+            if(this.pot.getPathFinder() != null) {
+                if (this.pot.getPathFinder().isContained(new lgds.trajectories.Point(poi.getArea().getPolygon().getCenterPoint().getX(),poi.getArea().getPolygon().getCenterPoint().getY()))){
+                    realList.add(poi);
+                }
+            }else{
+                realList.add(poi);
+            }
+        });
         return realList;
     }
 

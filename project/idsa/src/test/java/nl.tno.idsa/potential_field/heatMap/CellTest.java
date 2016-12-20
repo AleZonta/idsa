@@ -1,6 +1,6 @@
 package nl.tno.idsa.potential_field.heatMap;
 
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.potential_field.heatMap.Cell;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;

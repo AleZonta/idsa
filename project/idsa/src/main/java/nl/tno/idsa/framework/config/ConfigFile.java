@@ -40,7 +40,8 @@ public class ConfigFile {
     private String sourceData; //If file are not loaded from the location they will be loaded from here
     private String destinationData; //If not saved in the same location they will be saved here
     private Integer selectorSourceTracks; //Select the source of the track -> Now or IDSA or chinese trajectories
-    private Integer wayPoints; //
+    private Integer wayPoints; //waypoints for path planning
+    private Boolean POIsAreClustered; //True the POI are clustered, false not
 
     public static String realSourceData = null;
 
@@ -71,6 +72,7 @@ public class ConfigFile {
         this.destinationData = null;
         this.selectorSourceTracks = null;
         this.wayPoints = null;
+        this.POIsAreClustered = null;
     }
 
     //method that reads the configfile
@@ -119,6 +121,7 @@ public class ConfigFile {
         }
         this.selectorSourceTracks = ((Long) jsonObject.get("SelectorSourceTracks")).intValue(); // zero is IDSA, one is China
         this.wayPoints = ((Long) jsonObject.get("WayPoints")).intValue(); //zero is yes, one is no
+        this.POIsAreClustered = (Boolean) jsonObject.get("POIsAreClustered"); //True the POI are clustered, false not
     }
 
     //getter
@@ -198,4 +201,5 @@ public class ConfigFile {
 
     public Integer getWayPoints() { return this.wayPoints; }
 
+    public Boolean getPOIsAreClustered() { return this.POIsAreClustered; }
 }

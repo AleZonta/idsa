@@ -1,7 +1,7 @@
 package nl.tno.idsa.force_field;
 
 import nl.tno.idsa.framework.force_field.ElectricPotential;
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.Polygon;

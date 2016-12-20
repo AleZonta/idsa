@@ -1,9 +1,8 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
-import jdk.nashorn.internal.runtime.ECMAException;
 import lgds.routing.Routing;
 import nl.tno.idsa.framework.force_field.ForceField;
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Path;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
@@ -250,5 +249,6 @@ public class PacmanRule implements UpdateRules {
             this.angle = Math.atan2(vectorComponent.getY(), vectorComponent.getX());
         }
     }
+
 
 }

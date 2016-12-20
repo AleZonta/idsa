@@ -3,7 +3,7 @@ package nl.tno.idsa.framework.potential_field.heatMap;
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Point;

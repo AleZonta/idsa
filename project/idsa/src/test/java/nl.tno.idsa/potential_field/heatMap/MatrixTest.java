@@ -4,7 +4,7 @@ import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.force_field.ElectricPotential;
 import nl.tno.idsa.framework.force_field.update_rules.PacmanRule;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Area;

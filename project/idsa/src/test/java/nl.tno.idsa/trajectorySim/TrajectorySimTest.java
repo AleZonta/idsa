@@ -25,26 +25,29 @@ public class TrajectorySimTest {
         file.loadFile();
         TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks());
 
-
-        System.out.println("Loading idsa map simulator...");
-        //initialise the data source with the hardcoded version
-        DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
-        DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
-        System.out.println("Data source selected is" + dataSource.getPath() + "...");
-        // Create the world object.
-        String path = dataSource.getPath();
-        World world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
-                path + "/idsa_nav_network_pedestrian.shp",
-                path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
-                path + "/idsa_public_areas_a_utm31n.shp",
-                path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
-                path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
-        //DO i need info - > NO
-        //DO i need environment - > NO
-        //Do i need population in this case? ->  NO
-        //Do i need agenda? ->  NO
-        //Do i need police station? -> NO
-        world.resetAreas();
+        World world = null;
+        //load old world only if I am loading idsa
+        if (file.getSelectorSourceTracks() == 0) {
+            System.out.println("Loading idsa map simulator...");
+            //initialise the data source with the hardcoded version
+            DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
+            DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
+            System.out.println("Data source selected is" + dataSource.getPath() + "...");
+            // Create the world object.
+            String path = dataSource.getPath();
+            world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
+                    path + "/idsa_nav_network_pedestrian.shp",
+                    path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
+                    path + "/idsa_public_areas_a_utm31n.shp",
+                    path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
+                    path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
+            //DO i need info - > NO
+            //DO i need environment - > NO
+            //Do i need population in this case? ->  NO
+            //Do i need agenda? ->  NO
+            //Do i need police station? -> NO
+            world.resetAreas();
+        }
 
         //s1,s2,w1,w2
         //s1=0.25
@@ -66,25 +69,29 @@ public class TrajectorySimTest {
         file.loadFile();
         TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks());
 
-        System.out.println("Loading idsa map simulator...");
-        //initialise the data source with the hardcoded version
-        DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
-        DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
-        System.out.println("Data source selected is" + dataSource.getPath() + "...");
-        // Create the world object.
-        String path = dataSource.getPath();
-        World world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
-                path + "/idsa_nav_network_pedestrian.shp",
-                path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
-                path + "/idsa_public_areas_a_utm31n.shp",
-                path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
-                path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
-        //DO i need info - > NO
-        //DO i need environment - > NO
-        //Do i need population in this case? ->  NO
-        //Do i need agenda? ->  NO
-        //Do i need police station? -> NO
-        world.resetAreas();
+        World world = null;
+        //load old world only if I am loading idsa
+        if (file.getSelectorSourceTracks() == 0) {
+            System.out.println("Loading idsa map simulator...");
+            //initialise the data source with the hardcoded version
+            DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
+            DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
+            System.out.println("Data source selected is" + dataSource.getPath() + "...");
+            // Create the world object.
+            String path = dataSource.getPath();
+            world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
+                    path + "/idsa_nav_network_pedestrian.shp",
+                    path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
+                    path + "/idsa_public_areas_a_utm31n.shp",
+                    path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
+                    path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
+            //DO i need info - > NO
+            //DO i need environment - > NO
+            //Do i need population in this case? ->  NO
+            //Do i need agenda? ->  NO
+            //Do i need police station? -> NO
+            world.resetAreas();
+        }
 
         sim.initPotentialField(file,90.0, 0.1 ,-0.0001, null, null, "test", "test", world);
     }
@@ -99,25 +106,29 @@ public class TrajectorySimTest {
         file.loadFile();
         TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks());
 
-        System.out.println("Loading idsa map simulator...");
-        //initialise the data source with the hardcoded version
-        DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
-        DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
-        System.out.println("Data source selected is" + dataSource.getPath() + "...");
-        // Create the world object.
-        String path = dataSource.getPath();
-        World world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
-                path + "/idsa_nav_network_pedestrian.shp",
-                path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
-                path + "/idsa_public_areas_a_utm31n.shp",
-                path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
-                path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
-        //DO i need info - > NO
-        //DO i need environment - > NO
-        //Do i need population in this case? ->  NO
-        //Do i need agenda? ->  NO
-        //Do i need police station? -> NO
-        world.resetAreas();
+        World world = null;
+        //load old world only if I am loading idsa
+        if (file.getSelectorSourceTracks() == 0) {
+            System.out.println("Loading idsa map simulator...");
+            //initialise the data source with the hardcoded version
+            DataSourceInterface dataSourceSelectionDialog = new DataSourceSelection();
+            DataSourceFinder.DataSource dataSource = dataSourceSelectionDialog.getSelectedDataSource();
+            System.out.println("Data source selected is" + dataSource.getPath() + "...");
+            // Create the world object.
+            String path = dataSource.getPath();
+            world = WorldGenerator.generateWorld(dataSource.getWorldModel(),
+                    path + "/idsa_nav_network_pedestrian.shp",
+                    path + "/idsa_pand_osm_a_utm31n.shp",   // TODO File names are partially Dutch and not fully informative.
+                    path + "/idsa_public_areas_a_utm31n.shp",
+                    path + "/idsa_vbo_utm31n.shp",          // TODO File names are partially Dutch and not fully informative.
+                    path + "/idsa_pand_p_utm31n.shp");      // TODO File names are partially Dutch and not fully informative.
+            //DO i need info - > NO
+            //DO i need environment - > NO
+            //Do i need population in this case? ->  NO
+            //Do i need agenda? ->  NO
+            //Do i need police station? -> NO
+            world.resetAreas();
+        }
 
         sim.initPotentialField(file,90.0, 0.1 ,-0.0001, null, null, "test", "test", world);
         sim.init(5);

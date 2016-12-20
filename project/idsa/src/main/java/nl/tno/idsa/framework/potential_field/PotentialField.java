@@ -14,6 +14,7 @@ import nl.tno.idsa.framework.force_field.update_rules.PacmanRuleDistance;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
 import nl.tno.idsa.framework.potential_field.heatMap.Matrix;
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.semantics_impl.locations.LocationFunction;
 import nl.tno.idsa.framework.simulator.TrajectorySim;
@@ -281,6 +282,9 @@ public class PotentialField extends Observable{
         List<Point> positions = new ArrayList<>();
         this.pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
         this.performance.addLocations(positions);
+
+        //set POIs to the update rules
+        this.updateRule.setPOIs(this.pointsOfInterest);
     }
 
     //getter for differentAreaType
@@ -308,10 +312,6 @@ public class PotentialField extends Observable{
         //save this agent info to file and crate the folder with the person name
         this.storage.setTrackedAgent(trackedAgent);
         this.storage.saveAgentInfo();
-
-        //set POIs to the update rules
-        this.updateRule.setPOIs(this.pointsOfInterest);
-
     }
 
     //getter for cellSide
@@ -552,14 +552,6 @@ public class PotentialField extends Observable{
                     this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
                 if (this.trajectorySimReference != null)
                     this.trajectorySimReference.removeFromTheLists(this.trackedAgent.getId());
-                //erasing some objects
-                this.trackedAgent = null;
-                this.artificialPotentialField = null;
-                this.updateRule = null;
-                this.heatMapValues = null;
-                this.heatMapValuesSingleLevel = null;
-                this.centerPoint = null;
-                this.differentAreaType = null;
             }
         }
     }
@@ -727,14 +719,6 @@ public class PotentialField extends Observable{
                 if(!this.confGUI) {
                     if(this.mainFrameReference != null) this.mainFrameReference.removeFromTheLists(this.trackedAgent.getId());
                     if(this.trajectorySimReference != null) this.trajectorySimReference.removeFromTheLists(this.trackedAgent.getId());
-                    //erasing some objects
-                    this.trackedAgent = null;
-                    this.artificialPotentialField = null;
-                    this.updateRule = null;
-                    this.heatMapValues = null;
-                    this.heatMapValuesSingleLevel = null;
-                    this.centerPoint = null;
-                    this.differentAreaType = null;
                 }else{
                     //TODO what to do in this case?
                 }
@@ -781,7 +765,8 @@ public class PotentialField extends Observable{
     public UpdateRules returnUpdateRule(Integer value, Double degree, Double s1, Double w1, Double s2, Double w2){
         switch (value){
             case 0:
-                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.5, 0.5, Boolean.TRUE); //select Pacman rule fixed value
+                return new PacmanRule(90.0, 0.25 , 0.005, Boolean.FALSE); //select Pacman rule without distance and path
+//                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.5, 0.5, Boolean.TRUE); //select Pacman rule fixed value
             case 1:
                 return new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
             case 2:

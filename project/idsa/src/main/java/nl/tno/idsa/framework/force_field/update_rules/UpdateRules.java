@@ -1,7 +1,7 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
 import lgds.routing.Routing;
-import nl.tno.idsa.framework.potential_field.POI;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
 
