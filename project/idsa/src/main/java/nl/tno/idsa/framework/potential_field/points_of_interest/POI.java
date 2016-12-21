@@ -72,11 +72,13 @@ public class POI {
     public POI(List<lgds.POI.POI> points){
         List<Point> normalList = new ArrayList<>();
         points.stream().forEach(point -> normalList.add(new Point(point.getLocation().getLatitude(), point.getLocation().getLongitude())));
-        if (points.size() == 1){
-            this.setAreas(normalList.get(0));
-        } else {
-            this.setAreas(normalList);
+
+        Point[] pointsTransformed = new Point[normalList.size()];
+        for(int i = 0; i < normalList.size(); i++){
+            pointsTransformed[i] = normalList.get(i);
         }
+
+        this.area = new Area(9999, new Polygon(pointsTransformed), "Destination");
         this.charge = 1.0;
         this.initial_charge = this.charge;
         this.meaning = Boolean.TRUE;
@@ -132,25 +134,14 @@ public class POI {
     }
 
 
-    //set area if I have only one Point
-    private void setAreas(Point centralPoint){
-        Point[] points = {new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() - 0.00001 ),
-                new Point(centralPoint.getX() + 0.00001 , centralPoint.getY() + 0.00001 ),
-                new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() - 0.00001 ),
-                new Point(centralPoint.getX() - 0.00001 , centralPoint.getY() + 0.00001 )};
-        this.area = new Area(9999, new Polygon(points), "Destination");
-    }
-
-    //set area if i have more than one Point
-    private void setAreas(List<Point> centralPoints){
-
-        Point[] points = new Point[centralPoints.size()];
-        for(int i = 0; i < centralPoints.size(); i++){
-            points[i] = centralPoints.get(i);
+    //check if the point is inside the poi
+    public Boolean contains(Point point){
+        for(int i = 0; i < this.area.getPolygon().getPoints().length; i++){
+            if(this.area.getPolygon().getPoints()[i].getY() == point.getY() && this.area.getPolygon().getPoints()[i].getX() == point.getX()){
+                return Boolean.TRUE;
+            }
         }
-
-//        Point[] points = (Point[]) centralPoints.toArray();
-        this.area = new Area(9999, new Polygon(points), "Destination");
+        return Boolean.FALSE;
     }
 
 }

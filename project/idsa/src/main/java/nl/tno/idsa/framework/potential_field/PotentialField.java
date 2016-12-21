@@ -408,7 +408,7 @@ public class PotentialField extends Observable{
         //for now is better assign to every point the same charge
         this.pointsOfInterest.stream().forEach(p -> p.setCharge(this.confCommonInitialCharge));
         if(this.performance != null) {
-            this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+            this.performance.addValue((int)this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
             List<Point> positions = new ArrayList<>();
             this.pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
             this.performance.addLocations(positions);
@@ -501,8 +501,8 @@ public class PotentialField extends Observable{
     //function called after having select the person to track.
     //position is the real-time position
     public void trackAndUpdate(Point currentPosition){
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Calendar cal = Calendar.getInstance();
+//        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+//        Calendar cal = Calendar.getInstance();
 
         //check if current position is inside the border of the area loaded -> only if loading the trajectory
         Boolean point_inside = Boolean.TRUE;
@@ -513,7 +513,7 @@ public class PotentialField extends Observable{
 
         //If it is true do all the stuff otherwise throw away the trajectory
         if(point_inside) {
-            System.out.println(dateFormat.format(cal.getTime()) + " Updating " + this.trackedAgent.getFirstName() + "'s position and potential field...");
+//            System.out.println(dateFormat.format(cal.getTime()) + " Updating " + this.trackedAgent.getFirstName() + "'s position and potential field...");
             //compute the actual map that I will use only If this.confTypologyOfMatrix is true I am using the tile optimisation
             if (this.confTypologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
 
@@ -661,10 +661,10 @@ public class PotentialField extends Observable{
             this.performance.addWayPointList(waypoints);
         }
         //update performance
-        this.performance.addValue(this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        this.performance.addValue((int) this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
         //update all the POI and the charge
-        List<Double> charges = new ArrayList<>();
-        this.pointsOfInterest.stream().forEach(poi -> charges.add(poi.getCharge()));
+        List<Float> charges = new ArrayList<>();
+        this.pointsOfInterest.stream().forEach(poi -> charges.add(poi.getCharge().floatValue()));
         this.performance.addCharges(charges);
     }
 
@@ -688,7 +688,11 @@ public class PotentialField extends Observable{
     //Input Point currentPosition -> point where the tracked person is right now
     private POI arrivedIntoPOI(Point currentPosition){
         try {
-            return this.pointsOfInterest.stream().filter(poi -> poi.getArea().getPolygon().contains(currentPosition)).findFirst().get();
+            if(this.gdsi){
+                return this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition)).findFirst().get();
+            }else{
+                return this.pointsOfInterest.stream().filter(poi -> poi.getArea().getPolygon().contains(currentPosition)).findFirst().get();
+            }
         }catch (Exception e){
             return null;
         }
@@ -703,7 +707,10 @@ public class PotentialField extends Observable{
             this.targetCounter++;
             //How many time step do we wait before stopping the tracking?
             //Hardcoded value -> 20
-            if(this.targetCounter == 20){
+            if(this.targetCounter >= 20){
+                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Calendar cal = Calendar.getInstance();
+                System.out.println(dateFormat.format(cal.getTime()) + " End tracking for " + this.trackedAgent.getFirstName() + "...");
                 //Stop the tracking and save all the information
                 //remove observer from agent
                 this.trackedAgent.deleteObservers();

@@ -23,6 +23,9 @@ import org.apache.commons.math3.ml.clustering.Cluster;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -32,11 +35,10 @@ import java.util.stream.Collectors;
  */
 public class TrajectorySim implements SimulatorInterface {
     private Traces storage; //class that loads the track from file
-    private List<TrajectoryAgent> participant; //list of all the agents participating into the simulation
+    private Map<TrajectoryAgent, PotentialField> partecipantPot; //list of all the agents participating into the simulation //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
     private Trajectories tra; //keep track of all the trajectories
     private PotentialField pot; //This is the base instance of the pot
     private final PerformanceChecker performance; //keep track of the performance of the simulator
-    private HashMap<Long,PotentialField> listPot; //Every tracked agent need its own potential field. I will deep copy the base instance for all the tracked agents and I will store them here. Save PotentialField with the id of the agent tracked
     private Boolean oldWorld; //using this variable only to remmebre if i am loading the simulator world for pathplanning
     private Boolean clusteredPOI; //true I ask for clustered POI, False not
     /**
@@ -48,14 +50,14 @@ public class TrajectorySim implements SimulatorInterface {
         }else{
             this.storage = new LoadTrack();
         }
-        this.participant = new ArrayList<>();
         this.pot = null;
         this.performance = new PerformanceChecker();
-        this.listPot = new HashMap<>();
         //retrieve all the tracks from file
         this.tra = this.storage.loadTrajectories();
         this.oldWorld = Boolean.FALSE;
         this.clusteredPOI = null;
+
+        this.partecipantPot = new ConcurrentHashMap<>();
     }
 
     /**
@@ -71,7 +73,7 @@ public class TrajectorySim implements SimulatorInterface {
      * @return list of agent that I am going to simulate
      */
     public List<TrajectoryAgent> getLocalParticipant(){
-        return participant;
+        return new ArrayList<>(this.partecipantPot.keySet());
     }
 
     /**
@@ -102,52 +104,23 @@ public class TrajectorySim implements SimulatorInterface {
         //check the number
         if(number > actualTrajectories.size()) number = actualTrajectories.size() - 1;
         for(int i = 0; i < number; i++) id.add(i);
+
+        //what about poi? I should generate POI for them. Now I should generate some randomly than I should
+        //find a way to find them from the poi
+        //I can select how many POI use here. Lets add more
+        System.out.println("Computing POIs...");
+        this.tra.computePOIs(number);
+
         System.out.println("Creating agents...");
         //create the agents
         id.stream().forEach(integer -> {
             HouseholdTypes hhType = HouseholdTypes.SINGLE;
             Gender gender = Gender.FEMALE;
             double age = ThreadLocalRandom.current().nextDouble(0, 100);
-            this.participant.add(new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016));
-        });
-        //what about poi? I should generate POI for them. Now I should generate some randomly than I should
-        //find a way to find them from the poi
-        //I can select how many POI use here. Lets add more
-        System.out.println("Computing POIs...");
-        this.tra.computePOIs(number * 3);
-
-        System.out.println("Connecting the potential field to the people tracked...");
-        //now i should load all what I need for the potential field
-        this.participant.stream().forEach(trajectoryAgent -> {
-            try {
-                //new agent tracked new potential field for him
-                PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
-                TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
-
-                PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
-                fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
-                this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
-
-                fieldForTheTrackedAgent.setTrajectorySimReference(this);
-                fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
-                //if it is false I am using normal POI
-                if (!this.clusteredPOI) {
-                    fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
-                }else {
-                    //In this case I am using clustered POI
-                    fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
-                }
-                trajectoryAgent.deleteObservers(); //delete old observers
-                trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
-
-                //Add potential field and tracking system to their list
-                this.listPot.put(trajectoryAgent.getId(),fieldForTheTrackedAgent);
-                System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
-
-            } catch (EmptyActivityException | ActivityNotImplementedException e) {
-                //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
-                e.printStackTrace();
-            }
+            TrajectoryAgent agent = new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016);
+            System.out.println("Connecting the potential field to the people tracked...");
+            //now i should load all what I need for the potential field
+            this.loadControllers(agent);
         });
     }
 
@@ -158,8 +131,8 @@ public class TrajectorySim implements SimulatorInterface {
     @Override
     public void run(){
         //run the simulator
-        while (this.participant.stream().filter(agent -> !agent.getDead()).toArray().length != 0) {
-            this.participant.parallelStream().filter(agent -> !agent.getDead()).forEach(TrajectoryAgent::doStep);
+        while(this.partecipantPot.size() != 0){
+            this.partecipantPot.keySet().parallelStream().forEach(TrajectoryAgent::doStep);
         }
         System.out.println("End simulating procedure...");
 
@@ -186,73 +159,40 @@ public class TrajectorySim implements SimulatorInterface {
         //prepare the id of the agent
         List<Integer> id = new ArrayList<>();
         for(int i = 0; i < max_allowed; i++) id.add(i);
+
+        //what about poi? I should generate POI for them. Now I should generate some randomly than I should
+        //find a way to find them from the poi
+        //I can select how many POI use here. Lets add more
+        System.out.println("Computing POIs...");
+        this.tra.computePOIs(actualBigTrajectories);
+
         System.out.println("Creating agents...");
-        //delete everything in partecipant
-        this.participant = new ArrayList<>();
         //create the agents
         List<Trajectory> finalActualTrajectories = actualTrajectories;
         id.stream().forEach(integer -> {
             HouseholdTypes hhType = HouseholdTypes.SINGLE;
             Gender gender = Gender.FEMALE;
             double age = ThreadLocalRandom.current().nextDouble(0, 100);
-            this.participant.add(new TrajectoryAgent(finalActualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016));
+            TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016);
+            System.out.println("Connecting the potential field to the initialised person...");
+            //load controllers
+            this.loadControllers(agent);
         });
-        //what about poi? I should generate POI for them. Now I should generate some randomly than I should
-        //find a way to find them from the poi
-        //I can select how many POI use here. Lets add more
-        System.out.println("Computing POIs...");
-        this.tra.computePOIs(this.tra.getTrajectories());
 
-        System.out.println("Connecting the potential field to the people tracked...");
-        //now i should load all what I need for the potential field
-        this.participant.stream().forEach(trajectoryAgent -> {
-            try {
-                //new agent tracked new potential field for him
-                PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
-                TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
-                if (this.oldWorld){
-                    fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
-                }
-
-                PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
-                fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
-                this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
-
-                fieldForTheTrackedAgent.setTrajectorySimReference(this);
-                fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
-                //if it is false I am using normal POI
-                if (!this.clusteredPOI) {
-                    fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
-                }else {
-                    //In this case I am using clustered POI
-                    fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
-                }
-                trajectoryAgent.deleteObservers(); //delete old observers
-                trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
-
-                //Add potential field and tracking system to their list
-                this.listPot.put(trajectoryAgent.getId(),fieldForTheTrackedAgent);
-                System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
-
-            } catch (EmptyActivityException | ActivityNotImplementedException e) {
-                //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
-                e.printStackTrace();
-            }
-        });
         //run the simulator
-        while (this.participant.stream().filter(agent -> !agent.getDead()).toArray().length != 0) {
-            this.participant.parallelStream().filter(agent -> !agent.getDead()).forEach(TrajectoryAgent::doStep);
+        while(this.partecipantPot.size() != 0){
+            this.partecipantPot.keySet().parallelStream().forEach(TrajectoryAgent::doStep);
 
             //check if the partecipant number is max_allowed or not.. if there are fewer partecipants I will add one
-            if((this.participant.size() < max_allowed) && (effectiveCounter < number)){
-                Integer numberThatINeed = max_allowed - this.participant.size();
+            if((this.partecipantPot.size() < max_allowed) && (effectiveCounter < number)){
+                Integer numberThatINeed = max_allowed - this.partecipantPot.size();
                 Integer sumOfTheTwo = effectiveCounter + numberThatINeed;
                 if (sumOfTheTwo > number){
                     sumOfTheTwo = number;
                 }
                 actualTrajectories = actualBigTrajectories.subList(effectiveCounter, sumOfTheTwo);
                 id = new ArrayList<>();
-                for(int i = effectiveCounter; i < sumOfTheTwo; i++) id.add(i);
+                for(int i = 0; i < numberThatINeed; i++) id.add(i);
                 effectiveCounter = sumOfTheTwo;
                 List<Trajectory> finalActualTrajectories1 = actualTrajectories;
                 id.stream().forEach(integer -> {
@@ -260,111 +200,59 @@ public class TrajectorySim implements SimulatorInterface {
                     Gender gender = Gender.FEMALE;
                     double age = ThreadLocalRandom.current().nextDouble(0, 100);
                     TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016);
-                    try {
-                        //new agent tracked new potential field for him
-                        PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
-                        TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
-                        if (this.oldWorld){
-                            fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
-                        }
-
-                        PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
-                        fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
-                        this.performance.addPersonalPerformance(agent.getId(),personalPerformance); //connect performance with id person and put them together in a list
-
-                        fieldForTheTrackedAgent.setTrajectorySimReference(this);
-                        fieldForTheTrackedAgent.setTrackedAgent(agent);
-                        //if it is false I am using normal POI
-                        if (!this.clusteredPOI) {
-                            fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
-                        }else {
-                            //In this case I am using clustered POI
-                            fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
-                        }
-                        agent.deleteObservers(); //delete old observers
-                        agent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
-
-                        //Add potential field and tracking system to their list
-                        this.listPot.put(agent.getId(),fieldForTheTrackedAgent);
-                        System.out.println("Loaded Potential Field...");
-                        this.participant.add(agent);
-
-                    } catch (EmptyActivityException | ActivityNotImplementedException e) {
-                        //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
-                        e.printStackTrace();
-                    }
-
+                    System.out.println("Connecting the potential field to the initialised person...");
+                    //load controllers
+                    this.loadControllers(agent);
                 });
             }
         }
         System.out.println("End simulating procedure...");
 
-        /*
-        //how many division?
-        Double division = Math.ceil(actualBigTrajectories.size() / max_allowed.doubleValue());
-        for (Integer step = 1; step <= division.intValue(); step++){
-            Integer start = max_allowed * ( step - 1 );
-            Integer end = max_allowed * step;
-            if(actualBigTrajectories.size() < end) end = actualBigTrajectories.size();
-            //select subset from start to end
-            List<Trajectory> actualTrajectories = actualBigTrajectories.subList(start, end);
-            //prepare the id of the agent
-            List<Integer> id = new ArrayList<>();
-            //check the number
-            if(number > actualTrajectories.size()) number = actualTrajectories.size();
-            for(int i = 0; i < number; i++) id.add(i);
-            System.out.println("Creating agents...");
-            //delete everything in partecipant
-            this.participant = new ArrayList<>();
-            //create the agents
-            id.stream().forEach(integer -> {
-                HouseholdTypes hhType = HouseholdTypes.SINGLE;
-                Gender gender = Gender.FEMALE;
-                double age = ThreadLocalRandom.current().nextDouble(0, 100);
-                this.participant.add(new TrajectoryAgent(actualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016));
-            });
-            //what about poi? I should generate POI for them. Now I should generate some randomly than I should
-            //find a way to find them from the poi
-            //I can select how many POI use here. Lets add more
-            System.out.println("Computing POIs...");
-            this.tra.computePOIs(actualTrajectories);
 
-            System.out.println("Connecting the potential field to the people tracked...");
-            //now i should load all what I need for the potential field
-            this.participant.stream().forEach(trajectoryAgent -> {
-                try {
-                    //new agent tracked new potential field for him
-                    PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
-                    TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
-                    if (this.oldWorld){
-                        fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
-                    }
+    }
 
-                    PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
-                    fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
-                    this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
+    /**
+     * This private method loads all the controller to the agent tracked
+     * It loads the potential field, it sets the tracking system
+     * Create the personal performance for the agent
+     * It sets the POIs to the potential field
+     * Sets the observer for the agent
+     * Add the potential field to the global list
+     * @param trajectoryAgent
+     */
+    private void loadControllers(TrajectoryAgent trajectoryAgent){
+        try {
+            //new agent tracked new potential field for him
+            PotentialField fieldForTheTrackedAgent = this.pot.deepCopy();
+            TrackingSystem trackingForTheTrackedAgent = new TrackingSystem(fieldForTheTrackedAgent);
+            if (this.oldWorld){
+                fieldForTheTrackedAgent.setWorld(this.pot.getUpdateRule().retIdsaWorld().deepCopy());
+            }
 
-                    fieldForTheTrackedAgent.setTrajectorySimReference(this);
-                    fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
-                    fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
-                    trajectoryAgent.deleteObservers(); //delete old observers
-                    trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
+            PersonalPerformance personalPerformance = new PersonalPerformance(this.pot.getConfig().getSelectorSourceTracks()); //prepare class for personal performance
+            fieldForTheTrackedAgent.setPerformance(personalPerformance); //set personal performance on the field
+            this.performance.addPersonalPerformance(trajectoryAgent.getId(),personalPerformance); //connect performance with id person and put them together in a list
 
-                    //Add potential field and tracking system to their list
-                    this.listPot.put(trajectoryAgent.getId(),fieldForTheTrackedAgent);
-                    System.out.println("Loaded Potential Field for person number " + this.listPot.size() + "...");
+            fieldForTheTrackedAgent.setTrajectorySimReference(this);
+            fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
+            //if it is false I am using normal POI
+            if (!this.clusteredPOI) {
+                fieldForTheTrackedAgent.setPointsOfInterest(this.translatePOI(this.tra.getListOfPOIs())); //set the POIs obtained from the GPS trajectories
+            }else {
+                //In this case I am using clustered POI
+                fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
+            }
+            trajectoryAgent.deleteObservers(); //delete old observers
+            trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
 
-                } catch (EmptyActivityException | ActivityNotImplementedException e) {
-                    //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
-                    e.printStackTrace();
-                }
-            });
+            //Add potential field and tracking system to their list
+            this.partecipantPot.put(trajectoryAgent, fieldForTheTrackedAgent);
+            System.out.println("Loaded Potential Field for person number " + this.partecipantPot.size() + "...");
 
-            //run this subset of people
-            this.run();
+        } catch (EmptyActivityException | ActivityNotImplementedException e) {
+            //No planned activity. I do not need to do anything. The exception doesn't add the agent to the list
+            e.printStackTrace();
         }
-        */
-
     }
 
     /**
@@ -402,22 +290,9 @@ public class TrajectorySim implements SimulatorInterface {
      * @param agentId Id of the person to remove
      */
     public void removeFromTheLists(Long agentId){
-        this.listPot.remove(agentId);
-        System.out.println("Removing tracked agent from the list. Remaining agents -> " + this.listPot.size() + "...");
-        //once I removed the agent i should check how many of them are still alive
-        //If no one is alive stop the simulation
-        if(this.listPot.isEmpty()){
-            //now I should also save all the performance of all the person
-            //I have to compute the total performance before saving it
-            Integer value = this.pot.getConfig().getPerformance();
-            if(value == 1 || value == 2) {
-                this.performance.computeGraph();
-                System.out.println("Saving performance...");
-                //I am using the base instance of pot because it has still the correct path to save this fill
-                this.performance.saveTotalPerformance(this.pot.getStorage());
-            }
-            System.out.println("End tracking procedure...");
-        }
+        TrajectoryAgent agent = this.partecipantPot.keySet().stream().filter(trajectoryAgent -> trajectoryAgent.getId() == agentId).findFirst().get();
+        this.partecipantPot.remove(agent);
+        System.out.println("Removing tracked agent from the list. Remaining agents -> " + this.partecipantPot.size() + "...");
     }
 
     /**

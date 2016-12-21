@@ -57,7 +57,7 @@ public class TrajectorySimTest {
         sim.initPotentialField(file,180.0, 0.25 ,0.5, 0.01, 0.5, "testGH", "testGH", world);
 //        sim.init(99999);
 //        sim.run();
-        sim.init_and_run(2, 4);
+        sim.init_and_run(20, 40);
     }
 
     @Test

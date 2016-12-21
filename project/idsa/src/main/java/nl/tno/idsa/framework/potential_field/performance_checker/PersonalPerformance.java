@@ -11,9 +11,9 @@ import java.util.Map;
  * Created by alessandrozonta on 07/09/16.
  */
 public class PersonalPerformance {
-    private List<Double> numberOfPositivePOIs; //number of positive charged POIs
+    private List<Integer> numberOfPositivePOIs; //number of positive charged POIs
     private List<Point> locations; //locations of the POIs
-    private List<List<Double>> charges; //charges of every POIs per timestep
+    private List<List<Float>> charges; //charges of every POIs per timestep
     private Point target; // target central point
     private List<List<Point>> waypoints; //store all the used waypoint for the computation of the distance
     private List<Point> pointsOfThePath; //all the points of the path
@@ -33,11 +33,11 @@ public class PersonalPerformance {
         }
     }
 
-    public List<Double> getNumberOfPositivePOIs() { return this.numberOfPositivePOIs; }
+    public List<Integer> getNumberOfPositivePOIs() { return this.numberOfPositivePOIs; }
 
     //add the number to the list
-    public void addValue(Long value){
-        this.numberOfPositivePOIs.add(value.doubleValue());
+    public void addValue(Integer value){
+        this.numberOfPositivePOIs.add(value);
     }
 
     //add all the location of the POIs
@@ -47,7 +47,7 @@ public class PersonalPerformance {
     public void addWayPointList(List<Point> list) { this.waypoints.add(list); }
 
     //add che POIs charge
-    public void addCharges(List<Double> list) {
+    public void addCharges(List<Float> list) {
         this.charges.add(list);
     }
 
@@ -81,7 +81,7 @@ public class PersonalPerformance {
         }else{
             this.locations.stream().forEach(loc -> locations.add((loc)));
         }
-        storage.savePOIsCharge(target, locations, charges);
+        storage.savePOIsCharge(target, locations, this.charges);
     }
 
     //save waypoints

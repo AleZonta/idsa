@@ -174,7 +174,7 @@ public class SaveToFile {
     //Input
     //Point target -> target position
     //List<POI> listWithAllThePOIs -> list of all the POIs
-    public void savePOIsCharge(Point target, List<Point> locations, List<List<Double>> charges){
+    public void savePOIsCharge(Point target, List<Point> locations, List<List<Float>> charges){
         //I will save a Json File with the info of the agent
         JSONObject obj = new JSONObject();
         obj.put("target", Double.toString(target.getX()) + "," + Double.toString(target.getY()));
@@ -276,7 +276,7 @@ public class SaveToFile {
     //Save Performance. This method is used for the personal performance and also for the general one
     //input
     //list<Long> value -> list with the performance value
-    public void savePerformace(List<Double> value){
+    public void savePerformace(List<Integer> value){
         //I will save a Json File with the info of the agent
 //        JSONObject obj = new JSONObject();
 //        JSONArray perf = new JSONArray();

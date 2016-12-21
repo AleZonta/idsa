@@ -46,7 +46,7 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
             this.targetCounter++;
             //ended the trajectory
             //Hardcoded value -> 20
-            if(this.targetCounter == 20) {
+            if(this.targetCounter >= 21) {
                 this.dead = Boolean.TRUE;
             }else{
                 currentPosition = this.previousPoint;

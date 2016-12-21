@@ -90,7 +90,7 @@ public class Polygon implements IGeometry {
         if (x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax) {
             int i, j = points.length - 1;
             for (i = 0; i < points.length; ++i) {
-                if (points[i].getY() < y && points[j].getY() >= y || points[j].getY() < y && points[i].getY() >= y) {
+                if (points[i].getY() <= y && points[j].getY() >= y || points[j].getY() <= y && points[i].getY() >= y) {
                     if (points[i].getX() + (y - points[i].getY()) / (points[j].getY() - points[i].getY()) * (points[j].getX() - points[i].getX()) < x) {
                         result = !result;
                     }

@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class PerformanceChecker {
     private HashMap<Long, PersonalPerformance> performance; //list with all the tracked person and their performance
-    private List<Double> totalPerformanceNormalised; //List with all the value normalised at the end of the experiment
+    private List<Integer> totalPerformanceNormalised; //List with all the value normalised at the end of the experiment
 
     public PerformanceChecker(){
         this.performance = new HashMap<>();
@@ -42,9 +42,9 @@ public class PerformanceChecker {
             if(el.isEmpty()){
                 this.totalPerformanceNormalised.add(null);
             }else if(el.size() > 1) {
-                this.totalPerformanceNormalised.add(el.stream().mapToDouble(a -> a).average().getAsDouble());
+                this.totalPerformanceNormalised.add(Integer.parseInt(el.stream().mapToDouble(a -> a).average().toString()));
             }else{
-                this.totalPerformanceNormalised.add(el.get(0));
+                this.totalPerformanceNormalised.add(el.get(0).intValue());
             }
         });
     }

@@ -106,7 +106,7 @@ public class Matrix{
         //initialise also dynamic map level
         this.differentCellSize.forEach((key,size) -> this.dynamicMapLevel.put(key,this.copyEntireList(this.mapLevel.get(key))));
         if(this.performance != null) {
-            this.performance.addValue(pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+            this.performance.addValue((int)pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
             List<Point> positions = new ArrayList<>();
             pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
             this.performance.addLocations(positions);
@@ -926,10 +926,10 @@ public class Matrix{
         }
 
         //update performance
-        this.performance.addValue(totalList.stream().filter(poi -> poi.getCharge() > 0.0).count());
+        this.performance.addValue((int)totalList.stream().filter(poi -> poi.getCharge() > 0.0).count());
         //update all the POI and the charge
-        List<Double> charges = new ArrayList<>();
-        totalList.stream().forEach(poi -> charges.add(poi.getCharge()));
+        List<Float> charges = new ArrayList<>();
+        totalList.stream().forEach(poi -> charges.add(poi.getCharge().floatValue()));
         this.performance.addCharges(charges);
 
 
