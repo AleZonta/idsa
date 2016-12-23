@@ -74,7 +74,12 @@ public class PersonalPerformance {
 
     //save the POis info
     public void savePOIsInfo(SaveToFile storage){
-        Point target = this.convertFromUTMtoDeg(this.target);
+        Point target;
+        if(this.idsaSource) {
+            target = this.convertFromUTMtoDeg(this.target);
+        } else {
+            target = this.target;
+        }
         List<Point> locations = new ArrayList<>();
         if(this.idsaSource){
             this.locations.stream().forEach(loc -> locations.add(this.convertFromUTMtoDeg(loc)));

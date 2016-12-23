@@ -5,6 +5,8 @@ import lgds.load_track.Traces;
 import lgds.people.AgentInterface;
 import lgds.trajectories.Point;
 import lgds.trajectories.Trajectory;
+import nl.tno.idsa.framework.kalman_filter.FixedLagSmoother;
+import nl.tno.idsa.framework.kalman_filter.StateVector;
 import nl.tno.idsa.framework.population.Gender;
 import nl.tno.idsa.framework.population.HouseholdRoles;
 import nl.tno.idsa.framework.population.HouseholdTypes;
@@ -18,19 +20,31 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
     private Boolean dead; //true if it ends to move on the trajectory
     private Point previousPoint; //remember the previousPoint
     private Integer targetCounter; //Count time step after reached the target -> potential field count 20 time in the target before stopping tracking. I need to keep the track alive antil that point
+    private FixedLagSmoother smoother; //Smoother System
 
     /**
-     * Constructor with tho parameters. It builds the class with an Id and his trajectory
+     * Constructor with some parameters. It builds the class with an Id and his trajectory
      * @param trajectory agent's trajectory that it will follow
      * @param storage class used to load the next position
+     * @param age age agent
+     * @param gender gender agent
+     * @param householdType house type
+     * @param householdRole house role
+     * @param year current year
+     * @param smo Am I using the smoother?
      */
-    public TrajectoryAgent(Trajectory trajectory, Traces storage, double age, Gender gender, HouseholdTypes householdType, HouseholdRoles householdRole, int year){
+    public TrajectoryAgent(Trajectory trajectory, Traces storage, double age, Gender gender, HouseholdTypes householdType, HouseholdRoles householdRole, int year, Boolean smo, Integer lag){
         super(age,gender,householdType,householdRole,year);
         this.trajectory = trajectory;
         this.storage = storage;
         this.dead = Boolean.FALSE;
         this.previousPoint = null;
         this.targetCounter = 0;
+        if(smo){
+            this.smoother = new FixedLagSmoother(lag);
+        }else{
+            this.smoother = null;
+        }
     }
 
     /**
@@ -42,6 +56,34 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
     public void doStep(){
         //retrieve next point
         Point currentPosition = this.trajectory.getNextPoint(this.storage);
+        //Am I using the smoother
+        if(this.smoother != null){
+            //If current position is null set end trajectory
+            if(currentPosition == null) {
+                this.smoother.setEnd();
+            }
+            try {
+                this.smoother.smooth(currentPosition.getLatitude(), currentPosition.getLongitude()); //smooth the point
+            } catch (Exception e) {
+                if(e.toString().equals("Error")) {
+                    throw new Error("Error in data");
+                }
+            }
+            Point smoothedPoint;
+            try {
+                StateVector x = this.smoother.getSmoothedPoint();
+                if(x == null){
+                    smoothedPoint = null;
+                }else{
+                    smoothedPoint = new Point(x.getX(), x.getY()); //return the point smoothed
+                }
+            } catch (Exception e) {
+                //Not smoothed, I am not doing anything here
+                return;
+            }
+            currentPosition = smoothedPoint; //smoothed point, I am doing the same procedure as before
+        }
+
         if(currentPosition == null){
             this.targetCounter++;
             //ended the trajectory
@@ -58,6 +100,7 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
             nl.tno.idsa.framework.world.Point position = new nl.tno.idsa.framework.world.Point(currentPosition.getLatitude(), currentPosition.getLongitude());
             super.setLocation(position); //set actual position and notify the observer
         }
+
     }
 
     /**

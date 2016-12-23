@@ -45,6 +45,15 @@ public class MatrixDefinition {
         for(int i = 0; i < this.row; i++) for (int j = 0; j < this.column; j++) this.matrix[i][j] = value; //initialize matrix with O.o in every cells
     }
 
+    //constructor deep copy
+    public MatrixDefinition(Double[][] matrix, Integer row, Integer column, Double timeStep){
+        this.row = row;
+        this.column = column;
+        this.dt = timeStep;
+        this.matrix = new Double[this.row][this.column];
+        for(int i = 0; i < matrix.length; i++) for (int j = 0; j < matrix[i].length; j++) this.matrix[i][j] = matrix[i][j]; //initialize matrix with O.o in every cells
+    }
+
     //getter for the matrix
     //quite simple -> no test
     public Double[][] getMatrix(){
@@ -285,4 +294,9 @@ public class MatrixDefinition {
         return result;
     }
 
+
+    //deepcopy matrix
+    public MatrixDefinition deepCopy() throws DifferentMatrixException {
+        return new MatrixDefinition(this.matrix, this.row, this.column, this.dt);
+    }
 }

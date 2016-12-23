@@ -1,4 +1,4 @@
-package nl.tno.idsa.framework.test.kalman_filter;
+package nl.tno.idsa.kalman_filter;
 
 import nl.tno.idsa.framework.kalman_filter.StateVector;
 import nl.tno.idsa.framework.world.Point;
@@ -94,4 +94,18 @@ public class StateVectorTest {
 
     }
 
+    @Test
+    public  void deepCopy() throws Exception {
+        Point one = new Point(5.0,6.0);
+        Point two = new Point(5.0,6.0);
+        StateVector vector = new StateVector(one,two);
+
+        StateVector vector1 = vector.deepCopy();
+        assertEquals(vector.getX(), vector1.getX());
+        assertEquals(vector.getVx(), vector1.getVx());
+        assertEquals(vector.getVy(), vector1.getVy());
+        assertEquals(vector.getY(), vector1.getY());
+        assertEquals(vector.size(), vector1.size());
+        assertEquals(vector.getTimeStep(), vector1.getTimeStep());
+    }
 }

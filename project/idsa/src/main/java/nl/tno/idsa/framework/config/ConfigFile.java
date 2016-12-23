@@ -42,6 +42,8 @@ public class ConfigFile {
     private Integer selectorSourceTracks; //Select the source of the track -> Now or IDSA or chinese trajectories
     private Integer wayPoints; //waypoints for path planning
     private Boolean POIsAreClustered; //True the POI are clustered, false not
+    private Integer Lag; //Lag for kalman filter smoother
+    private Boolean Smoother; //Am I using the smoother?
 
     public static String realSourceData = null;
 
@@ -73,6 +75,8 @@ public class ConfigFile {
         this.selectorSourceTracks = null;
         this.wayPoints = null;
         this.POIsAreClustered = null;
+        this.Lag = null;
+        this.Smoother = null;
     }
 
     //method that reads the configfile
@@ -122,6 +126,8 @@ public class ConfigFile {
         this.selectorSourceTracks = ((Long) jsonObject.get("SelectorSourceTracks")).intValue(); // zero is IDSA, one is China
         this.wayPoints = ((Long) jsonObject.get("WayPoints")).intValue(); //zero is yes, one is no
         this.POIsAreClustered = (Boolean) jsonObject.get("POIsAreClustered"); //True the POI are clustered, false not
+        this.Lag = ((Long) jsonObject.get("Lag")).intValue();
+        this.Smoother = (Boolean) jsonObject.get("Smoother"); //True I am using Smoother
     }
 
     //getter
@@ -202,4 +208,8 @@ public class ConfigFile {
     public Integer getWayPoints() { return this.wayPoints; }
 
     public Boolean getPOIsAreClustered() { return this.POIsAreClustered; }
+
+    public Integer getLag() { return this.Lag; }
+
+    public Boolean getSmoother() { return this.Smoother; }
 }

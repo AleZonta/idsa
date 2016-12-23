@@ -9,7 +9,7 @@ import java.util.List;
  * Created by alessandrozonta on 01/07/16.
  */
 //State Vector for kalman filter. In our case it implements position (x,y) and velocity vector (Vx,Vy).
-//extend matrixDefinition. StateVector is a special case of Matrix
+//extend matrixDefinition. StateVector is a pecial case of Matrix
 //It is matrix [4][1]
 //Remember that it is ordered like [x Vx y Vy]
 public class StateVector extends MatrixDefinition {
@@ -104,4 +104,13 @@ public class StateVector extends MatrixDefinition {
         }
     }
 
+    @Override
+    public StateVector deepCopy() throws DifferentMatrixException {
+        MatrixDefinition result = super.deepCopy();
+        try {
+            return new StateVector(result);
+        } catch (Exception e) {
+            throw new DifferentMatrixException("Matrix with wrong size");
+        }
+    }
 }

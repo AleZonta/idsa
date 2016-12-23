@@ -41,10 +41,13 @@ public class TrajectorySim implements SimulatorInterface {
     private final PerformanceChecker performance; //keep track of the performance of the simulator
     private Boolean oldWorld; //using this variable only to remmebre if i am loading the simulator world for pathplanning
     private Boolean clusteredPOI; //true I ask for clustered POI, False not
+    private Boolean smoother; //Am I using the smoother?
+    private Integer lag; //Lag for the smoother
+
     /**
      * default constructor
      */
-    public TrajectorySim(Integer selector){
+    public TrajectorySim(Integer selector, Boolean smoother, Integer lag){
         if (selector == 0){
             this.storage = new LoadIDSATrack();
         }else{
@@ -58,6 +61,8 @@ public class TrajectorySim implements SimulatorInterface {
         this.clusteredPOI = null;
 
         this.partecipantPot = new ConcurrentHashMap<>();
+        this.smoother = smoother;
+        this.lag = lag;
     }
 
     /**
@@ -117,7 +122,7 @@ public class TrajectorySim implements SimulatorInterface {
             HouseholdTypes hhType = HouseholdTypes.SINGLE;
             Gender gender = Gender.FEMALE;
             double age = ThreadLocalRandom.current().nextDouble(0, 100);
-            TrajectoryAgent agent = new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016);
+            TrajectoryAgent agent = new TrajectoryAgent(actualTrajectories.get(integer), this.storage,age ,gender, hhType, HouseholdRoles.SINGLE,2016, this.smoother, this.lag);
             System.out.println("Connecting the potential field to the people tracked...");
             //now i should load all what I need for the potential field
             this.loadControllers(agent);
@@ -173,7 +178,7 @@ public class TrajectorySim implements SimulatorInterface {
             HouseholdTypes hhType = HouseholdTypes.SINGLE;
             Gender gender = Gender.FEMALE;
             double age = ThreadLocalRandom.current().nextDouble(0, 100);
-            TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016);
+            TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016, this.smoother, this.lag);
             System.out.println("Connecting the potential field to the initialised person...");
             //load controllers
             this.loadControllers(agent);
@@ -199,7 +204,7 @@ public class TrajectorySim implements SimulatorInterface {
                     HouseholdTypes hhType = HouseholdTypes.SINGLE;
                     Gender gender = Gender.FEMALE;
                     double age = ThreadLocalRandom.current().nextDouble(0, 100);
-                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016);
+                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016, this.smoother, this.lag);
                     System.out.println("Connecting the potential field to the initialised person...");
                     //load controllers
                     this.loadControllers(agent);

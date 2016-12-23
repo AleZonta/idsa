@@ -21,6 +21,8 @@ public class KalmanFilter {
     private MatrixDefinition K; // K -> noise covariance
     private Measurement y; // y -> residual
     private final Double timeStep; //time step
+    private Boolean setInitialX; //checker initial position
+    private Boolean setInitialP; //checker initial position
 
     //getter
     public StateVector getX() {
@@ -37,6 +39,10 @@ public class KalmanFilter {
 
     public Measurement getY() { return this.y; }
 
+    protected MeasurementFunction getH() { return this.H; }
+
+    protected StateTransition getF() { return this.F; }
+
     //set the new measurement
     public void setMeasurement(Double x, Double y){
         this.z = new Measurement(x,y);
@@ -45,11 +51,13 @@ public class KalmanFilter {
     //set the initial position
     public void setInitialPosition(Point position, Point velocity){
         this.x = new StateVector(position,velocity);
+        this.setInitialX = Boolean.TRUE;
     }
 
     //set initial covariance
     public void setInitialCovariance(Double value){
         this.P = new Covariance(value);
+        this.setInitialP = Boolean.TRUE;
     }
 
     // Constructor
@@ -67,6 +75,8 @@ public class KalmanFilter {
         this.y = null;
         this.S = null;
         this.K = null;
+        this.setInitialP = Boolean.FALSE;
+        this.setInitialX = Boolean.FALSE;
     }
 
     //constructor with one parameter (time step)
@@ -84,13 +94,16 @@ public class KalmanFilter {
         this.y = null; //I will update later this variable
         this.S = null; //I will update later this matrix
         this.K = null; //I will update later this matrix
+        this.setInitialP = Boolean.TRUE;
+        this.setInitialX = Boolean.TRUE;
     }
 
 
 
     //  Prediction phase of kalman filter
     //  Tested
-    public void predictionPhase(){
+    public void predictionPhase() throws Exception {
+        if(!this.setInitialP && !this.setInitialX) throw new Exception("Missing Initial Condition");
         try {
             this.x = this.F.multiplyFor(this.x); // x = Fx -> throws ParameterNotDefinedException
             this.P = (this.F.multiplyFor(this.P).multiplyFor(this.F.transposeMatrix())).sumWith(this.Q); // P = FPF^ + Q -> throws DifferentMatrixException

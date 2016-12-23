@@ -23,7 +23,7 @@ public class TrajectorySimTest {
     public void run() throws Exception {
         ConfigFile file = new ConfigFile();
         file.loadFile();
-        TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks());
+        TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks(), file.getSmoother(), file.getLag());
 
         World world = null;
         //load old world only if I am loading idsa
@@ -67,7 +67,7 @@ public class TrajectorySimTest {
     public void initPotentialField() throws Exception {
         ConfigFile file = new ConfigFile();
         file.loadFile();
-        TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks());
+        TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks(), file.getSmoother(), file.getLag());
 
         World world = null;
         //load old world only if I am loading idsa
@@ -104,7 +104,7 @@ public class TrajectorySimTest {
     public void init() throws Exception {
         ConfigFile file = new ConfigFile();
         file.loadFile();
-        TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks());
+        TrajectorySim sim = new TrajectorySim(file.getSelectorSourceTracks(), file.getSmoother(), file.getLag());
 
         World world = null;
         //load old world only if I am loading idsa
