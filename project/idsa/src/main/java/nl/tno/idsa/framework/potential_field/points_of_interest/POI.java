@@ -1,11 +1,16 @@
 package nl.tno.idsa.framework.potential_field.points_of_interest;
 
+import nl.tno.idsa.framework.simulator.TrajectorySim;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.Polygon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Created by alessandrozonta on 29/06/16.
@@ -140,6 +145,17 @@ public class POI {
             if(this.area.getPolygon().getPoints()[i].getY() == point.getY() && this.area.getPolygon().getPoints()[i].getX() == point.getX()){
                 return Boolean.TRUE;
             }
+        }
+        return Boolean.FALSE;
+    }
+
+    //If I am using the smoothing path I should use the distance to assess if I am inside or not
+    //hardcoded distance of 20 metres? It is okay?
+    //10 metres? lets try 10 metres
+    public Boolean contains(Point point, TrajectorySim sim){
+        Double result = sim.returnDistance(this.area.getPolygon().getCenterPoint(), point);
+        if(result <= 10.0){
+            return Boolean.TRUE;
         }
         return Boolean.FALSE;
     }

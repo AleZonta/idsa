@@ -190,11 +190,16 @@ public class TrajectorySim implements SimulatorInterface {
 
             //check if the partecipant number is max_allowed or not.. if there are fewer partecipants I will add one
             if((this.partecipantPot.size() < max_allowed) && (effectiveCounter < number)){
+                //counting how many free spot do I have
                 Integer numberThatINeed = max_allowed - this.partecipantPot.size();
+                //summing the actual counter plus the number that i need to be sure I am not using more than the number that i need
                 Integer sumOfTheTwo = effectiveCounter + numberThatINeed;
                 if (sumOfTheTwo > number){
+                    Integer difference = sumOfTheTwo - number;
                     sumOfTheTwo = number;
+                    numberThatINeed -= difference;
                 }
+                //retrieving all the trajectory that remains to analise
                 actualTrajectories = actualBigTrajectories.subList(effectiveCounter, sumOfTheTwo);
                 id = new ArrayList<>();
                 for(int i = 0; i < numberThatINeed; i++) id.add(i);
@@ -204,10 +209,13 @@ public class TrajectorySim implements SimulatorInterface {
                     HouseholdTypes hhType = HouseholdTypes.SINGLE;
                     Gender gender = Gender.FEMALE;
                     double age = ThreadLocalRandom.current().nextDouble(0, 100);
-                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016, this.smoother, this.lag);
+
+                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age, gender, hhType, HouseholdRoles.SINGLE, 2016, this.smoother, this.lag);
                     System.out.println("Connecting the potential field to the initialised person...");
                     //load controllers
                     this.loadControllers(agent);
+
+
                 });
             }
         }
@@ -345,6 +353,19 @@ public class TrajectorySim implements SimulatorInterface {
             }
         });
         return realList;
+    }
+
+
+    /**
+     * Return distance between two points using Distance measure used for clustering
+     * @param source point
+     * @param destination point
+     * @return distance between two points in Double
+     */
+    public Double returnDistance(Point source, Point destination){
+        double[] sourcePoints = new double[] { source.getX(), source.getY() };
+        double[] destinationPoints = new double[] { destination.getX(), destination.getY() };
+        return this.tra.retDistanceUsingDistanceClass(sourcePoints,destinationPoints);
     }
 
 }

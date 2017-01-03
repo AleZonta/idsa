@@ -42,9 +42,13 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
         this.targetCounter = 0;
         if(smo){
             this.smoother = new FixedLagSmoother(lag);
+            nl.tno.idsa.framework.world.Point firstPoint = new nl.tno.idsa.framework.world.Point(trajectory.getFirstPoint().getLatitude(), trajectory.getFirstPoint().getLongitude());
+            //set initial position for the smoother
+            this.smoother.setInitialPosition(firstPoint);
         }else{
             this.smoother = null;
         }
+
     }
 
     /**
@@ -92,6 +96,15 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
                 this.dead = Boolean.TRUE;
             }else{
                 currentPosition = this.previousPoint;
+            }
+            //In this case something wrong happened and the potential field didn't reach the end
+            //I need to put a safe end to the loop
+            if(this.targetCounter > 30){
+                //calling in anyway the pf field and updating the position
+                //he will verify with "this.dead == true" and will know what to do
+                currentPosition = this.previousPoint;
+                nl.tno.idsa.framework.world.Point position = new nl.tno.idsa.framework.world.Point(currentPosition.getLatitude(), currentPosition.getLongitude());
+                super.setLocation(position); //set actual position and notify the observer
             }
         }else{
             this.previousPoint = currentPosition;

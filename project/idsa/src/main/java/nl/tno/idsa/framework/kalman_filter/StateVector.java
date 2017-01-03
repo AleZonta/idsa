@@ -39,6 +39,16 @@ public class StateVector extends MatrixDefinition {
         this.setElement(3,0,matrix.getElement(3,0)); //Yy
     }
 
+    //constructor with only one point and velocity zero
+    public StateVector(Point firstPoint){
+        super(4,1);
+        this.setElement(0,0,firstPoint.getX()); //x
+        this.setElement(2,0,firstPoint.getY()); //y
+
+        this.setElement(1,0,0d); //Vx
+        this.setElement(3,0,0d); //Vy
+    }
+
     //constructor with two points. I have to compute Vx e Vy from the given points
     //The points are indicating a vector
     public StateVector(Point firstPoint, Point secondPoint){
@@ -54,6 +64,7 @@ public class StateVector extends MatrixDefinition {
         this.setElement(3,0,magnitude * Math.sin(angle)); //Vy
 
     }
+
 
 
 

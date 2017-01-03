@@ -4,8 +4,10 @@ import nl.tno.idsa.framework.potential_field.save_to_file.SaveToFile;
 import nl.tno.idsa.framework.world.Point;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 /**
  * Created by alessandrozonta on 07/09/16.
@@ -123,7 +125,7 @@ public class PersonalPerformance {
         if(this.idsaSource){
             this.pointsOfThePath.stream().forEach(point -> pointsOfThePathLocal.add(this.convertFromUTMtoDeg(point)));
         }else{
-            this.pointsOfThePath.stream().forEach(point -> pointsOfThePathLocal.add(point));
+            this.pointsOfThePath.stream().forEach(pointsOfThePathLocal::add);
         }
         storage.savePathToFile(pointsOfThePathLocal);
     }

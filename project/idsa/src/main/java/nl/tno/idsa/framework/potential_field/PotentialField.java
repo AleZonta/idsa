@@ -3,6 +3,7 @@ package nl.tno.idsa.framework.potential_field;
 import lgds.routing.PathFinderGraphHopper;
 import lgds.routing.Routing;
 import nl.tno.idsa.framework.agents.Agent;
+import nl.tno.idsa.framework.agents.TrajectoryAgent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
 import nl.tno.idsa.framework.behavior.activities.possible.PossibleActivity;
 import nl.tno.idsa.framework.config.ConfigFile;
@@ -21,12 +22,14 @@ import nl.tno.idsa.framework.simulator.TrajectorySim;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
+import nl.tno.idsa.library.actions.StreetTheft;
 import nl.tno.idsa.library.activities.possible.*;
 import nl.tno.idsa.viewer.ReplacementForMainFrame;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * Created by alessandrozonta on 29/06/16.
@@ -64,6 +67,7 @@ public class PotentialField extends Observable{
     private final Boolean confGUI; //If it is true I am using the GUI otherWise not (for deep copy)
     private final Integer confWayPoints; //Do i want to save the waypoints at the end?
     private final Boolean gdsi; //true if i am loading track from file
+    private final Boolean confSmoother; //true if I am using the smoother -> Need to compute if I reach the end or not
     private List<Double> parameter; //it stores the parameter for the update rules
 
 
@@ -108,6 +112,7 @@ public class PotentialField extends Observable{
         this.confGUI = this.conf.getGUI();
         this.gdsi = this.conf.getGdsi();
         this.confWayPoints = this.conf.getWayPoints();
+        this.confSmoother = this.conf.getSmoother();
 
         if(this.conf.getFileFromThisLocation()) {
             this.storage = new SaveToFile(name, experiment);
@@ -172,7 +177,8 @@ public class PotentialField extends Observable{
                            TreeMap<Double, Double> differentCellSize, Collection<Area> areaInTheWorld, Double thresholdPotential,
                            Double constantPotential, Routing pathFinder, Integer confHeatMap, Integer confPerformance,
                            Integer confPOIs, Boolean GUI, String name, String experiment, Boolean gdsi, List<Double> parameter,
-                            Boolean location, String destination, Integer confPath, Integer confWayPoints, Boolean idsaWorld){
+                            Boolean location, String destination, Integer confPath, Integer confWayPoints, Boolean idsaWorld,
+                           Boolean smoother){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -192,6 +198,7 @@ public class PotentialField extends Observable{
         this.confGUI = GUI;
         this.gdsi = gdsi;
         this.confWayPoints = confWayPoints;
+        this.confSmoother = smoother;
 
         if(location) {
             this.storage = new SaveToFile(name, experiment);
@@ -680,19 +687,38 @@ public class PotentialField extends Observable{
                 this.conf.getDifferentCellSize(),this.areaInTheWorld, this.confThresholdPotential, this.confConfConstantPotential,
                 this.pathFinder, this.confHeatMap, this.confPerformance, this.confPOIs, this.confGUI, this.name,
                 this.experiment, this.gdsi, this.parameter, this.conf.getFileFromThisLocation(), this.conf.getDestinationData(),
-                this.confPath, this.confWayPoints, idsaWorld);
+                this.confPath, this.confWayPoints, idsaWorld, this.confSmoother);
     }
 
     //Am I at the target?
     //I need to test this method
+    //If I am using the smoother I should change the system to understand if I am inside or not
     //Input Point currentPosition -> point where the tracked person is right now
     private POI arrivedIntoPOI(Point currentPosition){
         try {
-            if(this.gdsi){
-                return this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition)).findFirst().get();
-            }else{
-                return this.pointsOfInterest.stream().filter(poi -> poi.getArea().getPolygon().contains(currentPosition)).findFirst().get();
+            //If I am not smoothing
+            if(!this.confSmoother) {
+                if (this.gdsi) {
+                    return this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition)).findFirst().get();
+                } else {
+                    return this.pointsOfInterest.stream().filter(poi -> poi.getArea().getPolygon().contains(currentPosition)).findFirst().get();
+                }
+            } else {
+                //If I am smoothing
+                Boolean res = ((TrajectoryAgent)this.trackedAgent).getDead();
+                Boolean secRes = this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition, this.trajectorySimReference)).findFirst().isPresent();
+                //If it is dead but the pf failed in verify if it reach the destination (possible error in trajectory) but i need to stop it in any case
+                if(res){
+                    if(!secRes){
+                        System.out.println("Error trajectory " + this.trackedAgent.getFirstName());
+                        //return the first with charge TODO fix this
+                        return this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0).findFirst().get();
+                    }
+                }
+                return this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition, this.trajectorySimReference)).findFirst().get();
             }
+
+
         }catch (Exception e){
             return null;
         }

@@ -54,6 +54,12 @@ public class KalmanFilter {
         this.setInitialX = Boolean.TRUE;
     }
 
+    //set the initial position
+    public void setInitialPosition(Point position){
+        this.x = new StateVector(position);
+        this.setInitialX = Boolean.TRUE;
+    }
+
     //set initial covariance
     public void setInitialCovariance(Double value){
         this.P = new Covariance(value);
@@ -84,7 +90,7 @@ public class KalmanFilter {
     public KalmanFilter(Double timeStep){
         this.timeStep = timeStep; //time step
         this.x = new StateVector(); //In this way I am setting the initial position at (0,0) with velocity (0,0)
-        this.P = new Covariance(500.0); //In this way I am setting a very big covariance since our initial position is a pure guess
+        this.P = new Covariance(8.0); //In this way I am setting a very big covariance since our initial position is a pure guess -> Measure in metres
         this.F = new StateTransition(timeStep);
         this.H = new MeasurementFunction(); //I don't have transformation so i can use the value like they are.
         this.R = new MeasurementNoise(); //For now let's set the variance for xx and yy to be 5 meters22.
