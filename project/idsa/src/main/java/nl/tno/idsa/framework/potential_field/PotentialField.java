@@ -705,17 +705,44 @@ public class PotentialField extends Observable{
                 }
             } else {
                 //If I am smoothing
+                //I am checking if the trajectory is dead or not
                 Boolean res = ((TrajectoryAgent)this.trackedAgent).getDead();
-                Boolean secRes = this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition, this.trajectorySimReference)).findFirst().isPresent();
-                //If it is dead but the pf failed in verify if it reach the destination (possible error in trajectory) but i need to stop it in any case
+
+                //If it is dead I need to signal the PF that I am inside and to start the ending procedure
                 if(res){
-                    if(!secRes){
-                        System.out.println("Error trajectory " + this.trackedAgent.getFirstName());
-                        //return the first with charge TODO fix this
-                        return this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0).findFirst().get();
-                    }
+                    //If I am dead this means I am inside and I should return the POI that I am inside
+                    //This point correspond to the destination of the trajectory
+                    //Why not return it?
+                    //I don't have it
+                    //Maybe I should look for the closest one
+                    final POI[] poiSelected = {null};
+                    final Double[] distance = {Double.MAX_VALUE};
+                    this.pointsOfInterest.stream().forEach(poi -> {
+                        Double distanceLocal = this.trajectorySimReference.returnDistance(poi.getArea().getPolygon().getCenterPoint(), currentPosition);
+                        if(distanceLocal < distance[0]){
+                            distance[0] = distanceLocal;
+                            poiSelected[0] = poi;
+                        }
+                    });
+                    return poiSelected[0];
+                }else{
+                    //I am not inside so I will return null
+                    return null;
                 }
-                return this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition, this.trajectorySimReference)).findFirst().get();
+//
+//
+//
+//
+//                Boolean secRes = this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition, this.trajectorySimReference)).findFirst().isPresent();
+//                //If it is dead but the pf failed in verify if it reach the destination (possible error in trajectory) but i need to stop it in any case
+//                if(res){
+//                    if(!secRes){
+//                        System.out.println("Error trajectory " + this.trackedAgent.getFirstName());
+//                        //return the first with charge TODO fix this
+//                        return this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0).findFirst().get();
+//                    }
+//                }
+//                return this.pointsOfInterest.stream().filter(poi -> poi.contains(currentPosition, this.trajectorySimReference)).findFirst().get();
             }
 
 

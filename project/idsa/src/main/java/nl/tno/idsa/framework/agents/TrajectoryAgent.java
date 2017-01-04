@@ -98,6 +98,9 @@ public class TrajectoryAgent extends Agent implements AgentInterface {
                 currentPosition = this.previousPoint;
             }
             //In this case something wrong happened and the potential field didn't reach the end
+            //Most caused when I am using the smoother because the end point is not always the end point of the trajectory
+            //In that case I stop the PF because the trajectory is dead -> I will wait other 9 timestep to be sure and
+            //then I send again the signal to the potential field but he will check the fact that this.dead is true so it will end everything
             //I need to put a safe end to the loop
             if(this.targetCounter > 30){
                 //calling in anyway the pf field and updating the position

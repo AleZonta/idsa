@@ -157,6 +157,12 @@ public class TrajectorySim implements SimulatorInterface {
         System.out.println("Selecting trajectories...");
         List<Trajectory> actualBigTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
 
+        //check If I have fewer trajectories than the maximum number
+        if(actualBigTrajectories.size() < number) {
+            number = actualBigTrajectories.size();
+            System.out.println("Reducing maximum number due to limitation on trajectories number -> " + number.toString());
+        }
+
         //The number of people running
         Integer effectiveCounter = max_allowed;
         //max_allowed will be always present in the pool
