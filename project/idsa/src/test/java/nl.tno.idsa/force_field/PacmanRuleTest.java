@@ -141,4 +141,75 @@ public class PacmanRuleTest {
 
     }
 
+
+    @Test
+    //test if it computes correctly the increase value
+    public void testUpdate() throws Exception {
+        Double s = 1.0;
+        Double alpha = 0.0;
+        Double w = 0.005;
+        System.out.println(s * Math.exp(alpha * w));
+        alpha = 20.0;
+        System.out.println(s * Math.exp(alpha * w));
+        alpha = 45.0;
+        System.out.println(s * Math.exp(alpha * w));
+        System.out.println("--------------------");
+        alpha = 0.0;
+        w = 0.01;
+        System.out.println(s * Math.exp(alpha * w));
+        alpha = 20.0;
+        System.out.println(s * Math.exp(alpha * w));
+        alpha = 45.0;
+        System.out.println(s * Math.exp(alpha * w));
+        System.out.println("--------------------");
+        alpha = 0.0;
+        w = 0.02;
+        System.out.println(s * Math.exp(alpha * w));
+        alpha = 20.0;
+        System.out.println(s * Math.exp(alpha * w));
+        alpha = 45.0;
+        System.out.println(s * Math.exp(alpha * w));
+
+
+//        Double angle = Math.toDegrees(Math.atan2(5.0 - 0.0, 0.0 - 0.0));
+//        System.out.println(angle);
+//        Double currentAngle = Math.toDegrees(Math.atan2(7.0 - 5.0, 1.0 - 0.0)); //y2-y1 & x2-x1
+//        System.out.println(currentAngle);
+//        Double threshold = 120.0/2;
+//        Double alpha;
+//        if (currentAngle.equals(angle)) {
+//            alpha = threshold;
+//            System.out.println("--1");
+//        } else if (currentAngle > angle && currentAngle < angle + threshold) {
+//            alpha = angle + threshold - currentAngle;
+//            System.out.println("--2");
+//        } else if (currentAngle > angle + threshold && currentAngle <= angle + 180) {
+//            alpha = currentAngle - (angle + threshold);
+//            System.out.println("--3");
+//        } else if (currentAngle > angle - threshold && currentAngle < angle) {
+//            if(currentAngle > 0){
+//                alpha = threshold - (angle - currentAngle);
+//                System.out.println("--4.0");
+//            }else {
+//                //alpha = Math.abs(Math.abs(currentAngle) - Math.abs(threshold));
+//                alpha = threshold - (angle + Math.abs(currentAngle));
+//                System.out.println("--4.1");
+//            }
+//        } else {
+//            alpha = angle - threshold - currentAngle;
+//            System.out.println("--5");
+//        }
+//        if (currentAngle > angle - threshold && currentAngle < angle + threshold) {
+//            System.out.println("increase");
+//        }else {
+//            System.out.println("decrease");
+//        }
+//
+//        System.out.println(alpha);
+
+//        UpdateRules test0 = new PacmanRule(120.0,1.0,0.005, Boolean.FALSE);
+//        test0.setPreviousPoint(new Point(0.0,0.0));
+//        test0.computeUpdateRule(new Point(5.0,5.0), new Point(6.0,6.0));
+    }
+
 }

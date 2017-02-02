@@ -219,7 +219,13 @@ public class PacmanRule implements UpdateRules {
             } else if (currentAngle > angle + this.threshold && currentAngle <= angle + 180) {
                 alpha = currentAngle - (angle + this.threshold);
             } else if (currentAngle > angle - this.threshold && currentAngle < angle) {
-                alpha = Math.abs(Math.abs(currentAngle) - Math.abs(this.threshold));
+                if(currentAngle > 0){
+                    alpha = this.threshold - (angle - currentAngle);
+                }else {
+                    //alpha = Math.abs(Math.abs(currentAngle) - Math.abs(threshold));
+                    alpha = this.threshold - (angle + Math.abs(currentAngle));
+                }
+                //alpha = Math.abs(Math.abs(currentAngle) - Math.abs(this.threshold));
             } else {
                 alpha = angle - this.threshold - currentAngle;
             }
@@ -230,11 +236,11 @@ public class PacmanRule implements UpdateRules {
             if (currentAngle > angle - this.threshold && currentAngle < angle + this.threshold) {
                 //increase the charge
                 this.doINeedToUpdateTheCharge = Boolean.TRUE;
-                this.increaseValue = this.constantS * Math.exp(-alpha * this.constantWOne);
+                this.increaseValue = this.constantS * Math.exp(alpha * this.constantWOne);
             } else {
                 //decrease the charge
                 this.doINeedToUpdateTheCharge = Boolean.FALSE;
-                this.decreaseValue = this.constantS * Math.exp(-alpha * this.constantWOne);
+                this.decreaseValue = this.constantS * Math.exp(alpha * this.constantWOne);
             }
         }
     }

@@ -2,6 +2,7 @@ package nl.tno.idsa.framework.potential_field;
 
 import lgds.routing.PathFinderGraphHopper;
 import lgds.routing.Routing;
+import lgds.viewer.View;
 import nl.tno.idsa.framework.agents.Agent;
 import nl.tno.idsa.framework.agents.TrajectoryAgent;
 import nl.tno.idsa.framework.behavior.activities.concrete.Activity;
@@ -90,6 +91,8 @@ public class PotentialField extends Observable{
     private final String experiment; //remember the number of the exp
 
     private Routing pathFinder; //object path finder for path planning when not using the simulator
+
+    private View view; //object implementing the class that sows what is going on with a GUI -> usable with every dataset -> require internet connection for the maps
 
     //basic class constructor
     public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double w1, Double s2, Double w2, String name, String experiment){
@@ -249,6 +252,7 @@ public class PotentialField extends Observable{
 
     //getter for the matrix map level
     //public HashMap<Double, List<Cell>> getMapLevel(){ return this.heatMapTilesOptimisation.getMapLevel(); }
+
 
     //setter for world if i need the old world
     public void setWorld(World world){
@@ -511,6 +515,10 @@ public class PotentialField extends Observable{
 //        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 //        Calendar cal = Calendar.getInstance();
 
+        //notify that I have just updated the last point -> for the lgds.GUI
+        setChanged();
+        notifyObservers(currentPosition);
+
         //check if current position is inside the border of the area loaded -> only if loading the trajectory
         Boolean point_inside = Boolean.TRUE;
         if (this.pathFinder != null) {
@@ -673,6 +681,11 @@ public class PotentialField extends Observable{
         List<Float> charges = new ArrayList<>();
         this.pointsOfInterest.stream().forEach(poi -> charges.add(poi.getCharge().floatValue()));
         this.performance.addCharges(charges);
+
+
+        //notify that I have just updated all the POIs -> for the lgds.GUI
+        setChanged();
+        notifyObservers(this.pointsOfInterest);
     }
 
     //Deep copy of all the fields of this object

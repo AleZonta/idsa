@@ -18,6 +18,8 @@ import nl.tno.idsa.framework.potential_field.performance_checker.PerformanceChec
 import nl.tno.idsa.framework.potential_field.performance_checker.PersonalPerformance;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
+import nl.tno.idsa.viewer.view.UpdateGUI;
+import nl.tno.idsa.viewer.view.View;
 import org.apache.commons.math3.ml.clustering.Cluster;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -43,11 +46,14 @@ public class TrajectorySim implements SimulatorInterface {
     private Boolean clusteredPOI; //true I ask for clustered POI, False not
     private Boolean smoother; //Am I using the smoother?
     private Integer lag; //Lag for the smoother
+    private Integer morePOIs; //More than the normal number of POIs?
+    private View view; //implementing the lgds.View
+
 
     /**
      * default constructor
      */
-    public TrajectorySim(Integer selector, Boolean smoother, Integer lag){
+    public TrajectorySim(Integer selector, Boolean smoother, Integer lag, Integer morePOIs, Boolean gui){
         if (selector == 0){
             this.storage = new LoadIDSATrack();
         }else{
@@ -63,6 +69,14 @@ public class TrajectorySim implements SimulatorInterface {
         this.partecipantPot = new ConcurrentHashMap<>();
         this.smoother = smoother;
         this.lag = lag;
+
+        this.morePOIs = morePOIs;
+
+        if(gui){
+            this.view = new View();
+        }else{
+            this.view = null;
+        }
     }
 
     /**
@@ -114,7 +128,11 @@ public class TrajectorySim implements SimulatorInterface {
         //find a way to find them from the poi
         //I can select how many POI use here. Lets add more
         System.out.println("Computing POIs...");
-        this.tra.computePOIs(number);
+        Boolean morePOIsInTotal = Boolean.FALSE;
+        if(this.morePOIs > 0){
+            morePOIsInTotal = Boolean.TRUE;
+        }
+        this.tra.computePOIs(number, morePOIsInTotal, this.morePOIs);
 
         System.out.println("Creating agents...");
         //create the agents
@@ -145,7 +163,7 @@ public class TrajectorySim implements SimulatorInterface {
 
     /**
      * Wrap the init and the run to let run a fixed amount of people together
-     * @param max_allowed maximun number allowed to run in parallel
+     * @param max_allowed maximum number allowed to run in parallel
      * @param number total number of people tracked
      */
     public void init_and_run(Integer max_allowed, Integer number){
@@ -163,6 +181,10 @@ public class TrajectorySim implements SimulatorInterface {
             System.out.println("Reducing maximum number due to limitation on trajectories number -> " + number.toString());
         }
 
+        //check that max_allowed is not smaller than number
+        if(number < max_allowed){
+            max_allowed = number;
+        }
         //The number of people running
         Integer effectiveCounter = max_allowed;
         //max_allowed will be always present in the pool
@@ -175,7 +197,11 @@ public class TrajectorySim implements SimulatorInterface {
         //find a way to find them from the poi
         //I can select how many POI use here. Lets add more
         System.out.println("Computing POIs...");
-        this.tra.computePOIs(actualBigTrajectories);
+        Boolean morePOIsInTotal = Boolean.FALSE;
+        if(this.morePOIs > 0){
+            morePOIsInTotal = Boolean.TRUE;
+        }
+        this.tra.computePOIs(actualBigTrajectories, morePOIsInTotal, this.morePOIs);
 
         System.out.println("Creating agents...");
         //create the agents
@@ -190,9 +216,23 @@ public class TrajectorySim implements SimulatorInterface {
             this.loadControllers(agent);
         });
 
+        //show the gui
+        if (this.view != null) {
+            System.out.println("Loading the Map on the GUI...");
+            this.view.showMap();
+        }
+
         //run the simulator
         while(this.partecipantPot.size() != 0){
             this.partecipantPot.keySet().parallelStream().forEach(TrajectoryAgent::doStep);
+
+            if(this.view != null){
+                try {
+                    TimeUnit.MILLISECONDS.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
             //check if the partecipant number is max_allowed or not.. if there are fewer partecipants I will add one
             if((this.partecipantPot.size() < max_allowed) && (effectiveCounter < number)){
@@ -237,7 +277,7 @@ public class TrajectorySim implements SimulatorInterface {
      * It sets the POIs to the potential field
      * Sets the observer for the agent
      * Add the potential field to the global list
-     * @param trajectoryAgent
+     * @param trajectoryAgent the agent to track
      */
     private void loadControllers(TrajectoryAgent trajectoryAgent){
         try {
@@ -261,8 +301,22 @@ public class TrajectorySim implements SimulatorInterface {
                 //In this case I am using clustered POI
                 fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
             }
+            //set POIs to the map
+            if (this.view != null) {
+                this.view.setListPoints(fieldForTheTrackedAgent.getPointsOfInterest());
+                //Point center = new Point(this.tra.getUtmRoot().getLatitude() + this.tra.getWhWorld().getLatitude() / 2 , this.tra.getUtmRoot().getLongitude() + this.tra.getWhWorld().getLongitude() / 2);
+                Point center = new Point(39.905757, 116.392392);
+                this.view.setMapFocus(center);
+            }
+
+
             trajectoryAgent.deleteObservers(); //delete old observers
             trajectoryAgent.setTracked(trackingForTheTrackedAgent, null); //set the observer to this point
+            //set the observer for the gui
+            if (this.view != null) {
+                UpdateGUI updateGUI = new UpdateGUI(this.view);
+                fieldForTheTrackedAgent.addObserver(updateGUI);
+            }
 
             //Add potential field and tracking system to their list
             this.partecipantPot.put(trajectoryAgent, fieldForTheTrackedAgent);

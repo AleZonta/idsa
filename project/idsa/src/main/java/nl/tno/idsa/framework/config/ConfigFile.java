@@ -19,6 +19,7 @@ public class ConfigFile {
     private final String currentPath; //current path of the program
     private Boolean tileOptimisation;
     private Boolean GUI;
+    private Boolean lgds_GUI; //Am I using the separate gui?
     private Double commonInitialCharge;
     private Double thresholdPotential;
     private Double constantPotential;
@@ -44,6 +45,7 @@ public class ConfigFile {
     private Boolean POIsAreClustered; //True the POI are clustered, false not
     private Integer Lag; //Lag for kalman filter smoother
     private Boolean Smoother; //Am I using the smoother?
+    private Integer morePOIs; //More POIs than the number of trajectory selected?
 
     public static String realSourceData = null;
 
@@ -55,6 +57,7 @@ public class ConfigFile {
         this.thresholdPotential = null;
         this.commonInitialCharge = null;
         this.GUI = null;
+        this.lgds_GUI = null;
         this.tileOptimisation = null;
         this.dayOfWeek = null;
         this.season = null;
@@ -77,6 +80,7 @@ public class ConfigFile {
         this.POIsAreClustered = null;
         this.Lag = null;
         this.Smoother = null;
+        this.morePOIs = null;
     }
 
     //method that reads the configfile
@@ -89,6 +93,7 @@ public class ConfigFile {
 
         this.tileOptimisation = (Boolean) jsonObject.get("TileOptimisation");
         this.GUI = (Boolean) jsonObject.get("GUI");
+        this.lgds_GUI = (Boolean) jsonObject.get("lgds_GUI");
         this.commonInitialCharge = (Double) jsonObject.get("CommonInitialCharge");
         this.thresholdPotential = (Double) jsonObject.get("ThresholdPotential");
         this.constantPotential = (Double) jsonObject.get("ConstantPotential");
@@ -128,6 +133,8 @@ public class ConfigFile {
         this.POIsAreClustered = (Boolean) jsonObject.get("POIsAreClustered"); //True the POI are clustered, false not
         this.Lag = ((Long) jsonObject.get("Lag")).intValue();
         this.Smoother = (Boolean) jsonObject.get("Smoother"); //True I am using Smoother
+
+        this.morePOIs = ((Long) jsonObject.get("MorePOIs")).intValue(); //More POIs than the number of trajectory selected?
     }
 
     //getter
@@ -212,4 +219,8 @@ public class ConfigFile {
     public Integer getLag() { return this.Lag; }
 
     public Boolean getSmoother() { return this.Smoother; }
+
+    public Integer getMorePOIs() { return this.morePOIs; }
+
+    public Boolean getLgds_GUI() { return lgds_GUI; }
 }
