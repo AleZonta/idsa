@@ -28,7 +28,6 @@ public class UpdateGUI implements Observer {
      * argument could be:
      * Point point if I am updating only the position of the person
      * List<POI> poiList if I am updating also the list of Points of interest
-     * TODO implement way point path version
      * @param o Observable Object
      * @param arg argument that are changed
      */
@@ -51,8 +50,8 @@ public class UpdateGUI implements Observer {
                         this.view.setNewPOIs(actualList);
                     } else if (list.get(0) instanceof Point) {
                         //if the list contains some Point
-                        //TODO way Point implementation
-                        String appo = "";
+                        List<Point> actualList = (List<Point>) list;
+                        this.view.setWayPoints(actualList);
                     }
                 }
             }

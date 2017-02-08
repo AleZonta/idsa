@@ -6,6 +6,7 @@ import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Path;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
+import org.omg.CORBA.MARSHAL;
 
 import java.util.List;
 
@@ -211,29 +212,15 @@ public class PacmanRule implements UpdateRules {
             }
 
             //calculate how much increase/decrease the charge
-            Double alpha;
-            if (currentAngle.equals(angle)) {
-                alpha = this.threshold;
-            } else if (currentAngle > angle && currentAngle < angle + this.threshold) {
-                alpha = angle + this.threshold - currentAngle;
-            } else if (currentAngle > angle + this.threshold && currentAngle <= angle + 180) {
-                alpha = currentAngle - (angle + this.threshold);
-            } else if (currentAngle > angle - this.threshold && currentAngle < angle) {
-                if(currentAngle > 0){
-                    alpha = this.threshold - (angle - currentAngle);
-                }else {
-                    //alpha = Math.abs(Math.abs(currentAngle) - Math.abs(threshold));
-                    alpha = this.threshold - (angle + Math.abs(currentAngle));
-                }
-                //alpha = Math.abs(Math.abs(currentAngle) - Math.abs(this.threshold));
-            } else {
-                alpha = angle - this.threshold - currentAngle;
-            }
+            //More specific case
+            //angle is the direction where I am going
+            //current angle is the direction of the POI
+            Double alpha = this.define_alpha(angle, currentAngle);
 
             //The function that I am using is s * e ^ -alpha * -const
-
-
-            if (currentAngle > angle - this.threshold && currentAngle < angle + this.threshold) {
+            //I have more cases
+            Boolean increment = this.discriminate_increment_decrement(angle, currentAngle);
+            if (increment) {
                 //increase the charge
                 this.doINeedToUpdateTheCharge = Boolean.TRUE;
                 this.increaseValue = this.constantS * Math.exp(alpha * this.constantWOne);
@@ -244,6 +231,83 @@ public class PacmanRule implements UpdateRules {
             }
         }
     }
+
+    //find if I am incrementing or not
+    private Boolean discriminate_increment_decrement(Double angle, Double currentAngle){
+        Boolean inc = Boolean.FALSE;
+        if (angle < 0){
+            angle = -angle;
+            currentAngle = -currentAngle;
+        }
+        if (currentAngle > 0 && angle + this.threshold <= 180 && currentAngle >= angle - this.threshold && currentAngle <= angle + this.threshold ){
+            inc = Boolean.TRUE;
+        } else if (currentAngle > 0 && angle + this.threshold > 180){
+            Double real_upper_leg = -(360 - angle + this.threshold); //useful only if the upper_leg is > 180
+            if(currentAngle > -180 && currentAngle < real_upper_leg) inc = Boolean.TRUE;
+        } else if (currentAngle.equals(angle)){
+            inc = Boolean.TRUE;
+        } else if (angle - this.threshold < 0 && currentAngle <= angle + this.threshold && currentAngle >= angle - this.threshold){
+            inc = Boolean.TRUE;
+        }
+        return inc;
+    }
+
+    //set the alpha for the computation
+    private Double define_alpha(Double angle, Double currentAngle){
+        //first thing first -> everything is positive
+        Double alpha = 0.0;
+        //if the direction is negative, just change sign in both angles and rules defined will work
+        if (angle < 0){
+            angle = -angle;
+            currentAngle = -currentAngle;
+            //System.out.println("-angle && -currentAngle");
+        }
+        Double upper_leg = angle + this.threshold;
+        Double lower_leg = angle - this.threshold;
+        Double opposite_angle = angle - 180;
+        Double real_upper_leg = -(360 - upper_leg); //useful only if the upper_leg is > 180
+        //base option
+        if (currentAngle.equals(angle)) { //poi == angle
+            alpha = this.threshold;
+            //System.out.println("poi == angle");
+        }else if (currentAngle.equals(lower_leg)){// poi == leg POV
+            alpha = 0.0;
+            //System.out.println("poi == leg POV");
+        }else if (upper_leg <= 180 && currentAngle.equals(upper_leg)) { // poi == leg POV
+            alpha = 0.0;
+            //System.out.println("poi == leg POV");
+        }else if (upper_leg > 180 && currentAngle.equals(real_upper_leg)) { // poi == leg POV
+            alpha = 0.0;
+            //System.out.println("poi == leg POV");
+        } else if (currentAngle > upper_leg){ //180 > poi > upper_leg
+            alpha = currentAngle - upper_leg;
+            //System.out.println("180 > poi > upper_leg");
+        } else if (upper_leg <= 180 && currentAngle > angle && currentAngle < upper_leg) { //upper_leg > poi > angle
+            alpha = upper_leg - currentAngle;
+            //System.out.println("upper_leg > poi > angle");
+        } else if (upper_leg > 180  && currentAngle > real_upper_leg){ //upper_leg > poi > angle
+            alpha = Math.abs(currentAngle) - Math.abs(real_upper_leg);
+           // System.out.println("upper_leg > poi > angle");
+        } else if (currentAngle < angle && currentAngle > lower_leg){ //lower_leg < poi < angle
+            alpha = this.threshold - (angle - currentAngle);
+            //System.out.println("lower_leg < poi < angle");
+        } else if (currentAngle < lower_leg && currentAngle >= 0){ //lower_leg > poi > 0
+            alpha = lower_leg - currentAngle;
+            ///System.out.println("lower_leg > poi > 0");
+        } else if (currentAngle > opposite_angle){ //0 < poi < -angle
+            alpha = Math.abs(currentAngle) + lower_leg;
+            //System.out.println("0 < poi < -angle");
+        } else if (currentAngle.equals(opposite_angle)){  //poi == -angle
+            alpha = Math.abs(opposite_angle) + lower_leg;
+            //System.out.println("poi == -angle");
+        } else if (currentAngle < opposite_angle){ //-180 > poi > -angle
+            alpha = 360 - Math.abs(currentAngle) - upper_leg;
+            //System.out.println("-180 > poi > -angle");
+        }
+        return alpha;
+    }
+
+
 
     //compute the angle of the attraction of the Potential Field
     //Input

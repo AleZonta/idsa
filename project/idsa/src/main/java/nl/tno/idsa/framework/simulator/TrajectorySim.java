@@ -1,5 +1,6 @@
 package nl.tno.idsa.framework.simulator;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import lgds.load_track.LoadIDSATrack;
 import lgds.load_track.LoadTrack;
 import lgds.load_track.Traces;
@@ -48,12 +49,14 @@ public class TrajectorySim implements SimulatorInterface {
     private Integer lag; //Lag for the smoother
     private Integer morePOIs; //More than the normal number of POIs?
     private View view; //implementing the lgds.View
+    private final Integer trackedPersonNumber; //number of person tracked
+    private final Boolean selectPerson; //Am i selecting a person
 
 
     /**
      * default constructor
      */
-    public TrajectorySim(Integer selector, Boolean smoother, Integer lag, Integer morePOIs, Boolean gui){
+    public TrajectorySim(Integer selector, Boolean smoother, Integer lag, Integer morePOIs, Boolean gui, Double alpha, Integer trackedPersonNumber, Boolean person){
         if (selector == 0){
             this.storage = new LoadIDSATrack();
         }else{
@@ -74,9 +77,12 @@ public class TrajectorySim implements SimulatorInterface {
 
         if(gui){
             this.view = new View();
+            this.view.setAlpha(alpha);
         }else{
             this.view = null;
         }
+        this.trackedPersonNumber = trackedPersonNumber;
+        this.selectPerson = person;
     }
 
     /**
@@ -173,7 +179,14 @@ public class TrajectorySim implements SimulatorInterface {
         this.tra.analiseAndCheckTrajectory();
         //now I am choosing only the first $number trajectories
         System.out.println("Selecting trajectories...");
-        List<Trajectory> actualBigTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
+        List<Trajectory> actualBigTrajectories;
+        if(this.selectPerson){
+            actualBigTrajectories = new ArrayList<>();
+            actualBigTrajectories.add(this.tra.getTrajectories().get(this.trackedPersonNumber));
+        }else{
+            actualBigTrajectories = this.tra.getTrajectories().stream().limit(number).collect(Collectors.toList());
+        }
+
 
         //check If I have fewer trajectories than the maximum number
         if(actualBigTrajectories.size() < number) {
@@ -188,6 +201,7 @@ public class TrajectorySim implements SimulatorInterface {
         //The number of people running
         Integer effectiveCounter = max_allowed;
         //max_allowed will be always present in the pool
+        Integer startPoint = 0;
         List<Trajectory> actualTrajectories = actualBigTrajectories.subList(0, max_allowed);
         //prepare the id of the agent
         List<Integer> id = new ArrayList<>();

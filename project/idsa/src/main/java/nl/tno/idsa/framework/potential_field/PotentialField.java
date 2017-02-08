@@ -674,6 +674,9 @@ public class PotentialField extends Observable{
         //adding the list of waypoints. Check if they are null or not. If they are null I do not need to save them
         if(!waypoints.isEmpty()){
             this.performance.addWayPointList(waypoints);
+            //notify that I have just updated all the waypoints -> for the lgds.GUI
+            setChanged();
+            notifyObservers(waypoints);
         }
         //update performance
         this.performance.addValue((int) this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());

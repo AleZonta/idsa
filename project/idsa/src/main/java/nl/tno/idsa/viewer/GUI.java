@@ -225,7 +225,7 @@ public class GUI {
     //load and start the simulation using LGDS system
     private void loadAndStartSimLGDS(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, Integer number){
         System.out.println("Loading simulator...");
-        TrajectorySim sim = new TrajectorySim(conf.getSelectorSourceTracks(), conf.getSmoother(), conf.getLag(), conf.getMorePOIs(), conf.getLgds_GUI());
+        TrajectorySim sim = new TrajectorySim(conf.getSelectorSourceTracks(), conf.getSmoother(), conf.getLag(), conf.getMorePOIs(), conf.getLgds_GUI(), degree, number, conf.getSelectPerson());
         System.out.println("Loading potential field...");
 
         World oldWorld = null;

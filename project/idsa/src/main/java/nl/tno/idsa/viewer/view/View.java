@@ -56,4 +56,19 @@ public class View extends lgds.viewer.View {
     }
 
 
+    /**
+     * translate the list of waypoints into the lgds system
+     * @param pointList list to translate
+     */
+    public void setWayPoints(List<Point> pointList){
+        List<lgds.trajectories.Point> list = new ArrayList<>();
+        pointList.stream().forEach(point -> {
+            if(point != null) {
+                list.add(new lgds.trajectories.Point(point.getX(), point.getY()));
+            }
+        });
+        super.setWayPoint(list);
+    }
+
+
 }
