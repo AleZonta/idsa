@@ -18,7 +18,7 @@ public class PacmanRuleDistanceTest {
         UpdateRules test = new PacmanRuleDistance(40.0,1.0,-0.02,0.05,0.6, Boolean.FALSE);
         test.setPreviousPoint(new Point(0.0,0.0));
         test.computeUpdateRule(new Point(5.0,5.0),new Point(6.0,6.0));
-        assertEquals(new Double(7.035914377897558), test.getHowMuchIncreaseTheCharge());
+        assertEquals(new Double(6.214409726291927), test.getHowMuchIncreaseTheCharge());
         assertNull(test.getHowMuchDecreaseTheCharge());
 
         //test 1
