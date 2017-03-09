@@ -28,6 +28,7 @@ import org.apache.commons.math3.ml.clustering.Cluster;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -315,19 +316,40 @@ public class TrajectorySim implements SimulatorInterface {
                 List<POI> pois = this.translatePOI(this.tra.getListOfPOIs());
                 //since i deleted some poi i need to check if the target is there
                 if (this.morePOIs < 0) {
-                    Boolean pres = pois.stream().filter(poi -> poi.getArea().getPolygon().getCenterPoint().equals(endpoint)).findAny().isPresent();
-                    if (!pres) pois.add(new POI(new Point(endpoint.getX(),endpoint.getY())));
+                    Integer numberToRemove = Math.abs(this.morePOIs);
+                    if(pois.size() < numberToRemove){
+                        numberToRemove = numberToRemove - pois.size();
+                    }
+
+                    for(int i = 0; i < numberToRemove; i ++ ){
+                        Random rn = new Random();
+                        int numb = rn.nextInt(pois.size());
+                        if(!pois.get(numb).contains(endpoint)){
+                            pois.remove(numb);
+                        }
+                    }
                 }
                 fieldForTheTrackedAgent.setPointsOfInterest(pois); //set the POIs obtained from the GPS trajectories
             }else {
                 List<POI> pois = this.translateClusterPOI(this.tra.getListOfPOIsClustered());
                 //since i deleted some poi i need to check if the target is there
                 if (this.morePOIs < 0) {
-                    Boolean pres = pois.stream().filter(poi -> poi.getArea().getPolygon().getCenterPoint().equals(endpoint)).findAny().isPresent();
-                    if (!pres) pois.add(new POI(new Point(endpoint.getX(),endpoint.getY())));
+                    Integer numberToRemove = Math.abs(this.morePOIs);
+
+                    if(pois.size() < numberToRemove){
+                        numberToRemove = numberToRemove - pois.size();
+                    }
+
+                    for(int i = 0; i < numberToRemove; i ++ ){
+                        Random rn = new Random();
+                        int numb = rn.nextInt(pois.size());
+                        if(!pois.get(numb).contains(endpoint)){
+                            pois.remove(numb);
+                        }
+                    }
                 }
                 //In this case I am using clustered POI
-                fieldForTheTrackedAgent.setPointsOfInterest(this.translateClusterPOI(this.tra.getListOfPOIsClustered())); //set the POIs obtained from the GPS trajectories
+                fieldForTheTrackedAgent.setPointsOfInterest(pois); //set the POIs obtained from the GPS trajectories
             }
             //set POIs to the map
             if (this.view != null) {

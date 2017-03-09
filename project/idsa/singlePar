@@ -1,1 +1,1 @@
-{"Exp": 0, "Name": "PacmanDistancePath", "w1": 0.005, "s2": 0.1, "Alpha": 120.0, "s1": 0.25, "UR": 4, "Number": 1, "w2": 0.1}
+{"Exp": 0, "Name": "Test", "w1": 0.005, "s2": 0.25, "Alpha": 240.0, "s1": 1.0, "UR": 2, "Number": 1, "w2": 0.25}

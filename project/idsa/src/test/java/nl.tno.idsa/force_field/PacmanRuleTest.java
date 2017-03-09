@@ -2,10 +2,14 @@ package nl.tno.idsa.force_field;
 
 import nl.tno.idsa.framework.force_field.update_rules.PacmanRule;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
+import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Point;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by alessandrozonta on 12/09/16.
@@ -252,6 +256,138 @@ public class PacmanRuleTest {
         System.out.println();
 
 
+        System.out.println("-----------------------------------");
+        System.out.println("Data for graph");
+        a = new Point(0,0);
+        b = new Point(1,1);
+        direction = Math.toDegrees(Math.atan2(b.getY() - a.getY(), b.getX() - a.getX()));
+        c = new Point(5,5);
+        poi1 = Math.toDegrees(Math.atan2(c.getY() - b.getY(), c.getX() - b.getX()));
+        d = new Point(6,3);
+        poi2 = Math.toDegrees(Math.atan2(d.getY() - b.getY(), d.getX() - b.getX()));
+        e = new Point(8,1);
+        poi3 = Math.toDegrees(Math.atan2(e.getY() - b.getY(), e.getX() - b.getX()));
+        f = new Point(6,-2);
+        poi4 = Math.toDegrees(Math.atan2(f.getY() - b.getY(), f.getX() - b.getX()));
+        g = new Point(3,-5);
+        poi5 = Math.toDegrees(Math.atan2(g.getY() - b.getY(), g.getX() - b.getX()));
+        h = new Point(-2,-5);
+        poi6 = Math.toDegrees(Math.atan2(h.getY() - b.getY(), h.getX() - b.getX()));
+        i = new Point(-3,-3);
+        poi7 = Math.toDegrees(Math.atan2(i.getY() - b.getY(), i.getX() - b.getX()));
+        l = new Point(-5,-1);
+        poi8 = Math.toDegrees(Math.atan2(l.getY() - b.getY(), l.getX() - b.getX()));
+        Point m = new Point(-3,2);
+        Double poi9 = Math.toDegrees(Math.atan2(m.getY() - b.getY(), m.getX() - b.getX()));
+        Point n = new Point(-1,4);
+        Double poi10 = Math.toDegrees(Math.atan2(n.getY() - b.getY(), n.getX() - b.getX()));
+        Point o = new Point(1,6);
+        Double poi11 = Math.toDegrees(Math.atan2(o.getY() - b.getY(), o.getX() - b.getX()));
+        Point p = new Point(3,5);
+        Double poi12 = Math.toDegrees(Math.atan2(p.getY() - b.getY(), p.getX() - b.getX()));
+        Point q = new Point(6,-4);
+        Double poi13 = Math.toDegrees(Math.atan2(q.getY() - b.getY(), q.getX() - b.getX()));
+        Point r = new Point(2.5,1);
+        Double poi14 = Math.toDegrees(Math.atan2(r.getY() - b.getY(), r.getX() - b.getX()));
+
+        System.out.println("-----c");
+        System.out.println(this.define_alpha(direction, poi1, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi1, 45.0));
+        System.out.println("-----d");
+        System.out.println(this.define_alpha(direction, poi2, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi2, 45.0));
+        System.out.println("-----e");
+        System.out.println(this.define_alpha(direction, poi3, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi3, 45.0));
+        System.out.println("-----f");
+        System.out.println(this.define_alpha(direction, poi4, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi4, 45.0));
+        System.out.println("-----g");
+        System.out.println(this.define_alpha(direction, poi5, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi5, 45.0));
+        System.out.println("-----h");
+        System.out.println(this.define_alpha(direction, poi6, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi6, 45.0));
+        System.out.println("-----i");
+        System.out.println(this.define_alpha(direction, poi7, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi7, 45.0));
+        System.out.println("-----l");
+        System.out.println(this.define_alpha(direction, poi8, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi8, 45.0));
+        System.out.println("-----m");
+        System.out.println(this.define_alpha(direction, poi9, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi9, 45.0));
+        System.out.println("-----n");
+        System.out.println(this.define_alpha(direction, poi10, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi10, 45.0));
+        System.out.println("-----o");
+        System.out.println(this.define_alpha(direction, poi11, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi11, 45.0));
+        System.out.println("-----p");
+        System.out.println(this.define_alpha(direction, poi12, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi12, 45.0));
+        System.out.println("-----q");
+        System.out.println(this.define_alpha(direction, poi13, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi13, 45.0));
+        System.out.println("-----r");
+        System.out.println(this.define_alpha(direction, poi14, 45.0));
+        System.out.println(this.discriminate_increment_decrement(direction, poi14, 45.0));
+
+        System.out.println("---------------");
+
+        List<Point> points = new ArrayList<>();
+        points.add(new Point(0,0));
+        points.add(new Point(4,4));
+        points.add(new Point(5,5));
+        points.add(new Point(5,6));
+        points.add(new Point(5,7));
+        points.add(new Point(5,8));
+        points.add(new Point(6,8));
+        points.add(new Point(7,9));
+        points.add(new Point(8,9));
+        points.add(new Point(9,10));
+        points.add(new Point(10,10));
+        points.add(new Point(11,9));
+        points.add(new Point(12,9));
+        points.add(new Point(13,10));
+        points.add(new Point(14,10));
+        points.add(new Point(15,9));
+        points.add(new Point(15,8));
+        points.add(new Point(14,8));
+        points.add(new Point(13,8));
+        points.add(new Point(12,8));
+        points.add(new Point(12,7));
+        points.add(new Point(13,7));
+        points.add(new Point(13,6));
+        points.add(new Point(14,5));
+
+        List<POI> POIs = new ArrayList<>();
+        POIs.add(new POI(new Point(1,1)));
+        POIs.add(new POI(new Point(2,10)));
+        POIs.add(new POI(new Point(8,12)));
+        POIs.add(new POI(new Point(18,10)));
+        POIs.add(new POI(new Point(18,3)));
+        POIs.add(new POI(new Point(9,4)));
+        POIs.add(new POI(new Point(14,5)));
+
+
+
+
+        for (int w=1; w<points.size(); w++){
+            System.out.println(points.get(w));
+            direction = Math.toDegrees(Math.atan2(points.get(w).getY() - points.get(w-1).getY(), points.get(w).getX() - points.get(w-1).getX()));
+            System.out.println(w);
+            if(w == 17){
+                String s = "ds";
+            }
+            for (int ww=0; ww < POIs.size(); ww++){
+                Double ppp = Math.toDegrees(Math.atan2(POIs.get(ww).getArea().getPolygon().getCenterPoint().getY() - points.get(w).getY(), POIs.get(ww).getArea().getPolygon().getCenterPoint().getX() - points.get(w).getX()));
+                int www = ww + 1;
+                System.out.println(www + " // " + this.discriminate_increment_decrement(direction, ppp, 45.0));
+            }
+
+        }
+
     }
 
 
@@ -323,11 +459,21 @@ public class PacmanRuleTest {
         } else if (currentAngle > 0 && angle + threshold > 180){
             Double real_upper_leg = -(360 - angle + threshold); //useful only if the upper_leg is > 180
             if(currentAngle > -180 && currentAngle < real_upper_leg) inc = Boolean.TRUE;
+            if(currentAngle < 180 && currentAngle > angle - threshold) inc = Boolean.TRUE;
         } else if (currentAngle.equals(angle)){
             inc = Boolean.TRUE;
         } else if (angle - threshold < 0 && currentAngle <= angle + threshold && currentAngle >= angle - threshold){
             inc = Boolean.TRUE;
+        } else if(currentAngle < 0 && angle + threshold > 180){
+            //angle smaller than zero is missing
+            Double tot = angle + threshold;
+            Double realTot = tot - 360;
+            if(currentAngle < realTot){
+                inc = Boolean.TRUE;
+            }
         }
+
+
         return inc;
     }
 

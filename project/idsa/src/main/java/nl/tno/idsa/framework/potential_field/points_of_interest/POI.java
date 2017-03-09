@@ -7,10 +7,6 @@ import nl.tno.idsa.framework.world.Polygon;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Created by alessandrozonta on 29/06/16.
@@ -145,6 +141,9 @@ public class POI {
             if(this.area.getPolygon().getPoints()[i].getY() == point.getY() && this.area.getPolygon().getPoints()[i].getX() == point.getX()){
                 return Boolean.TRUE;
             }
+        }
+        if(this.area.getPolygon().getCenterPoint().getY() == point.getY() && this.area.getPolygon().getCenterPoint().getX() == point.getX()){
+            return Boolean.TRUE;
         }
         return Boolean.FALSE;
     }

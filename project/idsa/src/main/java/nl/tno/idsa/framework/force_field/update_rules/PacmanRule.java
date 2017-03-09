@@ -6,7 +6,6 @@ import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Path;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
-import org.omg.CORBA.MARSHAL;
 
 import java.util.List;
 
@@ -239,15 +238,23 @@ public class PacmanRule implements UpdateRules {
             angle = -angle;
             currentAngle = -currentAngle;
         }
-        if (currentAngle > 0 && angle + this.threshold <= 180 && currentAngle >= angle - this.threshold && currentAngle <= angle + this.threshold ){
+        if (currentAngle > 0 && angle + threshold <= 180 && currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
             inc = Boolean.TRUE;
-        } else if (currentAngle > 0 && angle + this.threshold > 180){
-            Double real_upper_leg = -(360 - angle + this.threshold); //useful only if the upper_leg is > 180
+        } else if (currentAngle > 0 && angle + threshold > 180){
+            Double real_upper_leg = -(360 - angle + threshold); //useful only if the upper_leg is > 180
             if(currentAngle > -180 && currentAngle < real_upper_leg) inc = Boolean.TRUE;
+            if(currentAngle < 180 && currentAngle > angle - threshold) inc = Boolean.TRUE;
         } else if (currentAngle.equals(angle)){
             inc = Boolean.TRUE;
-        } else if (angle - this.threshold < 0 && currentAngle <= angle + this.threshold && currentAngle >= angle - this.threshold){
+        } else if (angle - threshold < 0 && currentAngle <= angle + threshold && currentAngle >= angle - threshold){
             inc = Boolean.TRUE;
+        } else if(currentAngle < 0 && angle + threshold > 180){
+            //angle smaller than zero is missing
+            Double tot = angle + threshold;
+            Double realTot = tot - 360;
+            if(currentAngle < realTot){
+                inc = Boolean.TRUE;
+            }
         }
         return inc;
     }

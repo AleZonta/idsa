@@ -23,14 +23,12 @@ import nl.tno.idsa.framework.simulator.TrajectorySim;
 import nl.tno.idsa.framework.world.Area;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
-import nl.tno.idsa.library.actions.StreetTheft;
 import nl.tno.idsa.library.activities.possible.*;
 import nl.tno.idsa.viewer.ReplacementForMainFrame;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.BiFunction;
 
 /**
  * Created by alessandrozonta on 29/06/16.
@@ -554,10 +552,19 @@ public class PotentialField extends Observable{
                     //I'm fixing the parameter to 2 so I am not dealing with this exception
                 }
             }
+            //if I need the APF to print maybe I need also the potential values
+            if (this.confHeatMap == 1 || this.confHeatMap == 2){
+                try {
+                    this.calculatePotentialFieldInAllTheWorld();
+                } catch (ParameterNotDefinedException e) {
+                    //I'm fixing the parameter to 2 so I am not dealing with this exception
+                }
+            }
 
             //update the previous point
             this.previousPoint = currentPosition;
         }else{
+            System.out.println("Point outside border of the map...");
             //Stop the tracking and delete everything
             //remove observer from agent
             this.trackedAgent.deleteObservers();
