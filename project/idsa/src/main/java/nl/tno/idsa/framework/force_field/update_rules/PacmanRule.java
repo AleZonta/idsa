@@ -260,6 +260,7 @@ public class PacmanRule implements UpdateRules {
     }
 
     //set the alpha for the computation
+    //this method correspond to the first paper submitted to smart-ct2017
     private Double define_alpha(Double angle, Double currentAngle){
         //first thing first -> everything is positive
         Double alpha = 0.0;
@@ -312,6 +313,31 @@ public class PacmanRule implements UpdateRules {
             //System.out.println("-180 > poi > -angle");
         }
         return alpha;
+    }
+
+    /**
+     * Method that compute how much the charge is changed.
+     * It is using a different system than define_alpha
+     * The equation used to compute how much increment the charge is:
+     * y = -0.8 + max_increment_possible * exp(-value_alpha*currentangle)
+     * max_increment_possible is hardcoded here and equal to 10
+     * The equation works like this:
+     * domain from 0 to 180
+     * 0 is the direction of the movement
+     * 180 is opposite direction
+     * if the result of the equation is >0 assign that as a increment
+     * if the result is <0
+     * check how is the result with 180-angle as a new angle
+     * if is still <0 the result is 0
+     * if it is greater the result is the decrement we have to apply
+     * value_alpha is the variable that controls where the graph touches the axis x -> tuned outside
+     * @param angle direction of the movement
+     * @param currentAngle current angle with the POI
+     * @param valueAlpha define the zero in the graph (tuned from outside)
+     * @return Double value representing the increment or decrement. If it is positive is the increment, otherwise is a decrement
+     */
+    private Double define_change_in_charge(Double angle, Double currentAngle, Double valueAlpha){
+        return 0d;
     }
 
 

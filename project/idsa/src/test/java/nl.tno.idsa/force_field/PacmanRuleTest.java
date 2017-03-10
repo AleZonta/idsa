@@ -695,4 +695,10 @@ public class PacmanRuleTest {
 //        test0.computeUpdateRule(new Point(5.0,5.0), new Point(6.0,6.0));
     }
 
+
+    @Test
+    public void define_change_in_charge(Double angle, Double currentAngle, Double valueAlpha) throws Exception{
+        
+    }
+
 }
