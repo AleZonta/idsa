@@ -9,7 +9,9 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Created by alessandrozonta on 12/09/16.
@@ -377,9 +379,6 @@ public class PacmanRuleTest {
             System.out.println(points.get(w));
             direction = Math.toDegrees(Math.atan2(points.get(w).getY() - points.get(w-1).getY(), points.get(w).getX() - points.get(w-1).getX()));
             System.out.println(w);
-            if(w == 17){
-                String s = "ds";
-            }
             for (int ww=0; ww < POIs.size(); ww++){
                 Double ppp = Math.toDegrees(Math.atan2(POIs.get(ww).getArea().getPolygon().getCenterPoint().getY() - points.get(w).getY(), POIs.get(ww).getArea().getPolygon().getCenterPoint().getX() - points.get(w).getX()));
                 int www = ww + 1;
@@ -482,7 +481,54 @@ public class PacmanRuleTest {
     @Test
     //test if it computes correctly the increase value
     public void computeUpdateRule() throws Exception {
-//        UpdateRules test0 = new PacmanRule(120.0,0.5,-0.001, Boolean.FALSE);
+        UpdateRules test0 = new PacmanRule(0.05,-0.8,10d, Boolean.FALSE);
+
+        List<Point> points = new ArrayList<>();
+        points.add(new Point(0,0));
+        points.add(new Point(4,4));
+        points.add(new Point(5,5));
+        points.add(new Point(5,6));
+        points.add(new Point(5,7));
+        points.add(new Point(5,8));
+        points.add(new Point(6,8));
+        points.add(new Point(7,9));
+        points.add(new Point(8,9));
+        points.add(new Point(9,10));
+        points.add(new Point(10,10));
+        points.add(new Point(11,9));
+        points.add(new Point(12,9));
+        points.add(new Point(13,10));
+        points.add(new Point(14,10));
+        points.add(new Point(15,9));
+        points.add(new Point(15,8));
+        points.add(new Point(14,8));
+        points.add(new Point(13,8));
+        points.add(new Point(12,8));
+        points.add(new Point(12,7));
+        points.add(new Point(13,7));
+        points.add(new Point(13,6));
+        points.add(new Point(14,5));
+
+        List<Point> POIs = new ArrayList<>();
+        POIs.add(new Point(1,1));
+        POIs.add(new Point(2,10));
+        POIs.add(new Point(8,12));
+        POIs.add(new Point(18,10));
+        POIs.add(new Point(18,3));
+        POIs.add(new Point(9,4));
+        POIs.add(new Point(14,5));
+
+        test0.setPreviousPoint(points.get(0));
+        test0.computeUpdateRule(points.get(1), POIs.get(0));
+        assertNull(test0.getHowMuchIncreaseTheCharge());
+        assertTrue(0 < test0.getHowMuchDecreaseTheCharge() && test0.getHowMuchDecreaseTheCharge() <= 10);
+        for (int i=1;i< POIs.size() ;i++){
+            test0.computeUpdateRule(points.get(1), POIs.get(i));
+            assertTrue(0 <= test0.getHowMuchIncreaseTheCharge() && test0.getHowMuchIncreaseTheCharge() <= 10);
+            assertNull(test0.getHowMuchDecreaseTheCharge());
+        }
+
+
 //        test0.setPreviousPoint(new Point(0.0,0.0));
 //        test0.computeUpdateRule(new Point(5.0,5.0), new Point(5.0,6.0));
 //
@@ -605,23 +651,6 @@ public class PacmanRuleTest {
 //        test.computeUpdateRule(new Point(0.0,-5.0),new Point(5.0,0.0));
 //        assertEquals(new Double(9.974182454814724), test.getHowMuchDecreaseTheCharge());
 //        assertNull(test.getHowMuchIncreaseTheCharge());
-        Point StartingPoint = new Point(52.372702, 4.893080); //start in dam
-        Point SecondPoint = new Point(52.373102, 4.893272);
-
-        Point POI1 = new Point(52.379122, 4.900228); //central station -> same direction
-        Point POI2 = new Point(52.374530, 4.883914); //wester church Anna Frank house -> left
-        Point POI3 = new Point(52.365959, 4.916610); //artis -> right
-        Point POI4 = new Point(52.359995, 4.885216); //Rijksmuseum -> opposit direction
-
-
-        Point a = new Point(0,0);
-        Point b = new Point(1,-1);
-        Double direction = Math.toDegrees(Math.atan2(b.getY() - a.getY(), b.getX() - a.getX()));
-
-        Point c = new Point(2,0);
-        Double poi = Math.toDegrees(Math.atan2(c.getY() - b.getY(), c.getX() - b.getX()));
-
-        String te = "";
     }
 
 
@@ -697,8 +726,276 @@ public class PacmanRuleTest {
 
 
     @Test
-    public void define_change_in_charge(Double angle, Double currentAngle, Double valueAlpha) throws Exception{
-        
+    public void testDefineChangeInCharge() throws Exception{
+        List<Point> points = new ArrayList<>();
+        points.add(new Point(0,0));
+        points.add(new Point(4,4));
+        points.add(new Point(5,5));
+        points.add(new Point(5,6));
+        points.add(new Point(5,7));
+        points.add(new Point(5,8));
+        points.add(new Point(6,8));
+        points.add(new Point(7,9));
+        points.add(new Point(8,9));
+        points.add(new Point(9,10));
+        points.add(new Point(10,10));
+        points.add(new Point(11,9));
+        points.add(new Point(12,9));
+        points.add(new Point(13,10));
+        points.add(new Point(14,10));
+        points.add(new Point(15,9));
+        points.add(new Point(15,8));
+        points.add(new Point(14,8));
+        points.add(new Point(13,8));
+        points.add(new Point(12,8));
+        points.add(new Point(12,7));
+        points.add(new Point(13,7));
+        points.add(new Point(13,6));
+        points.add(new Point(14,5));
+
+        List<POI> POIs = new ArrayList<>();
+        POIs.add(new POI(new Point(1,1)));
+        POIs.add(new POI(new Point(2,10)));
+        POIs.add(new POI(new Point(8,12)));
+        POIs.add(new POI(new Point(18,10)));
+        POIs.add(new POI(new Point(18,3)));
+        POIs.add(new POI(new Point(9,4)));
+        POIs.add(new POI(new Point(14,5)));
+
+        System.out.println(this.curr_dir(17,points));
+        for (int i = 0; i < POIs.size(); i++){
+            System.out.println(this.curr_angle(i,17,POIs,points, this.curr_dir(17,points)));
+        }
+
+        //lets test with 90 degree
+        Integer number_poi=1;
+        Double direction = this.curr_dir(number_poi,points);
+        Double current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        for (int i = 1; i < POIs.size(); i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        }
+
+        number_poi=2;
+        direction = this.curr_dir(number_poi,points);
+        current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        for (int i = 1; i < POIs.size(); i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        }
+
+        number_poi=3;
+        direction = this.curr_dir(number_poi,points);
+        current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(1,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        current_angle = this.curr_angle(2,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+
+        number_poi=6;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<3;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        for (int i=3; i<5;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        }
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+
+        number_poi=7;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<2;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        for (int i=2; i<5;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        }
+        current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+
+        number_poi=9;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<2;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        for (int i=2; i<5;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        }
+        current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+
+        number_poi=11;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<3;i++){
+            current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        for (int i=3; i<POIs.size();i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        }
+
+        number_poi=13;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<3;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        for (int i=5; i<POIs.size();i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+
+        number_poi=15;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<3;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        current_angle = this.curr_angle(5, number_poi, POIs, points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+
+        number_poi=18;
+        direction = this.curr_dir(number_poi,points);
+        for (int i=0; i<3;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        }
+        current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+
+        current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+
+        number_poi=20;
+        direction = this.curr_dir(number_poi,points);
+        current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        for (int i=1; i<4;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        for (int i=5; i<POIs.size();i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        }
+
+        number_poi=22;
+        direction = this.curr_dir(number_poi,points);
+        current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        for (int i=1; i<4;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        for (int i=5; i<POIs.size();i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        }
+
+        number_poi=23;
+        direction = this.curr_dir(number_poi,points);
+        current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        for (int i=0; i<4;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        for (int i=5; i<6;i++) {
+            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
+            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        }
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+
     }
 
+    private Double curr_angle(Integer POI_ID, Integer Point_ID, List<POI> POIs, List<Point> points, Double currentDirection){
+        Double poiDir = Math.toDegrees(Math.atan2(POIs.get(POI_ID).getArea().getPolygon().getCenterPoint().getY() - points.get(Point_ID).getY(), POIs.get(POI_ID).getArea().getPolygon().getCenterPoint().getX() - points.get(Point_ID).getX()));
+        System.out.println("dir poi -> " + poiDir);
+        //we assume the direction is positive, if not we change sign
+        //with the direction be positive there are four different cases:
+        //if the poi is between 180 and the direction
+        //if the poi is between the direction and 0
+        //if the poi is between 0 and the opposite direction
+        //if the poi is between the opposite direction and -180
+        if(currentDirection<0){
+            currentDirection = -currentDirection;
+            poiDir = -poiDir;
+        }
+        Double oppositeDirection = currentDirection - 180;
+        System.out.println("opposite direction -> " + oppositeDirection);
+        if(poiDir <=180 & poiDir >= currentDirection){
+            return poiDir - currentDirection;
+        }else{
+            if (poiDir < currentDirection & poiDir >=0){
+                return currentDirection - poiDir;
+            }else{
+                if(poiDir < 0 & poiDir >= oppositeDirection){
+                    return currentDirection + Math.abs(poiDir);
+                }else{
+                    Double differenceNegativePart = 180 - Math.abs(poiDir);
+                    Double differencePoisitvePart = 180 - currentDirection;
+                    return differenceNegativePart + differencePoisitvePart;
+                }
+            }
+        }
+    }
+
+    private Double curr_dir(Integer Point_ID, List<Point> points){
+        return Math.toDegrees(Math.atan2(points.get(Point_ID).getY() - points.get(Point_ID-1).getY(), points.get(Point_ID).getX() - points.get(Point_ID-1).getX()));
+    }
+
+    private Double defineChangeInCharge(Double angle, Double currentAngle, Double valueAlpha){
+        Double positiveCurrentAngle = Math.abs(currentAngle);
+        //equation y = -0.8 + max_point_achievable * exp( -valueAlpha * positiveCurrentAngle)
+        Double increment = -0.8 + 10.0 * Math.exp(-valueAlpha*positiveCurrentAngle);
+        //increment negative I need to check the inverse function
+        if(increment < 0){
+            Double realPositiveCurrentAngle = 180 - positiveCurrentAngle;
+            Double checkIncrement = -0.8 + 10.0 * Math.exp(-valueAlpha*realPositiveCurrentAngle);
+            if(checkIncrement < 0){
+                return 0d;
+            }else{
+                return -checkIncrement;
+            }
+        }
+        return increment;
+    }
 }
