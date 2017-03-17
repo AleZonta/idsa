@@ -481,7 +481,7 @@ public class PacmanRuleTest {
     @Test
     //test if it computes correctly the increase value
     public void computeUpdateRule() throws Exception {
-        UpdateRules test0 = new PacmanRule(0.05,-0.8,10d, Boolean.FALSE);
+        UpdateRules test0 = new PacmanRule(1d,0.01,0.01, Boolean.FALSE);
 
         List<Point> points = new ArrayList<>();
         points.add(new Point(0,0));
@@ -772,12 +772,12 @@ public class PacmanRuleTest {
         System.out.println("(" + number_poi + ") ->> num+poi");
         Double direction = this.curr_dir(number_poi,points);
         Double current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         for (int i = 1; i < POIs.size(); i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
         System.out.println("");
@@ -786,12 +786,12 @@ public class PacmanRuleTest {
         System.out.println("(" + number_poi + ") ->> num+poi");
         direction = this.curr_dir(number_poi,points);
         current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         for (int i = 1; i < POIs.size(); i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
         System.out.println("");
@@ -800,20 +800,20 @@ public class PacmanRuleTest {
         System.out.println("(" + number_poi + ") ->> num+poi");
         direction = this.curr_dir(number_poi,points);
         current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(1,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(2,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
         System.out.println("");
@@ -821,19 +821,15 @@ public class PacmanRuleTest {
         number_poi=6;
         System.out.println("(" + number_poi + ") ->> num+poi");
         direction = this.curr_dir(number_poi,points);
-        for (int i=0; i<3;i++){
+        for (int i=0; i<2;i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
-        current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
-        for (int i=3; i<5;i++){
+        for (int i = 2; i < POIs.size(); i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
-        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -844,17 +840,17 @@ public class PacmanRuleTest {
         direction = this.curr_dir(number_poi,points);
         for (int i=0; i<2;i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         for (int i=2; i<5;i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
         current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -865,17 +861,17 @@ public class PacmanRuleTest {
         direction = this.curr_dir(number_poi,points);
         for (int i=0; i<2;i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         for (int i=2; i<5;i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
         current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 10);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -886,13 +882,13 @@ public class PacmanRuleTest {
         direction = this.curr_dir(number_poi,points);
         for (int i=0; i<3;i++){
             current_angle = this.curr_angle(i,number_poi,POIs,points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         for (int i=3; i<POIs.size();i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -903,15 +899,17 @@ public class PacmanRuleTest {
         direction = this.curr_dir(number_poi,points);
         for (int i=0; i<3;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
+        current_angle = this.curr_angle(5, number_poi, POIs, points, direction);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
+        current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
-        for (int i=5; i<POIs.size();i++) {
-            current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
-        }
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
+        current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -922,17 +920,17 @@ public class PacmanRuleTest {
         direction = this.curr_dir(number_poi,points);
         for (int i=0; i<3;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         current_angle = this.curr_angle(5, number_poi, POIs, points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -943,18 +941,18 @@ public class PacmanRuleTest {
         direction = this.curr_dir(number_poi,points);
         for (int i=0; i<3;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
         current_angle = this.curr_angle(5,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
 
         current_angle = this.curr_angle(3,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -964,16 +962,16 @@ public class PacmanRuleTest {
         System.out.println("(" + number_poi + ") ->> num+poi");
         direction = this.curr_dir(number_poi,points);
         current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         for (int i=1; i<4;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         for (int i=5; i<POIs.size();i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -983,16 +981,16 @@ public class PacmanRuleTest {
         System.out.println("(" + number_poi + ") ->> num+poi");
         direction = this.curr_dir(number_poi,points);
         current_angle = this.curr_angle(0,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         for (int i=1; i<4;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         for (int i=5; i<POIs.size();i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+            assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         }
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
 
 
 
@@ -1002,18 +1000,18 @@ public class PacmanRuleTest {
         System.out.println("(" + number_poi + ") ->> num+poi");
         direction = this.curr_dir(number_poi,points);
         current_angle = this.curr_angle(4,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
         for (int i=0; i<4;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         for (int i=5; i<6;i++) {
             current_angle = this.curr_angle(i, number_poi, POIs, points, direction);
-            assertTrue(-10 <= defineChangeInCharge(direction,current_angle,0.05) && defineChangeInCharge(direction,current_angle,0.05) <= 0);
+            assertTrue(-10 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 0);
         }
         current_angle = this.curr_angle(6,number_poi,POIs,points, direction);
-        assertTrue(0 <= defineChangeInCharge(direction, current_angle, 0.05) && defineChangeInCharge(direction, current_angle, 0.05) <= 10);
-        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(direction,current_angle,0.05)); }
+        assertTrue(0 <= defineChangeInCharge(0.01, 0.01,1d,current_angle) && defineChangeInCharge(0.01, 0.01,1d,current_angle) <= 10);
+        for (int i = 0; i < POIs.size(); i++){ current_angle = this.curr_angle(i,number_poi,POIs,points, direction); int y = i + 1; System.out.println(y + " ->> " + defineChangeInCharge(0.01, 0.01,1d,current_angle)); }
     }
 
     private Double curr_angle(Integer POI_ID, Integer Point_ID, List<POI> POIs, List<Point> points, Double currentDirection){
@@ -1052,20 +1050,9 @@ public class PacmanRuleTest {
         return Math.toDegrees(Math.atan2(points.get(Point_ID).getY() - points.get(Point_ID-1).getY(), points.get(Point_ID).getX() - points.get(Point_ID-1).getX()));
     }
 
-    private Double defineChangeInCharge(Double angle, Double currentAngle, Double valueAlpha){
-        Double positiveCurrentAngle = Math.abs(currentAngle);
-        //equation y = -0.8 + max_point_achievable * exp( -valueAlpha * positiveCurrentAngle)
-        Double increment = -0.8 + 10.0 * Math.exp(-valueAlpha*positiveCurrentAngle);
-        //increment negative I need to check the inverse function
-        if(increment < 0){
-            Double realPositiveCurrentAngle = 180 - positiveCurrentAngle;
-            Double checkIncrement = -0.8 + 10.0 * Math.exp(-valueAlpha*realPositiveCurrentAngle);
-            if(checkIncrement < 0){
-                return 0d;
-            }else{
-                return -checkIncrement;
-            }
-        }
-        return increment;
+    private Double defineChangeInCharge(Double z1, Double z2, Double h, Double currentAngle){
+        //equation f(x)=10 * exp(-z1*x) - 10 * h * exp(-z2*(180-x))
+        //x = current_angle
+        return 10 * Math.exp(-z1*Math.abs(currentAngle)) - 10*h*Math.exp(-z2*(180-Math.abs(currentAngle)));
     }
 }

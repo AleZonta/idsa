@@ -93,7 +93,7 @@ public class PotentialField extends Observable{
     private View view; //object implementing the class that sows what is going on with a GUI -> usable with every dataset -> require internet connection for the maps
 
     //basic class constructor
-    public PotentialField(World world, ConfigFile conf, Double degree, Double s1, Double w1, Double s2, Double w2, String name, String experiment){
+    public PotentialField(World world, ConfigFile conf, Double h, Double z1, Double z2, Double s2, Double w2, String name, String experiment){
         this.pointsOfInterest = new ArrayList<>();
         this.differentAreaType = new HashMap<>();
         this.trackedAgent = null;
@@ -142,7 +142,7 @@ public class PotentialField extends Observable{
         if(this.areaInTheWorld != null) this.initDifferentAreaType(this.areaInTheWorld); //loading the lists with all the places
 
         Integer value = this.conf.getUpdateRules();
-        this.updateRule = this.returnUpdateRule(value, degree, s1 , w1, s2, w2);
+        this.updateRule = this.returnUpdateRule(value, h, z1 , z2, s2, w2);
         if(this.conf.getSelectorSourceTracks() == 0){
             this.updateRule.setIdsaWorld(Boolean.TRUE);
         }else{
@@ -151,9 +151,9 @@ public class PotentialField extends Observable{
 
         this.parameter = new ArrayList<>();
         this.parameter.add(new Double(value));
-        this.parameter.add(degree);
-        this.parameter.add(s1);
-        this.parameter.add(w1);
+        this.parameter.add(h);
+        this.parameter.add(z1);
+        this.parameter.add(z2);
         this.parameter.add(s2);
         this.parameter.add(w2);
         this.updateRule.setWorld(world);
@@ -845,31 +845,31 @@ public class PotentialField extends Observable{
 
     //given the value it returns the selected update rule
     //Here we can add how many update rules we want
-    public UpdateRules returnUpdateRule(Integer value, Double degree, Double s1, Double w1, Double s2, Double w2){
+    public UpdateRules returnUpdateRule(Integer value, Double h, Double z1, Double z2, Double s2, Double w2){
         switch (value){
             case 0:
                 return new PacmanRule(90.0, 0.25 , 0.005, Boolean.FALSE); //select Pacman rule without distance and path
 //                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.5, 0.5, Boolean.TRUE); //select Pacman rule fixed value
             case 1:
-                return new PacmanRule(degree, s1 , w1, Boolean.FALSE); //select Pacman rule without distance and path
+                return new PacmanRule(h, z1 , z2, Boolean.FALSE); //select Pacman rule without distance and path
             case 2:
-                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE); //select Pacman rule with distance and no path
+                return new PacmanRuleDistance(h, z1 , z2, s2, w2, Boolean.FALSE); //select Pacman rule with distance and no path
             case 3:
-                return new PacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule without distance but with path
+                return new PacmanRule(h, z1 , z2, Boolean.TRUE); //select Pacman rule without distance but with path
             case 4:
-                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE); //select Pacman rule with distance and path
+                return new PacmanRuleDistance(h, z1 , z2, s2, w2, Boolean.TRUE); //select Pacman rule with distance and path
             case 5:
-                return new PacmanRule(degree, s1 , w1, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule without distance and path but with PF
+                return new PacmanRule(h, z1 , z2, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule without distance and path but with PF
             case 6:
-                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule with distance and no path but yes PF
+                return new PacmanRuleDistance(h, z1 , z2, s2, w2, Boolean.FALSE, this.artificialPotentialField); //select Pacman rule with distance and no path but yes PF
             case 7:
-                return new PacmanRule(degree, s1 , w1, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule without distance but with path and PF
+                return new PacmanRule(h, z1 , z2, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule without distance but with path and PF
             case 8:
-                return new PacmanRuleDistance(degree, s1 , w1, s2, w2, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule with distance and path and PF
+                return new PacmanRuleDistance(h, z1 , z2, s2, w2, Boolean.TRUE, this.artificialPotentialField); //select Pacman rule with distance and path and PF
             case 9:
-                return new DoublePacmanRule(degree, s1 , w1, Boolean.FALSE); //select DoublePacman rule without path
+                return new DoublePacmanRule(h, z1 , z2, Boolean.FALSE); //select DoublePacman rule without path
             case 10:
-                return new DoublePacmanRule(degree, s1 , w1, Boolean.TRUE); //select Pacman rule wit path
+                return new DoublePacmanRule(h, z1 , z2, Boolean.TRUE); //select Pacman rule wit path
         }
         return null;
     }

@@ -14,15 +14,15 @@ import java.util.List;
  */
 //Implements the pacman update rules
 public class PacmanRule implements UpdateRules {
-    private final Double threshold; //variable that changes where the curve reaches the zero
+    private final Double h; //symmetry of the curve
     private Double increaseValue; //value of how much I need to increase the charge
     private Double decreaseValue; //value of how much I need to decrease the charge
     private Double increaseInsidePOIValue; //value of how much I need to increase the charge if I am inside a POI
     private Double decreaseInsidePOIValue; //value of how much I need to decrease the charge if I am inside a POI
     private Boolean doINeedToUpdateTheCharge; //the name is self explaining
     private Point previousPoint; //store the previous point
-    private Double constantS; //constant fixed for the new formula (first element)
-    private Double constantWOne; //constant fixed for the new formula (maximum increase possible )
+    private Double z1; //first variable of the equation (passed as a parameter)
+    private Double z2; //second variable of the equation (passed as a parameter)
     protected World world; //I need the world to compute the real distance and the path
     private final Boolean usingPath; //I am using the path or not?
     private final ForceField  pot; //need the potential field to compute the path planning
@@ -35,16 +35,16 @@ public class PacmanRule implements UpdateRules {
 
     //normal constructor
     public PacmanRule(){
-//        this.threshold = 45.0;
-        this.threshold = 0.05;
+//        this.h = 45.0;
+        this.h = 1d;
         this.increaseValue = 0.1;
         this.decreaseValue = 0.1;
         this.increaseInsidePOIValue = 10d;
         this.decreaseInsidePOIValue = 10d;
         this.doINeedToUpdateTheCharge = null;
         this.previousPoint = null;
-        this.constantS = -0.8;
-        this.constantWOne = 10d;
+        this.z1 = 0.01;
+        this.z2 = 0.01;
         this.usingPath = Boolean.FALSE;
         this.pot = null;
         this.POIs = null;
@@ -55,16 +55,16 @@ public class PacmanRule implements UpdateRules {
     }
 
     //constructor with angle parameter
-    public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath){
-        this.threshold = angle; //using the angle variable to pass to threshold the new way to compute the change
+    public PacmanRule(Double angle, Double z1, Double z2, Boolean usingPath){
+        this.h = angle; //using the angle variable to pass to h the new way to compute the change
         this.increaseValue = null;
         this.decreaseValue = null;
-        this.increaseInsidePOIValue = constantWOne;
-        this.decreaseInsidePOIValue = constantWOne;
+        this.increaseInsidePOIValue = 10d;
+        this.decreaseInsidePOIValue = 10d;
         this.doINeedToUpdateTheCharge = null;
         this.previousPoint = null;
-        this.constantWOne = constantWOne;
-        this.constantS = constantS;
+        this.z2 = z2;
+        this.z1 = z1;
         this.usingPath = usingPath;
         this.pot = null;
         this.POIs = null;
@@ -74,16 +74,16 @@ public class PacmanRule implements UpdateRules {
         this.idsaWorld = null;
     }
 
-    public PacmanRule(Double angle, Double constantS, Double constantWOne, Boolean usingPath, ForceField pot){
-        this.threshold = angle; //using the angle variable to pass to threshold the new way to compute the change
+    public PacmanRule(Double angle, Double z1, Double z2, Boolean usingPath, ForceField pot){
+        this.h = angle; //using the angle variable to pass to h the new way to compute the change
         this.increaseValue = null;
         this.decreaseValue = null;
-        this.increaseInsidePOIValue = constantWOne;
-        this.decreaseInsidePOIValue = constantWOne;
+        this.increaseInsidePOIValue = 10d;
+        this.decreaseInsidePOIValue = 10d;
         this.doINeedToUpdateTheCharge = null;
         this.previousPoint = null;
-        this.constantWOne = constantWOne;
-        this.constantS = constantS;
+        this.z2 = z2;
+        this.z1 = z1;
         this.usingPath = usingPath;
         this.pot = pot;
         this.POIs = null;
@@ -128,11 +128,11 @@ public class PacmanRule implements UpdateRules {
 
     protected Boolean getUsingPath() { return this.usingPath; }
 
-    protected Double getThreshold() { return this.threshold; }
+    protected Double getThreshold() { return this.h; }
 
-    protected Double getConstantS() { return this.constantS; }
+    protected Double getConstantS() { return this.z1; }
 
-    protected Double getConstantWOne() { return this.constantWOne; }
+    protected Double getConstantWOne() { return this.z2; }
 
     protected void setDoINeedToUpdateTheCharge(Boolean doINeedToUpdateTheCharge) { this.doINeedToUpdateTheCharge = doINeedToUpdateTheCharge; }
 
@@ -224,11 +224,11 @@ public class PacmanRule implements UpdateRules {
             if (increment) {
                 //increase the charge
                 this.doINeedToUpdateTheCharge = Boolean.TRUE;
-                this.increaseValue = this.constantS * Math.exp(alpha * this.constantWOne);
+                this.increaseValue = this.z1 * Math.exp(alpha * this.z2);
             } else {
                 //decrease the charge
                 this.doINeedToUpdateTheCharge = Boolean.FALSE;
-                this.decreaseValue = this.constantS * Math.exp(alpha * this.constantWOne);
+                this.decreaseValue = this.z1 * Math.exp(alpha * this.z2);
             }
         }
     }
@@ -307,7 +307,7 @@ public class PacmanRule implements UpdateRules {
             Double angle_with_the_poi = this.define_new_alpha(angle, currentAngle);
 
             //compute the change in the charge
-            Double increment = this.defineChangeInCharge(angle_with_the_poi, this.threshold);
+            Double increment = this.defineChangeInCharge(angle_with_the_poi,this.z1, this.z2, this.h);
             //0 is considered an increment
             if (increment >= 0) {
                 //increase the charge
@@ -329,19 +329,19 @@ public class PacmanRule implements UpdateRules {
             angle = -angle;
             currentAngle = -currentAngle;
         }
-        if (currentAngle > 0 && angle + threshold <= 180 && currentAngle >= angle - threshold && currentAngle <= angle + threshold ){
+        if (currentAngle > 0 && angle + h <= 180 && currentAngle >= angle - h && currentAngle <= angle + h ){
             inc = Boolean.TRUE;
-        } else if (currentAngle > 0 && angle + threshold > 180){
-            Double real_upper_leg = -(360 - angle + threshold); //useful only if the upper_leg is > 180
+        } else if (currentAngle > 0 && angle + h > 180){
+            Double real_upper_leg = -(360 - angle + h); //useful only if the upper_leg is > 180
             if(currentAngle > -180 && currentAngle < real_upper_leg) inc = Boolean.TRUE;
-            if(currentAngle < 180 && currentAngle > angle - threshold) inc = Boolean.TRUE;
+            if(currentAngle < 180 && currentAngle > angle - h) inc = Boolean.TRUE;
         } else if (currentAngle.equals(angle)){
             inc = Boolean.TRUE;
-        } else if (angle - threshold < 0 && currentAngle <= angle + threshold && currentAngle >= angle - threshold){
+        } else if (angle - h < 0 && currentAngle <= angle + h && currentAngle >= angle - h){
             inc = Boolean.TRUE;
-        } else if(currentAngle < 0 && angle + threshold > 180){
+        } else if(currentAngle < 0 && angle + h > 180){
             //angle smaller than zero is missing
-            Double tot = angle + threshold;
+            Double tot = angle + h;
             Double realTot = tot - 360;
             if(currentAngle < realTot){
                 inc = Boolean.TRUE;
@@ -361,13 +361,13 @@ public class PacmanRule implements UpdateRules {
             currentAngle = -currentAngle;
             //System.out.println("-angle && -currentAngle");
         }
-        Double upper_leg = angle + this.threshold;
-        Double lower_leg = angle - this.threshold;
+        Double upper_leg = angle + this.h;
+        Double lower_leg = angle - this.h;
         Double opposite_angle = angle - 180;
         Double real_upper_leg = -(360 - upper_leg); //useful only if the upper_leg is > 180
         //base option
         if (currentAngle.equals(angle)) { //poi == angle
-            alpha = this.threshold;
+            alpha = this.h;
             //System.out.println("poi == angle");
         }else if (currentAngle.equals(lower_leg)){// poi == leg POV
             alpha = 0.0;
@@ -388,7 +388,7 @@ public class PacmanRule implements UpdateRules {
             alpha = Math.abs(currentAngle) - Math.abs(real_upper_leg);
            // System.out.println("upper_leg > poi > angle");
         } else if (currentAngle < angle && currentAngle > lower_leg){ //lower_leg < poi < angle
-            alpha = this.threshold - (angle - currentAngle);
+            alpha = this.h - (angle - currentAngle);
             //System.out.println("lower_leg < poi < angle");
         } else if (currentAngle < lower_leg && currentAngle >= 0){ //lower_leg > poi > 0
             alpha = lower_leg - currentAngle;
@@ -450,42 +450,21 @@ public class PacmanRule implements UpdateRules {
      * Method that compute how much the charge is changed.
      * It is using a different system than define_alpha
      * The equation used to compute how much increment the charge is:
-     * y = -0.8 + max_increment_possible * exp(-value_alpha*  current_angle)
-     * y = constantS + constantWOne * exp(-value_alpha * current_angle)
-     * max_increment_possible is hardcoded here and equal to 10
-     * The equation works like this:
-     * domain from 0 to 180
-     * 0 is the direction of the movement
-     * 180 is opposite direction
-     * if the result of the equation is >0 assign that as a increment
-     * if the result is <0
-     * check how is the result with 180-angle as a new angle
-     * if is still <0 the result is 0
-     * if it is greater the result is the decrement we have to apply
-     * value_alpha is the variable that controls where the graph touches the axis x -> tuned outside
+     * f(x)= 10 * exp(-z1*x) - 10 * h * exp(-z2*(180-x))
+     * now the formula it still has three variables
+     * The variable are passed by parameter
      * @param currentAngle current angle with the POI
-     * @param valueAlpha define the zero in the graph (tuned from outside)
+     * @param z1 variable controlling steepness positive part of graph
+     * @param z2 variable controlling steepness negative part of graph
+     * @param h variable controlling if positive and negative part are simmetric or not
      * @return Double value representing the increment or decrement. If it is positive is the increment, otherwise is a decrement
      */
-    private Double defineChangeInCharge(Double currentAngle, Double valueAlpha){
-        Double positiveCurrentAngle = Math.abs(currentAngle);
-        //equation y = -0.8 + max_point_achievable * exp( -valueAlpha * positiveCurrentAngle)
-        Double increment = this.constantS + this.constantWOne * Math.exp(-valueAlpha*positiveCurrentAngle);
-        //increment negative I need to check the inverse function
-        if(increment < 0){
-            Double realPositiveCurrentAngle = 180 - positiveCurrentAngle;
-            Double checkIncrement = this.constantS + this.constantWOne * Math.exp(-valueAlpha*realPositiveCurrentAngle);
-            if(checkIncrement < 0){
-                return 0d;
-            }else{
-                return -checkIncrement;
-            }
-        }
-        return increment;
+    private Double defineChangeInCharge(Double currentAngle, Double z1, Double z2, Double h){
+        //equation f(x)=10 * exp(-z1*x) - 10 * h * exp(-z2*(180-x))
+        //x = current_angle
+        return 10 * Math.exp(-z1*Math.abs(currentAngle)) - 10*h*Math.exp(-z2*(180-Math.abs(currentAngle)));
     }
-
-
-
+    
     //compute the angle of the attraction of the Potential Field
     //Input
     //Point currentPosition = current position where I am

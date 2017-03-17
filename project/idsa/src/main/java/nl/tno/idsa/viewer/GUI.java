@@ -67,9 +67,15 @@ public class GUI {
             //set update rule read by parameter files
             conf.setUpdateRules(par.getUpdateRule());
             if (gdsi) {
-                simulator.loadAndStartSimLGDS(conf, par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment(), par.getNumber());
+                //h -> h
+                //z1 -> z1
+                //z2 -> z2
+                simulator.loadAndStartSimLGDS(conf, par.getH(), par.getZ1(), par.getZ2(), par.getS2(), par.getW2(), par.getName(), par.getExperiment(), par.getNumber());
             } else {
-                simulator.loadAndStartSimIDSA(conf, par.getAlpha(), par.getS1(), par.getW1(), par.getS2(), par.getW2(), par.getName(), par.getExperiment(), par.getNumber());
+                //h -> h
+                //z1 -> z1
+                //z2 -> z2
+                simulator.loadAndStartSimIDSA(conf, par.getH(), par.getZ1(), par.getZ2(), par.getS2(), par.getW2(), par.getName(), par.getExperiment(), par.getNumber());
             }
         }
 
@@ -79,7 +85,7 @@ public class GUI {
     }
 
     //Load and start the simulation using IDSA system
-    private void loadAndStartSimIDSA(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, Integer number){
+    private void loadAndStartSimIDSA(ConfigFile conf, Double h, Double z1, Double s2, Double z2, Double w2, String name, String experiment, Integer number){
         //check if I am showing the GUI
         Boolean GUI = conf.getGUI();
         //If I am using the GUI I will show it otherwise no
@@ -188,7 +194,7 @@ public class GUI {
         //The problem here is if I want to track only one person or more. I need a potential field per person
         //From the config I need to check this and modify everything to support more than one potential field
         //But here I don't know how many pot I would need. I can create only one and then copy for the number of time that i need
-        PotentialField pot = new PotentialField(world, conf, degree , s1, s2, w1 , w2, name, experiment);
+        PotentialField pot = new PotentialField(world, conf, h , z1, s2, z2 , w2, name, experiment);
 
         if(GUI) {
             ProgressNotifier.notifyProgress(100);
@@ -223,9 +229,9 @@ public class GUI {
     }
 
     //load and start the simulation using LGDS system
-    private void loadAndStartSimLGDS(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, Integer number){
+    private void loadAndStartSimLGDS(ConfigFile conf, Double h, Double z1, Double z2, Double s2, Double w2, String name, String experiment, Integer number){
         System.out.println("Loading simulator...");
-        TrajectorySim sim = new TrajectorySim(conf.getSelectorSourceTracks(), conf.getSmoother(), conf.getLag(), conf.getMorePOIs(), conf.getLgds_GUI(), degree, number, conf.getSelectPerson());
+        TrajectorySim sim = new TrajectorySim(conf.getSelectorSourceTracks(), conf.getSmoother(), conf.getLag(), conf.getMorePOIs(), conf.getLgds_GUI(), h, number, conf.getSelectPerson());
         System.out.println("Loading potential field...");
 
         World oldWorld = null;
@@ -233,7 +239,8 @@ public class GUI {
         if (conf.getSelectorSourceTracks() == 0){
             oldWorld = this.loadWordForPathEngine();
         }
-        sim.initPotentialField(conf,degree,s1,s2,w1,w2,name,experiment, oldWorld);
+
+        sim.initPotentialField(conf,h,z1,s2,z2,w2,name,experiment, oldWorld);
 //        sim.init(conf.getMaxNumberOfTrackedPeople());
         //start the simulation
         System.out.println("Starting simulator...");

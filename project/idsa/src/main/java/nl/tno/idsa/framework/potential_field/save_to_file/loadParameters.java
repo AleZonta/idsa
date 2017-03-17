@@ -13,9 +13,9 @@ import java.nio.file.Paths;
  */
 public class LoadParameters {
     private String currentPath; //current path of the program
-    private Double alpha; // angle used on the update rule
-    private Double s1; // constant for the angle formula
-    private Double w1; // constant for the angle formula
+    private Double h; // angle used on the update rule
+    private Double z1; // constant for the angle formula
+    private Double z2; // constant for the angle formula
     private Double s2; // constant for the distance formula
     private Double w2;  // constant for the distance formula
     private String name; // experiment name
@@ -36,10 +36,13 @@ public class LoadParameters {
     }
 
     //constructor with all the parameters
-    public LoadParameters(String alpha, String s1, String w1, String s2, String w2, String name, String experiment, String number, String updateRule){
-        this.alpha = Double.parseDouble(alpha);
-        this.s1 = Double.parseDouble(s1);
-        this.w1 = Double.parseDouble(w1);
+    public LoadParameters(String h, String z1, String z2, String s2, String w2, String name, String experiment, String number, String updateRule){
+        //h -> h
+        //z1 -> z1
+        //z2 -> z2
+        this.h = Double.parseDouble(h);
+        this.z1 = Double.parseDouble(z1);
+        this.z2 = Double.parseDouble(z2);
         this.s2 = Double.parseDouble(s2);
         this.w2 = Double.parseDouble(w2);
         this.name = name;
@@ -57,9 +60,9 @@ public class LoadParameters {
         JSONParser parser = new JSONParser();
         JSONObject jsonObject = (JSONObject) parser.parse(reader);
 
-        this.alpha = (Double) jsonObject.get("Alpha");
-        this.s1 = (Double) jsonObject.get("s1");
-        this.w1 = (Double) jsonObject.get("w1");
+        this.h = (Double) jsonObject.get("h");
+        this.z1 = (Double) jsonObject.get("z1");
+        this.z2 = (Double) jsonObject.get("z2");
         this.s2 = (Double) jsonObject.get("s2");
         this.w2 = (Double) jsonObject.get("w2");
         this.name = (String) jsonObject.get("Name");
@@ -73,11 +76,11 @@ public class LoadParameters {
 
     public Double getS2() { return this.s2; }
 
-    public Double getW1() { return this.w1; }
+    public Double getZ2() { return this.z2; }
 
-    public Double getS1() { return this.s1; }
+    public Double getZ1() { return this.z1; }
 
-    public Double getAlpha() { return this.alpha; }
+    public Double getH() { return this.h; }
 
     public String getName() { return this.name; }
 

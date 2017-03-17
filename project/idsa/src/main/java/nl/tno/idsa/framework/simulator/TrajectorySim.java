@@ -266,13 +266,13 @@ public class TrajectorySim implements SimulatorInterface {
                 id = new ArrayList<>();
                 for(int i = 0; i < numberThatINeed; i++) id.add(i);
                 effectiveCounter = sumOfTheTwo;
-                List<Trajectory> finalActualTrajectories1 = actualTrajectories;
+                List<Trajectory> finalActualTrajectoriez1 = actualTrajectories;
                 id.stream().forEach(integer -> {
                     HouseholdTypes hhType = HouseholdTypes.SINGLE;
                     Gender gender = Gender.FEMALE;
                     double age = ThreadLocalRandom.current().nextDouble(0, 100);
 
-                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories1.get(integer), this.storage, age, gender, hhType, HouseholdRoles.SINGLE, 2016, this.smoother, this.lag);
+                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectoriez1.get(integer), this.storage, age, gender, hhType, HouseholdRoles.SINGLE, 2016, this.smoother, this.lag);
                     System.out.println("Connecting the potential field to the initialised person...");
                     //load controllers
                     this.loadControllers(agent, new Point(finalActualTrajectories.get(integer).getLastPoint().getLatitude(),finalActualTrajectories.get(integer).getLastPoint().getLongitude()));
@@ -381,15 +381,15 @@ public class TrajectorySim implements SimulatorInterface {
     /**
      * init the basic istanc eof the potential field
      * @param conf config file
-     * @param degree parameter that the update rule needs -> angle degree -> load by file
-     * @param s1 parameter that the update rule needs -> load by file
+     * @param h parameter that the update rule needs -> angle h -> load by file
+     * @param z1 parameter that the update rule needs -> load by file
      * @param s2 parameter that the update rule needs -> load by file
-     * @param w1 parameter that the update rule needs -> load by file
+     * @param z2 parameter that the update rule needs -> load by file
      * @param w2 parameter that the update rule needs -> load by file
      * @param name parameter that the update rule needs -> name of the experiment
      * @param experiment  parameter that the update rule needs -> repetition of the experiment
      */
-    public void initPotentialField(ConfigFile conf, Double degree, Double s1, Double s2, Double w1, Double w2, String name, String experiment, World oldWorld){
+    public void initPotentialField(ConfigFile conf, Double h, Double z1, Double s2, Double z2, Double w2, String name, String experiment, World oldWorld){
         //set in word the dimension of the word and the area of the word set to null
         World world;
         if(oldWorld == null){
@@ -400,7 +400,7 @@ public class TrajectorySim implements SimulatorInterface {
             this.oldWorld = Boolean.TRUE;
         }
         //I do not think I need something else inside the world for running the potential field
-        this.pot = new PotentialField(world, conf, degree , s1, s2, w1 , w2, name, experiment);
+        this.pot = new PotentialField(world, conf, h, z1, z2, s2, w2, name, experiment);
 
         //set cluster
         this.clusteredPOI = conf.getPOIsAreClustered();
