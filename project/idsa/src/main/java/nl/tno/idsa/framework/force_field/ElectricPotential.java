@@ -23,7 +23,8 @@ public class ElectricPotential extends ForceField {
         //formula  = constant * (charge/distance) -> constant * (potentialAttractionPower / euclideanDistanceBetween(attractivePoint, currentPosition) ^ 2)
         Double constant = this.constantNeededForThePotentialCalculation;
         Double distance = currentPosition.euclideanDistanceTo(attractivePoint);
-        return new Point(constant * (potentialAttractionPower/Math.pow(distance,2.0)) , Math.atan2(currentPosition.getY(),currentPosition.getX()));
+        //Math.toDegrees(Math.atan2(currentPosition.getY() - this.previousPoint.getY(), currentPosition.getX() - this.previousPoint.getX()));
+        return new Point(constant * (potentialAttractionPower/Math.pow(distance,2.0)) , Math.atan2(attractivePoint.getY() - currentPosition.getY(), attractivePoint.getX() - currentPosition.getX()));
     }
 
     @Override
@@ -109,7 +110,9 @@ public class ElectricPotential extends ForceField {
                 //this.force return the magnitude and the direction of the field in that position
                 Point E = this.force(currentPosition, aPointsOfInterest);
                 //I need to compute the vector component of the result -> Vx = v*sin(alpha) ; Vy = v*sin(alpha)
-                Point vectorComponent = new Point(E.getX() * Math.cos(E.getY()), E.getX() * Math.sin(E.getY()));
+                Double ang = E.getY();
+//                if (ang < 0) ang = 360 + ang;
+                Point vectorComponent = new Point(E.getX() * Math.cos(ang), E.getX() * Math.sin(ang));
                 totalForceInThisPoint = totalForceInThisPoint.plus(vectorComponent);
             }
         }

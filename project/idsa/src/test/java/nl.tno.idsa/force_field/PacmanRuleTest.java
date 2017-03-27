@@ -17,6 +17,7 @@ import static org.junit.Assert.assertNull;
  * Created by alessandrozonta on 12/09/16.
  */
 public class PacmanRuleTest {
+
     @Test
     public void define_alpha() throws Exception {
         UpdateRules test0 = new PacmanRule(90.0,0.5,-0.001, Boolean.FALSE);

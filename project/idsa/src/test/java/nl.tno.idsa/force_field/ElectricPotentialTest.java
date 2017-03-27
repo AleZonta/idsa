@@ -15,6 +15,44 @@ import static org.junit.Assert.assertEquals;
  * Created by alessandrozonta on 22/07/16.
  */
 public class ElectricPotentialTest {
+    //http://hyperphysics.phy-astr.gsu.edu/hbase/electric/e2p.html#c1
+    //website where to obtain the correct result for this equation and computation
+    //from the result be careful, need to subtract 180
+    @Test
+    public void calculateForceFromPoint() throws Exception {
+        ElectricPotential el = new ElectricPotential();
+        el.setConstant(400.0,1000.0);
+
+        List<POI> POIs = new ArrayList<>();
+
+        Point currentPosition = new Point(5d,5d);
+        POIs.clear();
+        POIs.add(new POI(new Point(10d,2d),5.0));
+        POIs.add(new POI(new Point(-1d,3d),1.0));
+        Point result = el.calculateForceFromPoint(currentPosition, POIs);
+        Double degrees = Math.toDegrees(Math.atan2(result.getY(), result.getX()));
+//        if (result.getX() < 0) degrees = degrees - 180;
+        System.out.println(result.toString() + " / -> " + degrees.toString());
+
+        currentPosition = new Point(5d,5d);
+        POIs.clear();
+        POIs.add(new POI(new Point(9d,9d),5.0));
+        POIs.add(new POI(new Point(4d,10d),1.0));
+        result = el.calculateForceFromPoint(currentPosition, POIs);
+        degrees = Math.toDegrees(Math.atan2(result.getY(), result.getX()));
+//        if (result.getX() < 0) degrees = degrees - 180;
+        System.out.println(result.toString() + " / -> " + degrees.toString());
+
+        currentPosition = new Point(5d,5d);
+        POIs.clear();
+        POIs.add(new POI(new Point(9d,8d),5.0));
+        POIs.add(new POI(new Point(8d,3d),1.0));
+        result = el.calculateForceFromPoint(currentPosition, POIs);
+        degrees = Math.toDegrees(Math.atan2(result.getY(), result.getX()));
+//        if (result.getX() < 0) degrees = degrees - 180;
+        System.out.println(result.toString() + " / -> " + degrees.toString());
+    }
+
     @Test
     //test if from a list with all the center point and a list with all the point of interest it returns a list of double with the result
     public void calculateForceInAllTheWorld() throws Exception {

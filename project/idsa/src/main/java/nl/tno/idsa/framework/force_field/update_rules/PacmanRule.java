@@ -253,6 +253,8 @@ public class PacmanRule implements UpdateRules {
         this.increaseValue = null;
         this.decreaseValue = null;
 
+
+        System.out.println("Current Position -> " + currentPosition.toString() +"Angle -> " + angle.toString() + " // APF angle -> " + this.angle.toString());
         if(this.PF && this.angle.equals(angle)){
             //If I am using the PF and the angle where I am going is the same that the angle of attraction
             //then do nothing
@@ -472,7 +474,7 @@ public class PacmanRule implements UpdateRules {
         //I am computing it only if I am using the potential field
         if(this.PF) {
             Point vectorComponent = this.pot.calculateForceFromPoint(currentPosition, this.POIs);
-            this.angle = Math.atan2(vectorComponent.getY(), vectorComponent.getX());
+            this.angle = Math.toDegrees(Math.atan2(vectorComponent.getY(), vectorComponent.getX()));
         }
     }
 

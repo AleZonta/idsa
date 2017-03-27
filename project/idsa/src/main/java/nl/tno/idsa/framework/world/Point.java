@@ -74,9 +74,13 @@ public class Point implements IGeometry {
     }
 
     @Override
+//    public String toString() {
+//        return "(" + Math.round(x * 100) / 100.0 + "," + Math.round(y * 100) / 100.0 + ")";
+//    }
     public String toString() {
-        return "(" + Math.round(x * 100) / 100.0 + "," + Math.round(y * 100) / 100.0 + ")";
+        return "(" + x + "," + y + ")";
     }
+
 
     @Override
     public GeometryType getGeometryType() {
