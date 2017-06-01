@@ -1,6 +1,7 @@
 package nl.tno.idsa.framework.force_field.update_rules;
 
 import lgds.routing.Routing;
+import nl.tno.idsa.framework.force_field.ForceField;
 import nl.tno.idsa.framework.potential_field.points_of_interest.POI;
 import nl.tno.idsa.framework.world.Point;
 import nl.tno.idsa.framework.world.World;
@@ -56,4 +57,13 @@ public interface UpdateRules {
 
     //reuturn idsaworld
     World retIdsaWorld();
+
+    //return direction attraction
+    Double getAngle();
+
+    //set if i am using PF computation
+    void setPF(Boolean PF);
+
+    //set the pot field
+    void setPot(ForceField pot);
 }

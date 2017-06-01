@@ -1,4 +1,4 @@
-package nl.tno.idsa.config;
+package config;
 
 import nl.tno.idsa.framework.config.ConfigFile;
 import nl.tno.idsa.framework.world.Time;

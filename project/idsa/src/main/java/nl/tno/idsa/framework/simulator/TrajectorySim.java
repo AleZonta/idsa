@@ -4,6 +4,7 @@ import lgds.load_track.LoadIDSATrack;
 import lgds.load_track.LoadTrack;
 import lgds.load_track.Traces;
 import lgds.people.Agent;
+import lgds.routing.Routing;
 import lgds.simulator.SimulatorInterface;
 import lgds.trajectories.Trajectories;
 import lgds.trajectories.Trajectory;
@@ -52,6 +53,7 @@ public class TrajectorySim implements SimulatorInterface {
     private View view; //implementing the lgds.View
     private final Integer trackedPersonNumber; //number of person tracked
     private final Boolean selectPerson; //Am i selecting a person
+    static Routing pathFinder; //pathfinder checker for the static method
 
 
     /**
@@ -84,6 +86,27 @@ public class TrajectorySim implements SimulatorInterface {
         }
         this.trackedPersonNumber = trackedPersonNumber;
         this.selectPerson = person;
+    }
+
+    /**
+     * Constructor with only three parameters.
+     * Only to initialise everything to null
+     * @param morePOIs Do I want to compute more POI than trajectories?
+     */
+    public TrajectorySim(Integer morePOIs){
+        this.storage = null;
+        this.pot = null;
+        this.performance = null;
+        this.tra = null;
+        this.oldWorld = Boolean.FALSE;
+        this.clusteredPOI = null;
+        this.smoother = Boolean.FALSE;
+        this.lag = 0;
+
+        this.morePOIs = morePOIs;
+        this.view = null;
+        this.trackedPersonNumber = 0;
+        this.selectPerson = Boolean.FALSE;
     }
 
     /**
@@ -152,6 +175,7 @@ public class TrajectorySim implements SimulatorInterface {
             //now i should load all what I need for the potential field
             this.loadControllers(agent, new Point(actualTrajectories.get(integer).getLastPoint().getLatitude(),actualTrajectories.get(integer).getLastPoint().getLongitude()));
         });
+
     }
 
 
@@ -222,15 +246,7 @@ public class TrajectorySim implements SimulatorInterface {
         System.out.println("Creating agents...");
         //create the agents
         List<Trajectory> finalActualTrajectories = actualTrajectories;
-        id.stream().forEach(integer -> {
-            HouseholdTypes hhType = HouseholdTypes.SINGLE;
-            Gender gender = Gender.FEMALE;
-            double age = ThreadLocalRandom.current().nextDouble(0, 100);
-            TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectories.get(integer), this.storage, age ,gender, hhType, HouseholdRoles.SINGLE,2016, this.smoother, this.lag);
-            System.out.println("Connecting the potential field to the initialised person...");
-            //load controllers
-            this.loadControllers(agent, new Point(finalActualTrajectories.get(integer).getLastPoint().getLatitude(),finalActualTrajectories.get(integer).getLastPoint().getLongitude()));
-        });
+        id.stream().forEach(integer -> this.createAgent(integer,finalActualTrajectories));
 
         //show the gui
         if (this.view != null) {
@@ -267,23 +283,28 @@ public class TrajectorySim implements SimulatorInterface {
                 for(int i = 0; i < numberThatINeed; i++) id.add(i);
                 effectiveCounter = sumOfTheTwo;
                 List<Trajectory> finalActualTrajectoriez1 = actualTrajectories;
-                id.stream().forEach(integer -> {
-                    HouseholdTypes hhType = HouseholdTypes.SINGLE;
-                    Gender gender = Gender.FEMALE;
-                    double age = ThreadLocalRandom.current().nextDouble(0, 100);
-
-                    TrajectoryAgent agent = new TrajectoryAgent(finalActualTrajectoriez1.get(integer), this.storage, age, gender, hhType, HouseholdRoles.SINGLE, 2016, this.smoother, this.lag);
-                    System.out.println("Connecting the potential field to the initialised person...");
-                    //load controllers
-                    this.loadControllers(agent, new Point(finalActualTrajectories.get(integer).getLastPoint().getLatitude(),finalActualTrajectories.get(integer).getLastPoint().getLongitude()));
-
-
-                });
+                id.stream().forEach(integer -> this.createAgent(integer,finalActualTrajectoriez1));
             }
         }
         System.out.println("End simulating procedure...");
 
 
+    }
+
+    /**
+     * creation of the Agent
+     * @param id id number of the agent
+     * @param actualTrajectories trajectories that I am using locally when the function is called
+     */
+    private void createAgent(Integer id, List<Trajectory> actualTrajectories){
+        HouseholdTypes hhType = HouseholdTypes.SINGLE;
+        Gender gender = Gender.FEMALE;
+        double age = ThreadLocalRandom.current().nextDouble(0, 100);
+
+        TrajectoryAgent agent = new TrajectoryAgent(actualTrajectories.get(id), this.storage, age, gender, hhType, HouseholdRoles.SINGLE, 2016, this.smoother, this.lag);
+        System.out.println("Connecting the potential field to the initialised person...");
+        //load controllers
+        this.loadControllers(agent, new Point(actualTrajectories.get(id).getLastPoint().getLatitude(),actualTrajectories.get(id).getLastPoint().getLongitude()));
     }
 
     /**
@@ -312,45 +333,30 @@ public class TrajectorySim implements SimulatorInterface {
             fieldForTheTrackedAgent.setTrajectorySimReference(this);
             fieldForTheTrackedAgent.setTrackedAgent(trajectoryAgent);
             //if it is false I am using normal POI
+            List<POI> pois;
             if (!this.clusteredPOI) {
-                List<POI> pois = this.translatePOI(this.tra.getListOfPOIs());
-                //since i deleted some poi i need to check if the target is there
-                if (this.morePOIs < 0) {
-                    Integer numberToRemove = Math.abs(this.morePOIs);
-                    if(pois.size() < numberToRemove){
-                        numberToRemove = numberToRemove - pois.size();
-                    }
-
-                    for(int i = 0; i < numberToRemove; i ++ ){
-                        Random rn = new Random();
-                        int numb = rn.nextInt(pois.size());
-                        if(!pois.get(numb).contains(endpoint)){
-                            pois.remove(numb);
-                        }
-                    }
-                }
-                fieldForTheTrackedAgent.setPointsOfInterest(pois); //set the POIs obtained from the GPS trajectories
+                pois = translatePOI(this.tra.getListOfPOIs());
             }else {
-                List<POI> pois = this.translateClusterPOI(this.tra.getListOfPOIsClustered());
-                //since i deleted some poi i need to check if the target is there
-                if (this.morePOIs < 0) {
-                    Integer numberToRemove = Math.abs(this.morePOIs);
+                pois = translateClusterPOI(this.tra.getListOfPOIsClustered());
+            }
+            if (this.morePOIs < 0) {
+                Integer numberToRemove = Math.abs(this.morePOIs);
 
-                    if(pois.size() < numberToRemove){
-                        numberToRemove = numberToRemove - pois.size();
-                    }
+                if(pois.size() < numberToRemove){
+                    numberToRemove = numberToRemove - pois.size();
+                }
 
-                    for(int i = 0; i < numberToRemove; i ++ ){
-                        Random rn = new Random();
-                        int numb = rn.nextInt(pois.size());
-                        if(!pois.get(numb).contains(endpoint)){
-                            pois.remove(numb);
-                        }
+                for(int i = 0; i < numberToRemove; i ++ ){
+                    Random rn = new Random();
+                    int numb = rn.nextInt(pois.size());
+                    if(!pois.get(numb).contains(endpoint)){
+                        pois.remove(numb);
                     }
                 }
-                //In this case I am using clustered POI
-                fieldForTheTrackedAgent.setPointsOfInterest(pois); //set the POIs obtained from the GPS trajectories
             }
+
+            //In this case I am using clustered POI
+            fieldForTheTrackedAgent.setPointsOfInterest(pois); //set the POIs obtained from the GPS trajectories
             //set POIs to the map
             if (this.view != null) {
                 this.view.setListPoints(fieldForTheTrackedAgent.getPointsOfInterest());
@@ -401,7 +407,7 @@ public class TrajectorySim implements SimulatorInterface {
         }
         //I do not think I need something else inside the world for running the potential field
         this.pot = new PotentialField(world, conf, h, z1, z2, s2, w2, name, experiment);
-
+        pathFinder = this.pot.getPathFinder();
         //set cluster
         this.clusteredPOI = conf.getPOIsAreClustered();
     }
@@ -423,12 +429,12 @@ public class TrajectorySim implements SimulatorInterface {
      * @param oldList List of POI in lgds version
      * @return List of POI in idsa version
      */
-    private List<POI> translatePOI(List<lgds.POI.POI> oldList){
+    public static List<POI> translatePOI(List<lgds.POI.POI> oldList){
         List<lgds.POI.POI> appoList = new ArrayList<>();
         //Check if the POIs are inside the boundaries
         oldList.stream().forEach(poi -> {
-            if(this.pot.getPathFinder() != null) {
-                if (this.pot.getPathFinder().isContained(poi.getLocation())) {
+            if(TrajectorySim.pathFinder != null) {
+                if (TrajectorySim.pathFinder.isContained(poi.getLocation())) {
                     appoList.add(poi);
                 }
             }else{
@@ -446,7 +452,7 @@ public class TrajectorySim implements SimulatorInterface {
      * @param list List of cluster
      * @return List of POI in idsa version
      */
-    private List<POI> translateClusterPOI(List<? extends Cluster<lgds.POI.POI>> list){
+    public static List<POI> translateClusterPOI(List<? extends Cluster<lgds.POI.POI>> list){
         List<POI> oldList = new ArrayList<>();
         list.stream().forEach(cluster -> {
             oldList.add(new POI(cluster.getPoints()));
@@ -454,8 +460,8 @@ public class TrajectorySim implements SimulatorInterface {
         List<POI> realList = new ArrayList<>();
         //Check if the POIs are inside the boundaries
         oldList.stream().forEach(poi -> {
-            if(this.pot.getPathFinder() != null) {
-                if (this.pot.getPathFinder().isContained(new lgds.trajectories.Point(poi.getArea().getPolygon().getCenterPoint().getX(),poi.getArea().getPolygon().getCenterPoint().getY()))){
+            if(TrajectorySim.pathFinder != null) {
+                if (TrajectorySim.pathFinder.isContained(new lgds.trajectories.Point(poi.getArea().getPolygon().getCenterPoint().getX(),poi.getArea().getPolygon().getCenterPoint().getY()))){
                     realList.add(poi);
                 }
             }else{

@@ -180,6 +180,8 @@ public class ConfigFile {
         return this.maxNumberOfTrackedPeople;
     }
 
+    public void setMaxNumberOfTrackedPeople(Integer maxNumberOfTrackedPeople) { this.maxNumberOfTrackedPeople = maxNumberOfTrackedPeople; }
+
     public Integer getPath() { return this.path; }
 
     public Integer getPerformance() { return this.performance; }
@@ -223,4 +225,40 @@ public class ConfigFile {
     public Integer getMorePOIs() { return this.morePOIs; }
 
     public Boolean getLgds_GUI() { return lgds_GUI; }
+
+    @Override
+    public String toString() {
+        return "ConfigFile{" +
+                "currentPath='" + currentPath + '\'' +
+                ", tileOptimisation=" + tileOptimisation +
+                ", GUI=" + GUI +
+                ", lgds_GUI=" + lgds_GUI +
+                ", commonInitialCharge=" + commonInitialCharge +
+                ", thresholdPotential=" + thresholdPotential +
+                ", constantPotential=" + constantPotential +
+                ", differentCellSize=" + differentCellSize +
+                ", dayOfWeek=" + dayOfWeek +
+                ", season=" + season +
+                ", timeOfTheYear=" + timeOfTheYear +
+                ", time=" + time +
+                ", maxNumberOfTrackedPeople=" + maxNumberOfTrackedPeople +
+                ", path=" + path +
+                ", performance=" + performance +
+                ", heatMap=" + heatMap +
+                ", POIs=" + POIs +
+                ", updateRules=" + updateRules +
+                ", gdsi=" + gdsi +
+                ", selectPerson=" + selectPerson +
+                ", selectUR=" + selectUR +
+                ", fileFromThisLocation=" + fileFromThisLocation +
+                ", sourceData='" + sourceData + '\'' +
+                ", destinationData='" + destinationData + '\'' +
+                ", selectorSourceTracks=" + selectorSourceTracks +
+                ", wayPoints=" + wayPoints +
+                ", POIsAreClustered=" + POIsAreClustered +
+                ", Lag=" + Lag +
+                ", Smoother=" + Smoother +
+                ", morePOIs=" + morePOIs +
+                '}';
+    }
 }

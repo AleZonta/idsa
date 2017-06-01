@@ -84,6 +84,7 @@ public class GUI {
         System.exit(0);
     }
 
+
     //Load and start the simulation using IDSA system
     private void loadAndStartSimIDSA(ConfigFile conf, Double h, Double z1, Double s2, Double z2, Double w2, String name, String experiment, Integer number){
         //check if I am showing the GUI
@@ -246,7 +247,7 @@ public class GUI {
         System.out.println("Starting simulator...");
 //        sim.run();
 
-        sim.init_and_run(100, conf.getMaxNumberOfTrackedPeople());
+        sim.init_and_run(50, conf.getMaxNumberOfTrackedPeople());
     }
 
 

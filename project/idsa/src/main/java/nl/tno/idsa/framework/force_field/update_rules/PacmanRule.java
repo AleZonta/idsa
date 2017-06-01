@@ -25,10 +25,10 @@ public class PacmanRule implements UpdateRules {
     private Double z2; //second variable of the equation (passed as a parameter)
     protected World world; //I need the world to compute the real distance and the path
     private final Boolean usingPath; //I am using the path or not?
-    private final ForceField  pot; //need the potential field to compute the path planning
+    private ForceField  pot; //need the potential field to compute the path planning
     private List<POI> POIs; //we need the list of all the poi to discover where the attraction comes from
     private Double angle; //angle of the attraction of the potential field
-    private final Boolean PF; //Am i using the Potential Field Path Planning
+    private Boolean PF; //Am i using the Potential Field Path Planning
     private Routing pathFinder; //set the object path finder to compute the path if loading the trajectories from file
     private Point waypoint; //waypoint used on the computation (stored for graph)
     private Boolean idsaWorld; //If i am loading idsa
@@ -138,7 +138,15 @@ public class PacmanRule implements UpdateRules {
 
     protected Boolean getPF() { return this.PF; }
 
-    protected Double getAngle() { return this.angle; }
+    public void setPF(Boolean PF) {
+        this.PF = PF;
+    }
+
+    public void setPot(ForceField pot) {
+        this.pot = pot;
+    }
+
+    public Double getAngle() { return this.angle; }
 
     protected Boolean getIdsaWorld() { return this.idsaWorld; }
 
@@ -254,7 +262,7 @@ public class PacmanRule implements UpdateRules {
         this.decreaseValue = null;
 
 
-        System.out.println("Current Position -> " + currentPosition.toString() +"Angle -> " + angle.toString() + " // APF angle -> " + this.angle.toString());
+//        System.out.println("Current Position -> " + currentPosition.toString() +"Angle -> " + angle.toString() + " // APF angle -> " + this.angle.toString());
         if(this.PF && this.angle.equals(angle)){
             //If I am using the PF and the angle where I am going is the same that the angle of attraction
             //then do nothing
@@ -477,6 +485,7 @@ public class PacmanRule implements UpdateRules {
             this.angle = Math.toDegrees(Math.atan2(vectorComponent.getY(), vectorComponent.getX()));
         }
     }
+
 
 
 }

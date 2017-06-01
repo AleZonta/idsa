@@ -161,12 +161,16 @@ public class PotentialField extends Observable{
         this.name = name;
         this.experiment = experiment;
 
-        if (this.gdsi){
-            if(this.conf.getSelectorSourceTracks() != 0) {
-                this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
-                //load it
-                this.pathFinder.load();
-                this.updateRule.setPathFinder(this.pathFinder);
+        if(this.doINeedPathFinder(value)) {
+            if (this.gdsi) {
+                if (this.conf.getSelectorSourceTracks() != 0) {
+                    this.pathFinder = new PathFinderGraphHopper(); //using graphHopper for path finding -> Need to load the .pbf file
+                    //load it
+                    this.pathFinder.load();
+                    this.updateRule.setPathFinder(this.pathFinder);
+                }
+            } else {
+                this.pathFinder = null;
             }
         }else{
             this.pathFinder = null;
@@ -235,10 +239,14 @@ public class PotentialField extends Observable{
         this.name = name;
         this.experiment = experiment;
 
-        if (this.gdsi){
-            if(!idsaWorld) {
-                this.pathFinder = pathFinder; //using graphHopper for path finding -> Need to load the .pbf file
-                this.updateRule.setPathFinder(this.pathFinder);
+        if(this.doINeedPathFinder(parameter.get(0).intValue())) {
+            if (this.gdsi) {
+                if (!idsaWorld) {
+                    this.pathFinder = pathFinder; //using graphHopper for path finding -> Need to load the .pbf file
+                    this.updateRule.setPathFinder(this.pathFinder);
+                }
+            } else {
+                this.pathFinder = null;
             }
         }else{
             this.pathFinder = null;
@@ -285,12 +293,20 @@ public class PotentialField extends Observable{
     //getter for pointsOfInterest
     public List<POI> getPointsOfInterest() { return this.pointsOfInterest; }
 
+    /**
+     * Setter for the previus point (first time need to be set)
+     * @param previousPoint point to set
+     */
+    public void setPreviousPoint(Point previousPoint) {
+        this.previousPoint = previousPoint;
+    }
+
     //setter for pointsOfInterest
     public void setPointsOfInterest(List<POI> pointsOfInterest) {
         this.pointsOfInterest = pointsOfInterest;
         List<Point> positions = new ArrayList<>();
         this.pointsOfInterest.stream().forEach(poi -> positions.add(poi.getArea().getPolygon().getCenterPoint()));
-        this.performance.addLocations(positions);
+        if (this.performance!=null) this.performance.addLocations(positions);
 
         //set POIs to the update rules
         this.updateRule.setPOIs(this.pointsOfInterest);
@@ -531,7 +547,7 @@ public class PotentialField extends Observable{
             if (this.confTypologyOfMatrix) this.heatMapTilesOptimisation.computeActualMatrix(currentPosition);
 
             //add the current position to the path to save on file
-            this.performance.addPointToPath(currentPosition);
+            if(this.performance != null) this.performance.addPointToPath(currentPosition);
 
             //set previous point for the update rule computation
             this.updateRule.setPreviousPoint(this.previousPoint);
@@ -680,18 +696,19 @@ public class PotentialField extends Observable{
         }
         //adding the list of waypoints. Check if they are null or not. If they are null I do not need to save them
         if(!waypoints.isEmpty()){
-            this.performance.addWayPointList(waypoints);
+            if(this.performance!=null) this.performance.addWayPointList(waypoints);
             //notify that I have just updated all the waypoints -> for the lgds.GUI
             setChanged();
             notifyObservers(waypoints);
         }
         //update performance
-        this.performance.addValue((int) this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
-        //update all the POI and the charge
-        List<Float> charges = new ArrayList<>();
-        this.pointsOfInterest.stream().forEach(poi -> charges.add(poi.getCharge().floatValue()));
-        this.performance.addCharges(charges);
-
+        if(this.performance != null) {
+            this.performance.addValue((int) this.pointsOfInterest.stream().filter(poi -> poi.getCharge() > 0.0).count());
+            //update all the POI and the charge
+            List<Float> charges = new ArrayList<>();
+            this.pointsOfInterest.stream().forEach(poi -> charges.add(poi.getCharge().floatValue()));
+            this.performance.addCharges(charges);
+        }
 
         //notify that I have just updated all the POIs -> for the lgds.GUI
         setChanged();
@@ -848,7 +865,7 @@ public class PotentialField extends Observable{
     public UpdateRules returnUpdateRule(Integer value, Double h, Double z1, Double z2, Double s2, Double w2){
         switch (value){
             case 0:
-                return new PacmanRule(90.0, 0.25 , 0.005, Boolean.FALSE); //select Pacman rule without distance and path
+                return new PacmanRule(90.0, 0.25 , 0.005, Boolean.TRUE); //select Pacman rule without distance and path
 //                return new PacmanRuleDistance(90.0, 0.25 ,0.005, 0.5, 0.5, Boolean.TRUE); //select Pacman rule fixed value
             case 1:
                 return new PacmanRule(h, z1 , z2, Boolean.FALSE); //select Pacman rule without distance and path
@@ -872,6 +889,35 @@ public class PotentialField extends Observable{
                 return new DoublePacmanRule(h, z1 , z2, Boolean.TRUE); //select Pacman rule wit path
         }
         return null;
+    }
+
+    //Do I need to load PathFinder?
+    public Boolean doINeedPathFinder(Integer value) {
+        if (value == 0 || value == 3 || value == 4 || value == 7 || value == 8 || value == 10) {
+            return Boolean.TRUE;
+        }
+        return Boolean.FALSE;
+    }
+
+    /**
+     * Return the direction of the attraction of the potential Field
+     * @return
+     */
+    public Double returnDirectionAttraction(Point lastPosition){
+        this.updateRule.setPF(Boolean.TRUE);
+        //okay in this way I am sure I compute the attraction
+        this.updateRule.setPot(this.artificialPotentialField);
+        this.updateRule.PFPathPlanning(lastPosition);
+        this.updateRule.setPF(Boolean.TRUE);
+        //I return the angle
+        return this.updateRule.getAngle();
+    }
+
+    /**
+     * Reset all the POIs putting the charge to zero
+     */
+    public void resetPOIs(){
+        this.pointsOfInterest.forEach(poi -> poi.setCharge(0.0));
     }
 
 }

@@ -91,4 +91,20 @@ public class LoadParameters {
     public Integer getUpdateRule() {
         return updateRule;
     }
+
+    @Override
+    public String toString() {
+        return "LoadParameters{" + "\n" +
+                "currentPath='" + currentPath + '\'' + ",\n" +
+                "h=" + h + ",\n" +
+                "z1=" + z1 + ",\n" +
+                "z2=" + z2 + ",\n" +
+                "s2=" + s2 + ",\n" +
+                "w2=" + w2 + ",\n" +
+                "name='" + name + '\'' + ",\n" +
+                "experiment='" + experiment + '\'' + ",\n" +
+                "number=" + number + ",\n" +
+                "updateRule=" + updateRule + "\n" +
+                '}';
+    }
 }

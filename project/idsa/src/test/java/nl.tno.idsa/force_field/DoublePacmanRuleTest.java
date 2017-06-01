@@ -1,4 +1,4 @@
-package nl.tno.idsa.force_field;
+package force_field;
 
 import nl.tno.idsa.framework.force_field.update_rules.DoublePacmanRule;
 import nl.tno.idsa.framework.force_field.update_rules.UpdateRules;
