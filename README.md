@@ -14,15 +14,8 @@ It can be built and run using popular Java IDEs such as Eclipse, NetBeans and In
 
 ## How to run
 Check and substitute in the config-file your own path of the files required by the simulator.
+Fill the parameter file with the value you want to test.
+Start nl.tno.idsa.viewer.GUI (with the name of the parameter file as a parameter or directly the parameters) to run the experimentation environment.
 
-
-
-
-Start nl.tno.idsa.viewer.GUI (no arguments) to run the experimentation environment.
-
-## TODO
-1. Configuration file.
-2. Guide to adding your own GIS and census data (replacing the example NL data).
-3. Code documentation and cleanup.
 
 
